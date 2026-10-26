@@ -47,15 +47,15 @@ export function CartView() {
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-[1fr_280px]">
-      <ul className="divide-y rounded-lg border">
+    <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+      <ul className="divide-y rounded-xl border bg-card">
         {cart.items.map((i) => (
           <li key={i.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">{i.product.brand}</p>
               <p className="font-medium">{i.product.name}</p>
               <p className="text-sm">{eyeLabel[i.eye]}</p>
-              <p className="text-xs text-muted-foreground">{describe(i)}</p>
+              <p className="optic text-xs text-muted-foreground">{describe(i)}</p>
               {!i.purchasable && (
                 <p role="alert" className="text-xs text-destructive">
                   {i.available > 0
@@ -81,7 +81,7 @@ export function CartView() {
           </li>
         ))}
       </ul>
-      <aside className="h-fit space-y-4 rounded-lg border p-4">
+      <aside className="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-28">
         <div className="flex justify-between">
           <span>Subtotal</span>
           <strong>{formatMxn(cart.subtotal_cents)}</strong>

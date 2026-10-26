@@ -36,21 +36,24 @@ function buildSchema(o: ProductOptions) {
 const fmtSigned = (n: number) => (n > 0 ? `+${n.toFixed(2)}` : n.toFixed(2));
 
 function Field({
-  label, value, onChange, options, error,
+  label, abbr, value, onChange, options, error, optical = true,
 }: {
-  label: string; value: string; onChange: (v: string) => void;
-  options: { value: string; label: string }[]; error?: string;
+  label: string; abbr?: string; value: string; onChange: (v: string) => void;
+  options: { value: string; label: string }[]; error?: string; optical?: boolean;
 }) {
   return (
     <div className="space-y-1">
-      <Label className="text-xs">{label}</Label>
-      <Select value={value || null} onValueChange={(v) => onChange(v ?? "")}>
+      <Label className="gap-1.5 text-xs">
+        {abbr && <span className="optic text-[10px] font-medium tracking-widest text-primary">{abbr}</span>}
+        {label}
+      </Label>
+      <Select items={options} value={value || null} onValueChange={(v) => onChange(v ?? "")}>
         <SelectTrigger className="w-full" aria-invalid={!!error}>
-          <SelectValue placeholder="Elegir" />
+          <SelectValue placeholder="Elegir" className={optical ? "optic" : undefined} />
         </SelectTrigger>
         <SelectContent>
           {options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            <SelectItem key={o.value} value={o.value} className={optical ? "optic" : undefined}>{o.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -81,9 +84,12 @@ function VariantPrice({ slug, params }: { slug: string; params: GetProductVarian
   if (data?.status !== 200)
     return <p className="text-xs text-destructive">Esta combinación no está disponible.</p>;
   return (
+    // El precio "rueda" al cambiar la graduación (220 ms); la key reinicia la animación.
     <p className="text-sm">
-      <strong>{formatMxn(data.data.price_cents)}</strong>{" "}
-      <span className={data.data.available > 0 ? "text-muted-foreground" : "text-destructive"}>
+      <strong key={data.data.price_cents} className="inline-block animate-roll font-display text-lg">
+        {formatMxn(data.data.price_cents)}
+      </strong>{" "}
+      <span className={data.data.available > 0 ? "text-good" : "text-destructive"}>
         {data.data.available > 0 ? "En existencia" : "Agotado"}
       </span>
     </p>
@@ -104,31 +110,31 @@ function EyeBlock({
     (!o.axes?.length || !!eye.axis) && (!o.additions?.length || !!eye.addition);
 
   return (
-    <fieldset className="space-y-3 rounded-lg border p-4">
-      <legend className="px-1 text-sm font-medium">{title}</legend>
+    <fieldset className="space-y-3 rounded-xl border bg-card p-4">
+      <legend className="optic px-1 text-xs font-medium tracking-widest text-muted-foreground uppercase">{title}</legend>
       <div className="grid grid-cols-2 gap-3">
         <Controller control={control} name={`${name}.sphere`} render={({ field }) => (
-          <Field label="Esfera" value={field.value} onChange={field.onChange}
+          <Field label="Esfera" abbr="PWR" value={field.value} onChange={field.onChange}
             error={errors?.sphere?.message}
             options={o.spheres.map((s) => ({ value: String(s), label: fmtSigned(s) }))} />
         )} />
         {!!o.cylinders?.length && (
           <Controller control={control} name={`${name}.cylinder`} render={({ field }) => (
-            <Field label="Cilindro" value={field.value} onChange={field.onChange}
+            <Field label="Cilindro" abbr="CYL" value={field.value} onChange={field.onChange}
               error={errors?.cylinder?.message}
               options={o.cylinders!.map((s) => ({ value: String(s), label: fmtSigned(s) }))} />
           )} />
         )}
         {!!o.axes?.length && (
           <Controller control={control} name={`${name}.axis`} render={({ field }) => (
-            <Field label="Eje" value={field.value} onChange={field.onChange}
+            <Field label="Eje" abbr="EJE" value={field.value} onChange={field.onChange}
               error={errors?.axis?.message}
               options={o.axes!.map((s) => ({ value: String(s), label: `${s}°` }))} />
           )} />
         )}
         {!!o.additions?.length && (
           <Controller control={control} name={`${name}.addition`} render={({ field }) => (
-            <Field label="Adición" value={field.value} onChange={field.onChange}
+            <Field label="Adición" abbr="ADD" value={field.value} onChange={field.onChange}
               error={errors?.addition?.message}
               options={o.additions!.map((s) => ({ value: s, label: s }))} />
           )} />
@@ -207,14 +213,14 @@ export function RxSelector({ product }: { product: ProductDetail }) {
         <div className="grid grid-cols-2 gap-3">
           {o.base_curves.length > 1 && (
             <Controller control={control} name="base_curve" render={({ field }) => (
-              <Field label="Curva base" value={field.value} onChange={field.onChange}
+              <Field label="Curva base" abbr="BC" value={field.value} onChange={field.onChange}
                 error={errors.base_curve?.message}
                 options={o.base_curves.map((s) => ({ value: String(s), label: s.toFixed(1) }))} />
             )} />
           )}
           {o.diameters.length > 1 && (
             <Controller control={control} name="diameter" render={({ field }) => (
-              <Field label="Diámetro" value={field.value} onChange={field.onChange}
+              <Field label="Diámetro" abbr="DIA" value={field.value} onChange={field.onChange}
                 error={errors.diameter?.message}
                 options={o.diameters.map((s) => ({ value: String(s), label: s.toFixed(1) }))} />
             )} />
@@ -222,7 +228,7 @@ export function RxSelector({ product }: { product: ProductDetail }) {
         </div>
       )}
       <div className="max-w-[10rem]">
-        <Field label="Cajas por ojo" value={boxes} onChange={setBoxes}
+        <Field label="Cajas por ojo" optical={false} value={boxes} onChange={setBoxes}
           options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))} />
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

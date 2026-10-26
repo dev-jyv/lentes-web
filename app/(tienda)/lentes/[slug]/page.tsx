@@ -53,13 +53,13 @@ export default async function ProductPage({ params }: Props) {
   };
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-10 px-4 py-10 md:grid-cols-2">
+    <div className="container-page grid gap-10 py-10 md:grid-cols-2">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <ProductViewTracker slug={p.slug} name={p.name} brand={p.brand.name} />
-      <div className="relative aspect-square rounded-lg bg-muted">
+      <div className="relative aspect-square animate-iris overflow-hidden rounded-2xl bg-secondary">
         {images[0] ? (
           <Image src={images[0]} alt={p.name} fill unoptimized className="object-contain p-8" />
         ) : (
@@ -71,7 +71,7 @@ export default async function ProductPage({ params }: Props) {
       <div className="space-y-6">
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">{p.brand.name}</p>
-          <h1 className="text-3xl font-bold">{p.name}</h1>
+          <h1 className="text-3xl sm:text-4xl">{p.name}</h1>
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary">{lensTypeLabel[p.lens_type]}</Badge>
             <Badge variant="secondary">{replacementLabel[p.replacement]}</Badge>
@@ -79,7 +79,7 @@ export default async function ProductPage({ params }: Props) {
           </div>
           <p className="text-lg">
             {p.from_price_cents != null ? (
-              <>Desde <strong>{formatMxn(p.from_price_cents)}</strong></>
+              <>Desde <strong className="font-display text-2xl">{formatMxn(p.from_price_cents)}</strong></>
             ) : (
               <strong>Agotado</strong>
             )}

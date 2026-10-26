@@ -18,7 +18,7 @@ export function PrescriptionList() {
           <div>
             <p className="font-medium">{r.doctor_name}</p>
             <p className="text-xs text-muted-foreground">
-              OD {r.od_sphere} · OI {r.os_sphere} · vigente hasta {r.expires_at}
+              <span className="optic">OD {r.od_sphere} · OI {r.os_sphere}</span> · vigente hasta {r.expires_at}
             </p>
           </div>
           <div className="flex gap-2">

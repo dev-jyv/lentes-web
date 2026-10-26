@@ -5,8 +5,8 @@ export const metadata: Metadata = { title: "Carrito", robots: { index: false } }
 
 export default function CartPage() {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="mb-6 text-3xl font-bold">Tu carrito</h1>
+    <div className="container-page py-10">
+      <h1 className="mb-6 text-3xl">Tu carrito</h1>
       <CartView />
     </div>
   );

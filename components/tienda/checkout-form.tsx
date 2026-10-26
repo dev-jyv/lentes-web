@@ -137,14 +137,14 @@ export function CheckoutForm() {
   }
 
   return (
-    <div className="ph-no-capture grid gap-8 md:grid-cols-[1fr_280px]">
+    <div className="ph-no-capture grid gap-8 lg:grid-cols-[1fr_380px]">
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Dirección de envío</h2>
+        <h2 className="text-lg">Dirección de envío</h2>
         {addresses.length > 0 && !adding && (
           <ul className="space-y-2">
             {addresses.map((a) => (
               <li key={a.id}>
-                <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm">
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-card p-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-secondary">
                   <input type="radio" name="address" className="mt-1"
                     checked={addressId === a.id} onChange={() => setPicked(a.id)} />
                   <span>
@@ -164,7 +164,7 @@ export function CheckoutForm() {
         )}
         {needsRx && (
           <>
-            <h2 className="pt-4 text-lg font-semibold">Receta</h2>
+            <h2 className="pt-4 text-lg">Receta</h2>
             {prescriptions.length === 0 ? (
               <p className="text-sm">
                 Tus lentes requieren receta vigente.{" "}
@@ -174,12 +174,12 @@ export function CheckoutForm() {
               <ul className="space-y-2">
                 {prescriptions.map((r) => (
                   <li key={r.id}>
-                    <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm">
+                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-card p-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-secondary">
                       <input type="radio" name="rx" className="mt-1"
                         checked={prescriptionId === r.id} onChange={() => setPickedRx(r.id)} />
                       <span>
                         <strong>{r.doctor_name}</strong> · {rxStatusLabel[r.status]}<br />
-                        OD {r.od_sphere} · OI {r.os_sphere} · vigente hasta {r.expires_at}
+                        <span className="optic">OD {r.od_sphere} · OI {r.os_sphere}</span> · vigente hasta {r.expires_at}
                       </span>
                     </label>
                   </li>
@@ -189,8 +189,8 @@ export function CheckoutForm() {
           </>
         )}
       </section>
-      <aside className="h-fit space-y-4 rounded-lg border p-4">
-        <h2 className="font-semibold">Resumen</h2>
+      <aside className="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-28">
+        <h2 className="text-lg">Resumen</h2>
         <ul className="space-y-1 text-sm">
           {cart.items.map((i) => (
             <li key={i.id} className="flex justify-between gap-2">

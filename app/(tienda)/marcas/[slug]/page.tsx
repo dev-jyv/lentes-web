@@ -36,9 +36,9 @@ export default async function BrandPage({ params, searchParams }: Props) {
   const items = res.status === 200 ? res.data.items : [];
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="mb-8 text-3xl font-bold">{brand.name}</h1>
-      <div className="grid gap-8 md:grid-cols-[200px_1fr]">
+    <div className="container-page py-10">
+      <h1 className="mb-8 text-3xl">{brand.name}</h1>
+      <div className="grid gap-8 md:grid-cols-[250px_1fr]">
         <CatalogFilters base={`/marcas/${slug}`} params={filters} brands={[]} />
         {items.length === 0 ? (
           <p className="text-muted-foreground">No encontramos lentes con esos filtros.</p>

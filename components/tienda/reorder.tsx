@@ -49,7 +49,7 @@ export function Reorder({ orderId }: { orderId: string }) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Vuelve a pedir tus lentes</h1>
+        <h1 className="text-2xl">Vuelve a pedir tus lentes</h1>
         <p className="text-sm text-muted-foreground">
           Pedido LC-{String(order.number).padStart(6, "0")}. Los precios y la existencia se
           confirman al agregar: pueden haber cambiado.
@@ -61,7 +61,7 @@ export function Reorder({ orderId }: { orderId: string }) {
             <div>
               <p className="font-medium">{i.product_name} <span className="text-muted-foreground">· {i.brand_name}</span></p>
               <p>{eyeLabel[i.eye]} · {i.quantity} {i.quantity === 1 ? "caja" : "cajas"}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="optic text-xs text-muted-foreground">
                 {[i.sphere != null && `Esf ${sign(i.sphere)}`,
                   i.cylinder != null && `Cil ${sign(i.cylinder)}`,
                   i.axis != null && `Eje ${i.axis}°`,

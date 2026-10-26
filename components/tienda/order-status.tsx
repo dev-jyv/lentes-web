@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useGetOrder } from "@/lib/api/generated/api";
@@ -26,10 +27,19 @@ export function OrderStatus({ orderId }: { orderId: string }) {
 
   return (
     <div className="space-y-4">
+      {paid && (
+        // Confirmación: la gota cae y el check aparece con un pequeño rebote.
+        <div className="relative grid size-16 place-items-center" aria-hidden="true">
+          <span className="absolute top-0 size-3 animate-drop rounded-[50%_50%_50%_0] bg-primary" />
+          <span className="grid size-14 animate-pop place-items-center rounded-full bg-good text-background">
+            <Check className="size-8" />
+          </span>
+        </div>
+      )}
       <h2 className="text-2xl font-semibold">
         {paid ? "¡Gracias por tu compra!" : failed ? "Tu pago no se completó" : "Confirmando tu pago…"}
       </h2>
-      <p>Pedido <strong>LC-{String(o.number).padStart(6, "0")}</strong> · {formatMxn(o.total_cents)}</p>
+      <p>Pedido <strong className="optic">LC-{String(o.number).padStart(6, "0")}</strong> · {formatMxn(o.total_cents)}</p>
       {!paid && !failed && (
         <p className="text-sm text-muted-foreground">
           Esto puede tardar unos segundos. Si pagaste en OXXO o SPEI, se confirma cuando recibamos el pago.

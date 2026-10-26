@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CatalogFilters } from "@/components/tienda/catalog-filters";
+import { ActiveFilters, CatalogFilters } from "@/components/tienda/catalog-filters";
 import { ProductCard } from "@/components/tienda/product-card";
 import { listBrands, listProducts } from "@/lib/api/generated/api";
 import type { LensType, Replacement } from "@/lib/api/generated/model";
@@ -25,17 +25,23 @@ export default async function CatalogPage({ searchParams }: { searchParams: Sear
   const brandList = brands.status === 200 ? brands.data.items : [];
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="mb-8 text-3xl font-bold">Lentes de contacto</h1>
-      <div className="grid gap-8 md:grid-cols-[200px_1fr]">
+    <div className="container-page py-10">
+      <h1 className="mb-8 text-3xl">Lentes de contacto</h1>
+      <div className="grid gap-8 md:grid-cols-[250px_1fr]">
         <CatalogFilters params={params} brands={brandList} />
-        {items.length === 0 ? (
-          <p className="text-muted-foreground">No encontramos lentes con esos filtros.</p>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-            {items.map((p) => <ProductCard key={p.id} product={p} />)}
-          </div>
-        )}
+        <div>
+          <ActiveFilters params={params} brands={brandList} />
+          {items.length === 0 ? (
+            <p className="text-muted-foreground">No encontramos lentes con esos filtros.</p>
+          ) : (
+            <>
+              <p className="optic mb-4 text-sm text-muted-foreground">{items.length} {items.length === 1 ? "producto" : "productos"}</p>
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+                {items.map((p) => <ProductCard key={p.id} product={p} />)}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
