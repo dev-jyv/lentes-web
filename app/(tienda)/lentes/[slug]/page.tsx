@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { ProductViewTracker } from "@/components/tienda/product-view-tracker";
 import { RxSelector } from "@/components/tienda/rx-selector";
 import { Badge } from "@/components/ui/badge";
 import { getProduct } from "@/lib/api/generated/catalog/catalog";
@@ -52,6 +53,7 @@ export default async function ProductPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
+      <ProductViewTracker slug={p.slug} name={p.name} brand={p.brand.name} />
       <div className="relative aspect-square rounded-lg bg-muted">
         {images[0] ? (
           <Image src={images[0]} alt={p.name} fill unoptimized className="object-contain p-8" />

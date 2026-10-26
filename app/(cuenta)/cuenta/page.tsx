@@ -12,7 +12,7 @@ export default async function AccountPage() {
   if (!user) redirect("/login?next=/cuenta");
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 px-4 py-10">
+    <div className="ph-no-capture mx-auto max-w-3xl space-y-4 px-4 py-10">
       <h1 className="text-2xl font-bold">Mi cuenta</h1>
       <p className="text-muted-foreground">{user.email}</p>
       <nav className="flex gap-4 text-sm underline">

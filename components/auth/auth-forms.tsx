@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { mergeCart } from "@/lib/api/generated/cart/cart";
 import { clearCartToken, getCartToken } from "@/lib/cart-token";
+import { useTurnstile } from "@/components/turnstile";
 import { env } from "@/lib/env";
 import { safeNext } from "@/lib/safe-next";
 import { createClient } from "@/lib/supabase/client";
@@ -63,6 +64,7 @@ export function LoginForm({ next }: { next?: string }) {
   const router = useRouter();
   const target = safeNext(next);
   const [error, setError] = useState<string | null>(null);
+  const turnstile = useTurnstile();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(z.object({ email, password: z.string().min(1, "Requerido") })),
   });
@@ -70,7 +72,11 @@ export function LoginForm({ next }: { next?: string }) {
   return (
     <form className="space-y-4" onSubmit={handleSubmit(async (v) => {
       setError(null);
-      const { error } = await createClient().auth.signInWithPassword(v);
+      if (turnstile.required && !turnstile.token) return setError("Completa la verificación.");
+      const { error } = await createClient().auth.signInWithPassword({
+        ...v, options: { captchaToken: turnstile.token },
+      });
+      turnstile.reset();
       if (error) return setError("Correo o contraseña incorrectos.");
       // Une el carrito anónimo al del cliente; si falla, el carrito anónimo se conserva.
       if (getCartToken() && (await mergeCart()).status === 200) clearCartToken();
@@ -81,6 +87,7 @@ export function LoginForm({ next }: { next?: string }) {
         error={errors.email?.message} reg={register("email")} />
       <Row id="password" label="Contraseña" type="password" autoComplete="current-password"
         error={errors.password?.message} reg={register("password")} />
+      {turnstile.widget}
       <Notice error={error} />
       <Button type="submit" className="w-full" disabled={isSubmitting}>Iniciar sesión</Button>
       <GoogleButton next={target} />
@@ -95,6 +102,7 @@ export function LoginForm({ next }: { next?: string }) {
 export function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const turnstile = useTurnstile();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(z.object({ full_name: z.string().min(2, "Requerido"), email, password })),
   });
@@ -102,13 +110,16 @@ export function RegisterForm() {
   return (
     <form className="space-y-4" onSubmit={handleSubmit(async ({ full_name, ...v }) => {
       setError(null);
+      if (turnstile.required && !turnstile.token) return setError("Completa la verificación.");
       const { error } = await createClient().auth.signUp({
         ...v,
         options: {
+          captchaToken: turnstile.token,
           data: { full_name },
           emailRedirectTo: `${origin()}/auth/callback?next=/cuenta`,
         },
       });
+      turnstile.reset();
       if (error) return setError("No se pudo crear la cuenta. Intenta de nuevo.");
       setInfo("Revisa tu correo para confirmar tu cuenta.");
     })}>
@@ -118,6 +129,7 @@ export function RegisterForm() {
         error={errors.email?.message} reg={register("email")} />
       <Row id="password" label="Contraseña" type="password" autoComplete="new-password"
         error={errors.password?.message} reg={register("password")} />
+      {turnstile.widget}
       <Notice error={error} info={info} />
       <Button type="submit" className="w-full" disabled={isSubmitting}>Crear cuenta</Button>
       <GoogleButton next="/cuenta" />

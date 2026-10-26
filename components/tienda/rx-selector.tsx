@@ -14,6 +14,7 @@ import {
 import { addCartItem, getGetCartQueryKey } from "@/lib/api/generated/cart/cart";
 import { resolveVariant, useResolveVariant } from "@/lib/api/generated/catalog/catalog";
 import type { ProductDetail, ProductOptions, ResolveVariantParams } from "@/lib/api/generated/model";
+import { track } from "@/lib/analytics";
 import { formatMxn } from "@/lib/format";
 
 type EyeValues = { sphere: string; cylinder: string; axis: string; addition: string };
@@ -181,6 +182,7 @@ export function RxSelector({ product }: { product: ProductDetail }) {
       if (last.status !== 200) return setError("No pudimos agregar al carrito (¿sin stock?).");
     }
     queryClient.setQueryData(getGetCartQueryKey(), last);
+    track("add_to_cart", { slug: product.slug, name: product.name, boxes_per_eye: quantity });
     router.push("/carrito");
   });
 

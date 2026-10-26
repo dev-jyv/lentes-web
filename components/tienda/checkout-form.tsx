@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ import { createCheckout } from "@/lib/api/generated/checkout/checkout";
 import {
   createAddress, getListAddressesQueryKey, useListAddresses, useListPrescriptions,
 } from "@/lib/api/generated/me/me";
+import { useTurnstile } from "@/components/turnstile";
+import { track } from "@/lib/analytics";
 import { formatMxn } from "@/lib/format";
 import { isUsable, rxStatusLabel } from "@/lib/prescription";
 
@@ -73,11 +75,21 @@ export function CheckoutForm() {
   const cartQuery = useGetCart();
   const addressesQuery = useListAddresses();
   const rxQuery = useListPrescriptions();
+  const turnstile = useTurnstile();
+  const started = useRef(false);
   const [pickedRx, setPickedRx] = useState<string | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const cartReady = cartQuery.data?.status === 200 && cartQuery.data.data.items.length > 0;
+  useEffect(() => {
+    if (cartReady && !started.current) {
+      started.current = true;
+      track("checkout_started");
+    }
+  }, [cartReady]);
 
   if (cartQuery.isLoading || addressesQuery.isLoading || rxQuery.isLoading) return <Skeleton className="h-60 w-full" />;
   const cart = cartQuery.data?.status === 200 ? cartQuery.data.data : undefined;
@@ -95,12 +107,13 @@ export function CheckoutForm() {
   const addressId = picked ?? addresses.find((a) => a.is_default)?.id ?? addresses[0]?.id;
 
   async function pay() {
-    if (!addressId || (needsRx && !prescriptionId)) return;
+    if (!addressId || (needsRx && !prescriptionId) || (turnstile.required && !turnstile.token)) return;
     setPaying(true);
     setError(null);
-    const res = await createCheckout({ address_id: addressId, prescription_id: prescriptionId ?? null });
+    const res = await createCheckout({ address_id: addressId, prescription_id: prescriptionId ?? null, turnstile_token: turnstile.token });
     if (res.status !== 200) {
       setPaying(false);
+      turnstile.reset();
       setError(
         res.status === 409
           ? "Algunos artículos ya no están disponibles o cambió el precio. Revisa tu carrito."
@@ -113,7 +126,7 @@ export function CheckoutForm() {
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-[1fr_280px]">
+    <div className="ph-no-capture grid gap-8 md:grid-cols-[1fr_280px]">
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">Dirección de envío</h2>
         {addresses.length > 0 && !adding && (
@@ -181,8 +194,9 @@ export function CheckoutForm() {
         <p className="text-xs text-muted-foreground">
           El backend valida precios y stock al pagar; el total final puede variar por envío.
         </p>
+        {turnstile.widget}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <Button size="lg" className="w-full" disabled={!addressId || (needsRx && !prescriptionId) || paying} onClick={pay}>
+        <Button size="lg" className="w-full" disabled={!addressId || (needsRx && !prescriptionId) || (turnstile.required && !turnstile.token) || paying} onClick={pay}>
           {paying ? "Redirigiendo…" : "Pagar con Mercado Pago"}
         </Button>
       </aside>
