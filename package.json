@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "api:gen": "orval",
+    "mock": "node scripts/mock-api.mjs",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
