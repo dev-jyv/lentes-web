@@ -12,7 +12,9 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "api:gen": "orval",
     "api:sync": "cp ../lentes-api/api/openapi.yaml openapi/openapi.yaml && orval",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "emails:export": "email export --dir emails --outDir emails/out",
+    "emails:sync": "pnpm emails:export && mkdir -p ../lentes-api/internal/email/templates && cp emails/out/*.html ../lentes-api/internal/email/templates/"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -35,6 +37,8 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.1.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -42,6 +46,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
     "orval": "^8.44.0",
+    "react-email": "^6.11.3",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wrangler": "^4.152.0"
