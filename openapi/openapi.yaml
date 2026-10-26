@@ -296,13 +296,13 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Prescription" }
-  /admin/prescriptions:
-    get:
-      operationId: adminListPrescriptions
-      tags: [admin]
-      description: Solo admin (app_metadata.role = admin). file_url es una URL prefirmada de lectura de corta vida.
+  /me/orders/{id}/reorder:
+    post:
+      operationId: reorderOrder
+      tags: [me]
+      description: Copia al carrito los artículos de un pedido anterior. Lo no disponible se reporta en unavailable.
       parameters:
-        - { name: status, in: query, schema: { $ref: "#/components/schemas/RxStatus" } }
+        - { name: id, in: path, required: true, schema: { type: string } }
       responses:
         "200":
           description: OK
@@ -310,37 +310,18 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [items]
+                required: [cart, unavailable]
                 properties:
-                  items:
+                  cart: { $ref: "#/components/schemas/Cart" }
+                  unavailable:
                     type: array
-                    items: { $ref: "#/components/schemas/Prescription" }
-        "403":
-          description: No es admin
+                    items:
+                      $ref: "#/components/schemas/UnavailableItem"
+        "404":
+          description: No encontrado
           content:
             application/problem+json:
               schema: { $ref: "#/components/schemas/Problem" }
-  /admin/prescriptions/{id}:
-    patch:
-      operationId: adminReviewPrescription
-      tags: [admin]
-      parameters:
-        - { name: id, in: path, required: true, schema: { type: string } }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [status]
-              properties:
-                status: { type: string, enum: [approved, rejected] }
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Prescription" }
 components:
   schemas:
     LensType:
@@ -487,6 +468,19 @@ components:
         number: { type: integer, format: int64 }
         status: { $ref: "#/components/schemas/OrderStatus" }
         total_cents: { type: integer, format: int64 }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/OrderItem" }
+    OrderItem:
+      type: object
+      required: [product_name, brand_name, eye, quantity, unit_price_cents, params]
+      properties:
+        product_name: { type: string }
+        brand_name: { type: string }
+        eye: { $ref: "#/components/schemas/Eye" }
+        quantity: { type: integer }
+        unit_price_cents: { type: integer, format: int64, description: Precio pagado en ese pedido }
+        params: { $ref: "#/components/schemas/CartItem/properties/params" }
     RxStatus:
       type: string
       enum: [pending, approved, rejected]
@@ -520,3 +514,9 @@ components:
             created_at: { type: string, format: date-time }
             customer_email: { type: string, description: Solo en vistas admin }
             file_url: { type: string, nullable: true, description: "URL prefirmada de lectura, de corta vida" }
+    UnavailableItem:
+      type: object
+      required: [product_name, reason]
+      properties:
+        product_name: { type: string }
+        reason: { type: string, enum: [out_of_stock, discontinued] }

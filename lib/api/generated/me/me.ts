@@ -33,7 +33,8 @@ import type {
   Order,
   Prescription,
   PrescriptionInput,
-  Problem
+  Problem,
+  ReorderOrder200
 } from '../model';
 
 import { apiFetch } from '../../mutator';
@@ -664,4 +665,93 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getCreatePrescriptionMutationOptions(options), queryClient);
+    }
+    export type reorderOrderResponse200 = {
+  data: ReorderOrder200
+  status: 200
+}
+
+export type reorderOrderResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type reorderOrderResponseSuccess = (reorderOrderResponse200) & {
+  headers: Headers;
+};
+export type reorderOrderResponseError = (reorderOrderResponse404) & {
+  headers: Headers;
+};
+
+export type reorderOrderResponse = (reorderOrderResponseSuccess | reorderOrderResponseError)
+
+export const getReorderOrderUrl = (id: string,) => {
+
+
+
+
+  return `/me/orders/${id}/reorder`
+}
+
+/**
+ * Copia al carrito los artículos de un pedido anterior. Lo no disponible se reporta en unavailable.
+ */
+export const reorderOrder = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<reorderOrderResponse> => {
+
+  return apiFetch<reorderOrderResponse>(getReorderOrderUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getReorderOrderMutationKey = () => ['reorderOrder'] as const;
+
+export const getReorderOrderMutationOptions = <TError = Problem,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderOrder>>, TError,ReorderOrderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reorderOrder>>, TError,ReorderOrderMutationVariables, TContext> => {
+
+const mutationKey = getReorderOrderMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reorderOrder>>, ReorderOrderMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  reorderOrder(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReorderOrderMutationResult = NonNullable<Awaited<ReturnType<typeof reorderOrder>>>
+
+    export type ReorderOrderMutationError = Problem
+    export type ReorderOrderMutationVariables = {id: string}
+
+    export const useReorderOrder = <TError = Problem,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderOrder>>, TError,ReorderOrderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reorderOrder>>,
+        TError,
+        ReorderOrderMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReorderOrderMutationOptions(options), queryClient);
     }

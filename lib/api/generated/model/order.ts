@@ -4,6 +4,7 @@
  * Lentes API
  * OpenAPI spec version: 0.1.0
  */
+import type { OrderItem } from './orderItem';
 import type { OrderStatus } from './orderStatus';
 
 export interface Order {
@@ -11,4 +12,5 @@ export interface Order {
   number: number;
   status: OrderStatus;
   total_cents: number;
+  items?: OrderItem[];
 }

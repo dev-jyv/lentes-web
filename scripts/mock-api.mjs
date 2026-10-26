@@ -172,6 +172,9 @@ createServer(async (req, res) => {
     orders.set(id, {
       id, number: ++orderNumber, status: "pending_payment",
       total_cents: cartView(items).subtotal_cents, created: Date.now(),
+      items: items.map(({ product_name, brand_name, eye, quantity, unit_price_cents, params }) =>
+        ({ product_name, brand_name, eye, quantity, unit_price_cents, params })),
+      raw: structuredClone(items),
     });
     carts.set(token, []);
     return json({
@@ -184,7 +187,18 @@ createServer(async (req, res) => {
     const o = orders.get(om[1]);
     if (!o) return problem(res, 404, "No encontrado");
     if (o.status === "pending_payment" && Date.now() - o.created > 4000) o.status = "paid";
-    return json({ id: o.id, number: o.number, status: o.status, total_cents: o.total_cents });
+    return json({ id: o.id, number: o.number, status: o.status, total_cents: o.total_cents, items: o.items });
+  }
+  const rm = p.match(/^\/me\/orders\/([^/]+)\/reorder$/);
+  if (rm && req.method === "POST") {
+    const o = orders.get(rm[1]);
+    if (!o) return problem(res, 404, "No encontrado");
+    let token = req.headers["x-cart-token"];
+    if (!token || !carts.has(token)) { token = crypto.randomUUID(); carts.set(token, []); }
+    res.setHeader("x-cart-token", token);
+    const items = carts.get(token);
+    structuredClone(o.raw).forEach((i) => { i.id = crypto.randomUUID(); items.push(i); });
+    return json({ cart: cartView(items), unavailable: [] });
   }
   if (p === "/brands") return json({ items: brands });
   if (p === "/products") {

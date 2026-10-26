@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
 
-const PROTECTED = ["/cuenta", "/checkout", "/admin"];
+const PROTECTED = ["/cuenta", "/checkout", "/recompra"];
 
 // Refresca la sesión en cada request y protege rutas privadas.
 export async function updateSession(request: NextRequest) {

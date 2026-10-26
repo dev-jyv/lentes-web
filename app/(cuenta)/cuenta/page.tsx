@@ -17,7 +17,6 @@ export default async function AccountPage() {
       <p className="text-muted-foreground">{user.email}</p>
       <nav className="flex gap-4 text-sm underline">
         <Link href="/cuenta/recetas">Mis recetas</Link>
-        {user.app_metadata?.role === "admin" && <Link href="/admin/recetas">Panel admin</Link>}
       </nav>
       <SignOutButton />
     </div>
