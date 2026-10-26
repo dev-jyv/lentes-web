@@ -1,0 +1,159 @@
+# Contrato provisional. Reemplazar por copia de lentes-api/api/openapi.yaml.
+openapi: 3.0.3
+info:
+  title: Lentes API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080/v1
+paths:
+  /brands:
+    get:
+      operationId: listBrands
+      tags: [catalog]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Brand" }
+  /products:
+    get:
+      operationId: listProducts
+      tags: [catalog]
+      parameters:
+        - { name: brand, in: query, schema: { type: string } }
+        - { name: lens_type, in: query, schema: { $ref: "#/components/schemas/LensType" } }
+        - { name: replacement, in: query, schema: { $ref: "#/components/schemas/Replacement" } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 24 } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/ProductSummary" }
+                  next_cursor: { type: string, nullable: true }
+  /products/{slug}:
+    get:
+      operationId: getProduct
+      tags: [catalog]
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProductDetail" }
+        "404":
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+  /products/{slug}/variant:
+    get:
+      operationId: resolveVariant
+      tags: [catalog]
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+        - { name: sphere, in: query, schema: { type: number } }
+        - { name: cylinder, in: query, schema: { type: number } }
+        - { name: axis, in: query, schema: { type: integer } }
+        - { name: addition, in: query, schema: { type: string } }
+        - { name: base_curve, in: query, schema: { type: number } }
+        - { name: diameter, in: query, schema: { type: number } }
+        - { name: color, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Variant" }
+        "404":
+          description: Sin variante
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+components:
+  schemas:
+    LensType:
+      type: string
+      enum: [spherical, toric, multifocal, cosmetic]
+    Replacement:
+      type: string
+      enum: [daily, biweekly, monthly, quarterly, yearly]
+    Brand:
+      type: object
+      required: [id, name, slug]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+    ProductSummary:
+      type: object
+      required: [id, name, slug, brand, lens_type, replacement, pieces_per_box, from_price_cents]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        brand: { $ref: "#/components/schemas/Brand" }
+        lens_type: { $ref: "#/components/schemas/LensType" }
+        replacement: { $ref: "#/components/schemas/Replacement" }
+        pieces_per_box: { type: integer }
+        from_price_cents: { type: integer, format: int64 }
+        image_key: { type: string, nullable: true }
+    ProductDetail:
+      allOf:
+        - $ref: "#/components/schemas/ProductSummary"
+        - type: object
+          required: [images, options, requires_prescription]
+          properties:
+            description: { type: string, nullable: true }
+            material: { type: string, nullable: true }
+            water_content_pct: { type: number, nullable: true }
+            requires_prescription: { type: boolean }
+            images:
+              type: array
+              items: { type: string }
+            options: { $ref: "#/components/schemas/ProductOptions" }
+    ProductOptions:
+      type: object
+      description: Valores realmente disponibles para este modelo.
+      required: [spheres, base_curves, diameters]
+      properties:
+        spheres: { type: array, items: { type: number } }
+        cylinders: { type: array, items: { type: number } }
+        axes: { type: array, items: { type: integer } }
+        additions: { type: array, items: { type: string } }
+        base_curves: { type: array, items: { type: number } }
+        diameters: { type: array, items: { type: number } }
+        colors: { type: array, items: { type: string } }
+    Variant:
+      type: object
+      required: [id, sku, price_cents, available]
+      properties:
+        id: { type: string, format: uuid }
+        sku: { type: string }
+        price_cents: { type: integer, format: int64 }
+        compare_at_cents: { type: integer, format: int64, nullable: true }
+        available: { type: integer, description: stock - reserved }
+    Problem:
+      type: object
+      required: [title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
