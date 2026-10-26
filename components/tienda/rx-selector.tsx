@@ -1,7 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { Controller, useForm, useWatch, type Control } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -9,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useResolveVariant } from "@/lib/api/generated/catalog/catalog";
+import { addCartItem, getGetCartQueryKey } from "@/lib/api/generated/cart/cart";
+import { resolveVariant, useResolveVariant } from "@/lib/api/generated/catalog/catalog";
 import type { ProductDetail, ProductOptions, ResolveVariantParams } from "@/lib/api/generated/model";
 import { formatMxn } from "@/lib/format";
 
@@ -137,7 +140,7 @@ function EyeBlock({
 export function RxSelector({ product }: { product: ProductDetail }) {
   const o = product.options;
   const schema = useMemo(() => buildSchema(o), [o]);
-  const { control, handleSubmit, getValues, setValue, formState: { errors } } =
+  const { control, handleSubmit, getValues, setValue, formState: { errors, isSubmitting } } =
     useForm<FormValues>({
       resolver: zodResolver(schema),
       defaultValues: {
@@ -147,8 +150,39 @@ export function RxSelector({ product }: { product: ProductDetail }) {
       },
     });
 
-  // Fase 5: aquí se llamará POST /cart/items con las variantes resueltas.
-  const onSubmit = handleSubmit(() => {});
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [boxes, setBoxes] = useState("1");
+  const [error, setError] = useState<string | null>(null);
+
+  const onSubmit = handleSubmit(async (v) => {
+    setError(null);
+    const [od, os] = await Promise.all([
+      resolveVariant(product.slug, toParams(v.od, v.base_curve, v.diameter)),
+      resolveVariant(product.slug, toParams(v.os, v.base_curve, v.diameter)),
+    ]);
+    if (od.status !== 200 || os.status !== 200) {
+      return setError("Alguna combinación no está disponible.");
+    }
+    if (od.data.available < 1 || os.data.available < 1) {
+      return setError("Alguna combinación está agotada.");
+    }
+    const quantity = Number(boxes);
+    // Misma variante en ambos ojos: un solo renglón "both" (cajas por ojo).
+    const lines = od.data.id === os.data.id
+      ? [{ variant_id: od.data.id, eye: "both" as const, quantity }]
+      : [
+          { variant_id: od.data.id, eye: "right" as const, quantity },
+          { variant_id: os.data.id, eye: "left" as const, quantity },
+        ];
+    let last;
+    for (const line of lines) {
+      last = await addCartItem(line);
+      if (last.status !== 200) return setError("No pudimos agregar al carrito (¿sin stock?).");
+    }
+    queryClient.setQueryData(getGetCartQueryKey(), last);
+    router.push("/carrito");
+  });
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -180,7 +214,14 @@ export function RxSelector({ product }: { product: ProductDetail }) {
           )}
         </div>
       )}
-      <Button type="submit" size="lg" className="w-full">Agregar al carrito</Button>
+      <div className="max-w-[10rem]">
+        <Field label="Cajas por ojo" value={boxes} onChange={setBoxes}
+          options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))} />
+      </div>
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+        Agregar al carrito
+      </Button>
       <p className="text-xs text-muted-foreground">
         Curva base {o.base_curves.join(" / ")} · Diámetro {o.diameters.join(" / ")} mm
       </p>

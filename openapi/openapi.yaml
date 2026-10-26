@@ -86,6 +86,160 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: "#/components/schemas/Problem" }
+  /cart:
+    get:
+      operationId: getCart
+      tags: [cart]
+      description: Carrito actual. Anónimo con header X-Cart-Token; el backend devuelve el token en el header X-Cart-Token de la respuesta.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cart" }
+  /cart/items:
+    post:
+      operationId: addCartItem
+      tags: [cart]
+      description: eye=both significa la misma variante para ambos ojos; quantity son cajas por ojo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddCartItem" }
+      responses:
+        "200":
+          description: Carrito actualizado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cart" }
+        "409":
+          description: Sin stock
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+  /cart/items/{id}:
+    patch:
+      operationId: updateCartItem
+      tags: [cart]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity: { type: integer, minimum: 1, maximum: 12 }
+      responses:
+        "200":
+          description: Carrito actualizado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cart" }
+    delete:
+      operationId: removeCartItem
+      tags: [cart]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Carrito actualizado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cart" }
+  /cart/merge:
+    post:
+      operationId: mergeCart
+      tags: [cart]
+      description: Requiere sesión. Une el carrito anónimo (X-Cart-Token) al del cliente.
+      responses:
+        "200":
+          description: Carrito unido
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cart" }
+  /me/addresses:
+    get:
+      operationId: listAddresses
+      tags: [me]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Address" }
+    post:
+      operationId: createAddress
+      tags: [me]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddressInput" }
+      responses:
+        "201":
+          description: Creada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Address" }
+  /checkout:
+    post:
+      operationId: createCheckout
+      tags: [checkout]
+      description: Valida precios y stock, aparta inventario, crea el pedido y la preferencia de Mercado Pago.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [address_id]
+              properties:
+                address_id: { type: string }
+                prescription_id: { type: string, nullable: true }
+                turnstile_token: { type: string }
+      responses:
+        "200":
+          description: Pedido creado
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [order_id, init_point]
+                properties:
+                  order_id: { type: string }
+                  init_point: { type: string, description: URL de Mercado Pago Checkout Pro }
+        "409":
+          description: Sin stock o precios cambiaron
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+  /me/orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [me]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "404":
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
 components:
   schemas:
     LensType:
@@ -157,3 +311,77 @@ components:
         title: { type: string }
         status: { type: integer }
         detail: { type: string }
+    Eye:
+      type: string
+      enum: [right, left, both]
+    AddCartItem:
+      type: object
+      required: [variant_id, eye, quantity]
+      properties:
+        variant_id: { type: string }
+        eye: { $ref: "#/components/schemas/Eye" }
+        quantity: { type: integer, minimum: 1, maximum: 12 }
+    CartItem:
+      type: object
+      required: [id, variant_id, eye, quantity, unit_price_cents, line_total_cents, product_name, brand_name, params]
+      properties:
+        id: { type: string }
+        variant_id: { type: string }
+        eye: { $ref: "#/components/schemas/Eye" }
+        quantity: { type: integer }
+        unit_price_cents: { type: integer, format: int64 }
+        line_total_cents: { type: integer, format: int64 }
+        product_name: { type: string }
+        product_slug: { type: string }
+        brand_name: { type: string }
+        params:
+          type: object
+          description: Parámetros de la variante tal como los muestra el backend.
+          properties:
+            sphere: { type: number, nullable: true }
+            cylinder: { type: number, nullable: true }
+            axis: { type: integer, nullable: true }
+            addition: { type: string, nullable: true }
+            base_curve: { type: number }
+            diameter: { type: number }
+        available: { type: integer, description: Stock disponible actual }
+    Cart:
+      type: object
+      required: [items, subtotal_cents]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/CartItem" }
+        subtotal_cents: { type: integer, format: int64 }
+    AddressInput:
+      type: object
+      required: [recipient, street, ext_number, neighborhood, city, state, postal_code, phone]
+      properties:
+        recipient: { type: string }
+        street: { type: string }
+        ext_number: { type: string }
+        int_number: { type: string, nullable: true }
+        neighborhood: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postal_code: { type: string, minLength: 5, maxLength: 5 }
+        phone: { type: string }
+        is_default: { type: boolean }
+    Address:
+      allOf:
+        - $ref: "#/components/schemas/AddressInput"
+        - type: object
+          required: [id]
+          properties:
+            id: { type: string }
+    OrderStatus:
+      type: string
+      enum: [pending_payment, paid, preparing, shipped, delivered, cancelled, refunded, expired]
+    Order:
+      type: object
+      required: [id, number, status, total_cents]
+      properties:
+        id: { type: string }
+        number: { type: integer, format: int64 }
+        status: { $ref: "#/components/schemas/OrderStatus" }
+        total_cents: { type: integer, format: int64 }

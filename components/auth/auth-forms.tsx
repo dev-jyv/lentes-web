@@ -9,6 +9,8 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { mergeCart } from "@/lib/api/generated/cart/cart";
+import { clearCartToken, getCartToken } from "@/lib/cart-token";
 import { env } from "@/lib/env";
 import { safeNext } from "@/lib/safe-next";
 import { createClient } from "@/lib/supabase/client";
@@ -70,6 +72,8 @@ export function LoginForm({ next }: { next?: string }) {
       setError(null);
       const { error } = await createClient().auth.signInWithPassword(v);
       if (error) return setError("Correo o contraseña incorrectos.");
+      // Une el carrito anónimo al del cliente; si falla, el carrito anónimo se conserva.
+      if (getCartToken() && (await mergeCart()).status === 200) clearCartToken();
       router.replace(target);
       router.refresh();
     })}>

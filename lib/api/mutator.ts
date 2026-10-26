@@ -1,3 +1,4 @@
+import { getCartToken, setCartToken } from "@/lib/cart-token";
 import { env } from "@/lib/env";
 
 // Solo navegador. En servidor las llamadas autenticadas pasan el header
@@ -15,11 +16,15 @@ export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   const token = headers.has("Authorization") ? undefined : await getBrowserToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
+  const cartToken = getCartToken();
+  if (cartToken) headers.set("X-Cart-Token", cartToken);
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
   const res = await fetch(`${env.apiUrl}${url}`, { ...init, headers });
+  const newCartToken = res.headers.get("X-Cart-Token");
+  if (newCartToken && typeof window !== "undefined") setCartToken(newCartToken);
   const text = await res.text();
   const data = text ? JSON.parse(text) : undefined;
   return { data, status: res.status, headers: res.headers } as T;

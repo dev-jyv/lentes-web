@@ -1,8 +1,8 @@
 import Link from "next/link";
+import { CartLink } from "@/components/tienda/cart-link";
 
 const links = [
   { href: "/lentes", label: "Lentes" },
-  { href: "/carrito", label: "Carrito" },
   { href: "/cuenta", label: "Mi cuenta" },
 ];
 
@@ -19,6 +19,7 @@ export function SiteHeader() {
               {l.label}
             </Link>
           ))}
+          <CartLink />
         </nav>
       </div>
     </header>
