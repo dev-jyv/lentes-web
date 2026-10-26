@@ -10,14 +10,8 @@ async function getBrowserToken(): Promise<string | undefined> {
   return (await createClient().auth.getSession()).data.session?.access_token;
 }
 
-// PROVISIONAL: rutas que la API real aún no publica se desvían al mock (docs/API-GAPS.md).
-const PROVISIONAL = /^\/v1\/me\/orders\/[^/]+\/reorder/;
-
 // Las rutas generadas son /v1/...; NEXT_PUBLIC_API_URL ya incluye /v1 (como en el SPEC).
-const toUrl = (path: string) => {
-  const base = PROVISIONAL.test(path) && env.provisionalApiUrl ? env.provisionalApiUrl : env.apiUrl;
-  return `${base}${path.replace(/^\/v1/, "")}`;
-};
+const toUrl = (path: string) => `${env.apiUrl}${path.replace(/^\/v1/, "")}`;
 
 // Mutator de orval: devuelve { data, status, headers } sin lanzar en 4xx/5xx
 // (los errores llegan como application/problem+json en `data`).

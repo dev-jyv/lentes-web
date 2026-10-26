@@ -28,14 +28,22 @@ import type {
   Address,
   AddressInput,
   AdminImportVariants200,
+  AdminListLowStock200,
+  AdminListLowStockParams,
+  AdminListOrders200,
+  AdminListOrdersParams,
   AdminListPrescriptions200,
   AdminListPrescriptionsParams,
+  AdminListProductImages200,
   AdminListProducts200,
   AdminListProductsParams,
+  AdminListStockAdjustments200,
   AdminListVariants200,
   AdminListVariantsParams,
+  AdminOrder,
   AdminPrescription,
   AdminProduct,
+  AdminReorderProductImages200,
   AdminVariant,
   Brand,
   BrandInput,
@@ -48,6 +56,10 @@ import type {
   CustomerUpdate,
   GetHealth200,
   GetProductVariantParams,
+  ImageAddInput,
+  ImageOrderInput,
+  ImageUpload,
+  ImageUploadInput,
   ImportProblem,
   ListAddresses200,
   ListBrands200,
@@ -57,6 +69,7 @@ import type {
   MercadoPagoWebhookBody,
   MercadoPagoWebhookParams,
   Order,
+  OrderUpdate,
   Prescription,
   PrescriptionInput,
   PrescriptionReview,
@@ -64,7 +77,11 @@ import type {
   PrescriptionUploadInput,
   ProblemResponse,
   ProductDetail,
+  ProductImageAdmin,
   ProductInput,
+  ReorderResult,
+  StockAdjustment,
+  StockAdjustmentInput,
   Variant,
   VariantInput
 } from './model';
@@ -2137,6 +2154,102 @@ export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError
 
 
 
+export type reorderOrderResponse200 = {
+  data: ReorderResult
+  status: 200
+}
+
+export type reorderOrderResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type reorderOrderResponseSuccess = (reorderOrderResponse200) & {
+  headers: Headers;
+};
+export type reorderOrderResponseError = (reorderOrderResponse404) & {
+  headers: Headers;
+};
+
+export type reorderOrderResponse = (reorderOrderResponseSuccess | reorderOrderResponseError)
+
+export const getReorderOrderUrl = (id: string,) => {
+
+
+
+
+  return `/v1/me/orders/${id}/reorder`
+}
+
+/**
+ * Deja cada renglón del pedido en el carrito del cliente con **al menos** la cantidad pedida (no suma, así que repetir la acción no duplica).
+ * Es todo o nada por renglón: si la existencia no alcanza o el producto ya no se vende, no se agrega y se lista en `unavailable`.
+ * Se usa el precio vigente, no el que se pagó. No lleva la receta: se elige al pagar. Un pedido ajeno es `404`.
+ * @summary Copia al carrito los artículos de un pedido anterior
+ */
+export const reorderOrder = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<reorderOrderResponse> => {
+
+  return apiFetch<reorderOrderResponse>(getReorderOrderUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getReorderOrderMutationKey = () => ['reorderOrder'] as const;
+
+export const getReorderOrderMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderOrder>>, TError,ReorderOrderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reorderOrder>>, TError,ReorderOrderMutationVariables, TContext> => {
+
+const mutationKey = getReorderOrderMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reorderOrder>>, ReorderOrderMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  reorderOrder(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReorderOrderMutationResult = NonNullable<Awaited<ReturnType<typeof reorderOrder>>>
+
+    export type ReorderOrderMutationError = ProblemResponse
+    export type ReorderOrderMutationVariables = {id: string}
+
+    /**
+ * @summary Copia al carrito los artículos de un pedido anterior
+ */
+export const useReorderOrder = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderOrder>>, TError,ReorderOrderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reorderOrder>>,
+        TError,
+        ReorderOrderMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReorderOrderMutationOptions(options), queryClient);
+    }
+
 export type mercadoPagoWebhookResponse200 = {
   data: void
   status: 200
@@ -2859,6 +2972,1320 @@ export const useAdminReviewPrescription = <TError = ProblemResponse,
       > => {
       return useMutation(getAdminReviewPrescriptionMutationOptions(options), queryClient);
     }
+
+export type adminListOrdersResponse200 = {
+  data: AdminListOrders200
+  status: 200
+}
+
+export type adminListOrdersResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminListOrdersResponseSuccess = (adminListOrdersResponse200) & {
+  headers: Headers;
+};
+export type adminListOrdersResponseError = (adminListOrdersResponse400) & {
+  headers: Headers;
+};
+
+export type adminListOrdersResponse = (adminListOrdersResponseSuccess | adminListOrdersResponseError)
+
+export const getAdminListOrdersUrl = (params?: AdminListOrdersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/admin/orders?${stringifiedParams}` : `/v1/admin/orders`
+}
+
+/**
+ * Filtra por estado y pagina por cursor (límite 1 a 100, 20 por defecto).
+ * @summary Pedidos, el más reciente primero
+ */
+export const adminListOrders = async (params?: AdminListOrdersParams, options?: Parameters<typeof apiFetch>[1]): Promise<adminListOrdersResponse> => {
+
+  return apiFetch<adminListOrdersResponse>(getAdminListOrdersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListOrdersQueryKey = (params?: AdminListOrdersParams,) => {
+    return [
+    `/v1/admin/orders`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminListOrdersQueryOptions = <TData = Awaited<ReturnType<typeof adminListOrders>>, TError = ProblemResponse>(params?: AdminListOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListOrders>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListOrdersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListOrders>>> = ({ signal }) => adminListOrders(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListOrders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminListOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof adminListOrders>>>
+export type AdminListOrdersQueryError = ProblemResponse
+
+
+export function useAdminListOrders<TData = Awaited<ReturnType<typeof adminListOrders>>, TError = ProblemResponse>(
+ params: undefined |  AdminListOrdersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListOrders>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListOrders>>,
+          TError,
+          Awaited<ReturnType<typeof adminListOrders>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListOrders<TData = Awaited<ReturnType<typeof adminListOrders>>, TError = ProblemResponse>(
+ params?: AdminListOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListOrders>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListOrders>>,
+          TError,
+          Awaited<ReturnType<typeof adminListOrders>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListOrders<TData = Awaited<ReturnType<typeof adminListOrders>>, TError = ProblemResponse>(
+ params?: AdminListOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListOrders>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Pedidos, el más reciente primero
+ */
+
+export function useAdminListOrders<TData = Awaited<ReturnType<typeof adminListOrders>>, TError = ProblemResponse>(
+ params?: AdminListOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListOrders>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListOrdersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminGetOrderResponse200 = {
+  data: AdminOrder
+  status: 200
+}
+
+export type adminGetOrderResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminGetOrderResponseSuccess = (adminGetOrderResponse200) & {
+  headers: Headers;
+};
+export type adminGetOrderResponseError = (adminGetOrderResponse404) & {
+  headers: Headers;
+};
+
+export type adminGetOrderResponse = (adminGetOrderResponseSuccess | adminGetOrderResponseError)
+
+export const getAdminGetOrderUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/orders/${id}`
+}
+
+/**
+ * @summary Detalle de un pedido
+ */
+export const adminGetOrder = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<adminGetOrderResponse> => {
+
+  return apiFetch<adminGetOrderResponse>(getAdminGetOrderUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminGetOrderQueryKey = (id: string,) => {
+    return [
+    `/v1/admin/orders/${id}`
+    ] as const;
+    }
+
+
+export const getAdminGetOrderQueryOptions = <TData = Awaited<ReturnType<typeof adminGetOrder>>, TError = ProblemResponse>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminGetOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminGetOrderQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminGetOrder>>> = ({ signal }) => adminGetOrder(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminGetOrder>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminGetOrderQueryResult = NonNullable<Awaited<ReturnType<typeof adminGetOrder>>>
+export type AdminGetOrderQueryError = ProblemResponse
+
+
+export function useAdminGetOrder<TData = Awaited<ReturnType<typeof adminGetOrder>>, TError = ProblemResponse>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminGetOrder>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminGetOrder>>,
+          TError,
+          Awaited<ReturnType<typeof adminGetOrder>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminGetOrder<TData = Awaited<ReturnType<typeof adminGetOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminGetOrder>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminGetOrder>>,
+          TError,
+          Awaited<ReturnType<typeof adminGetOrder>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminGetOrder<TData = Awaited<ReturnType<typeof adminGetOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminGetOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Detalle de un pedido
+ */
+
+export function useAdminGetOrder<TData = Awaited<ReturnType<typeof adminGetOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminGetOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminGetOrderQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminUpdateOrderResponse200 = {
+  data: AdminOrder
+  status: 200
+}
+
+export type adminUpdateOrderResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminUpdateOrderResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminUpdateOrderResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type adminUpdateOrderResponseSuccess = (adminUpdateOrderResponse200) & {
+  headers: Headers;
+};
+export type adminUpdateOrderResponseError = (adminUpdateOrderResponse400 | adminUpdateOrderResponse404 | adminUpdateOrderResponse409) & {
+  headers: Headers;
+};
+
+export type adminUpdateOrderResponse = (adminUpdateOrderResponseSuccess | adminUpdateOrderResponseError)
+
+export const getAdminUpdateOrderUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/orders/${id}`
+}
+
+/**
+ * Transiciones: `paid` → `preparing` | `cancelled`; `preparing` → `shipped` | `cancelled`; `shipped` → `delivered`.
+ * `shipped` exige `tracking_carrier` y `tracking_number`. Con el pedido ya enviado se puede corregir la guía sin cambiar el estado.
+ * Cancelar un pedido que no salió devuelve su existencia al inventario; **no reembolsa**: el reembolso en Mercado Pago es manual (ver docs/ADMIN_ORDERS.md).
+ * `409` si la transición no es válida, falta la guía o el estado cambió mientras tanto.
+ * @summary Cambia el estado de un pedido o corrige su guía
+ */
+export const adminUpdateOrder = async (id: string,
+    orderUpdate: OrderUpdate, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateOrderResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminUpdateOrderResponse>(getAdminUpdateOrderUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(orderUpdate)
+  }
+);}
+
+
+
+
+
+export const getAdminUpdateOrderMutationKey = () => ['adminUpdateOrder'] as const;
+
+export const getAdminUpdateOrderMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateOrder>>, TError,AdminUpdateOrderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUpdateOrder>>, TError,AdminUpdateOrderMutationVariables, TContext> => {
+
+const mutationKey = getAdminUpdateOrderMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUpdateOrder>>, AdminUpdateOrderMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminUpdateOrder(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUpdateOrderMutationResult = NonNullable<Awaited<ReturnType<typeof adminUpdateOrder>>>
+    export type AdminUpdateOrderMutationBody = OrderUpdate
+    export type AdminUpdateOrderMutationError = ProblemResponse
+    export type AdminUpdateOrderMutationVariables = {id: string;data: OrderUpdate}
+
+    /**
+ * @summary Cambia el estado de un pedido o corrige su guía
+ */
+export const useAdminUpdateOrder = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateOrder>>, TError,AdminUpdateOrderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminUpdateOrder>>,
+        TError,
+        AdminUpdateOrderMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminUpdateOrderMutationOptions(options), queryClient);
+    }
+
+export type adminCreateImageUploadUrlResponse200 = {
+  data: ImageUpload
+  status: 200
+}
+
+export type adminCreateImageUploadUrlResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminCreateImageUploadUrlResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminCreateImageUploadUrlResponse502 = {
+  data: ProblemResponse
+  status: 502
+}
+
+export type adminCreateImageUploadUrlResponseSuccess = (adminCreateImageUploadUrlResponse200) & {
+  headers: Headers;
+};
+export type adminCreateImageUploadUrlResponseError = (adminCreateImageUploadUrlResponse400 | adminCreateImageUploadUrlResponse404 | adminCreateImageUploadUrlResponse502) & {
+  headers: Headers;
+};
+
+export type adminCreateImageUploadUrlResponse = (adminCreateImageUploadUrlResponseSuccess | adminCreateImageUploadUrlResponseError)
+
+export const getAdminCreateImageUploadUrlUrl = () => {
+
+
+
+
+  return `/v1/admin/uploads/image-url`
+}
+
+/**
+ * PUT directo desde el navegador al bucket público, 10 minutos, tamaño y tipo firmados. Solo JPG, PNG o WebP, máx. 5 MB.
+ * Después se registra con `POST /v1/admin/products/{id}/images`.
+ * @summary URL prefirmada de R2 para subir una foto de producto
+ */
+export const adminCreateImageUploadUrl = async (imageUploadInput: ImageUploadInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateImageUploadUrlResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminCreateImageUploadUrlResponse>(getAdminCreateImageUploadUrlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(imageUploadInput)
+  }
+);}
+
+
+
+
+
+export const getAdminCreateImageUploadUrlMutationKey = () => ['adminCreateImageUploadUrl'] as const;
+
+export const getAdminCreateImageUploadUrlMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateImageUploadUrl>>, TError,AdminCreateImageUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminCreateImageUploadUrl>>, TError,AdminCreateImageUploadUrlMutationVariables, TContext> => {
+
+const mutationKey = getAdminCreateImageUploadUrlMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCreateImageUploadUrl>>, AdminCreateImageUploadUrlMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminCreateImageUploadUrl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminCreateImageUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof adminCreateImageUploadUrl>>>
+    export type AdminCreateImageUploadUrlMutationBody = ImageUploadInput
+    export type AdminCreateImageUploadUrlMutationError = ProblemResponse
+    export type AdminCreateImageUploadUrlMutationVariables = {data: ImageUploadInput}
+
+    /**
+ * @summary URL prefirmada de R2 para subir una foto de producto
+ */
+export const useAdminCreateImageUploadUrl = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateImageUploadUrl>>, TError,AdminCreateImageUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminCreateImageUploadUrl>>,
+        TError,
+        AdminCreateImageUploadUrlMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminCreateImageUploadUrlMutationOptions(options), queryClient);
+    }
+
+export type adminListProductImagesResponse200 = {
+  data: AdminListProductImages200
+  status: 200
+}
+
+export type adminListProductImagesResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminListProductImagesResponseSuccess = (adminListProductImagesResponse200) & {
+  headers: Headers;
+};
+export type adminListProductImagesResponseError = (adminListProductImagesResponse404) & {
+  headers: Headers;
+};
+
+export type adminListProductImagesResponse = (adminListProductImagesResponseSuccess | adminListProductImagesResponseError)
+
+export const getAdminListProductImagesUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/products/${id}/images`
+}
+
+/**
+ * @summary Galería del producto en orden (la primera es la principal)
+ */
+export const adminListProductImages = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<adminListProductImagesResponse> => {
+
+  return apiFetch<adminListProductImagesResponse>(getAdminListProductImagesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListProductImagesQueryKey = (id: string,) => {
+    return [
+    `/v1/admin/products/${id}/images`
+    ] as const;
+    }
+
+
+export const getAdminListProductImagesQueryOptions = <TData = Awaited<ReturnType<typeof adminListProductImages>>, TError = ProblemResponse>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProductImages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListProductImagesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListProductImages>>> = ({ signal }) => adminListProductImages(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListProductImages>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminListProductImagesQueryResult = NonNullable<Awaited<ReturnType<typeof adminListProductImages>>>
+export type AdminListProductImagesQueryError = ProblemResponse
+
+
+export function useAdminListProductImages<TData = Awaited<ReturnType<typeof adminListProductImages>>, TError = ProblemResponse>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProductImages>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListProductImages>>,
+          TError,
+          Awaited<ReturnType<typeof adminListProductImages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListProductImages<TData = Awaited<ReturnType<typeof adminListProductImages>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProductImages>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListProductImages>>,
+          TError,
+          Awaited<ReturnType<typeof adminListProductImages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListProductImages<TData = Awaited<ReturnType<typeof adminListProductImages>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProductImages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Galería del producto en orden (la primera es la principal)
+ */
+
+export function useAdminListProductImages<TData = Awaited<ReturnType<typeof adminListProductImages>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProductImages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListProductImagesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminAddProductImageResponse201 = {
+  data: ProductImageAdmin
+  status: 201
+}
+
+export type adminAddProductImageResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminAddProductImageResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminAddProductImageResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type adminAddProductImageResponse502 = {
+  data: ProblemResponse
+  status: 502
+}
+
+export type adminAddProductImageResponseSuccess = (adminAddProductImageResponse201) & {
+  headers: Headers;
+};
+export type adminAddProductImageResponseError = (adminAddProductImageResponse400 | adminAddProductImageResponse404 | adminAddProductImageResponse409 | adminAddProductImageResponse502) & {
+  headers: Headers;
+};
+
+export type adminAddProductImageResponse = (adminAddProductImageResponseSuccess | adminAddProductImageResponseError)
+
+export const getAdminAddProductImageUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/products/${id}/images`
+}
+
+/**
+ * La llave debe empezar con `productos/{id}/` y el archivo existir en R2 como imagen válida (tipo y ≤ 5 MB).
+ * `409` si la galería ya tiene 10 imágenes o el archivo ya está registrado. El catálogo público puede tardar hasta 5 minutos en reflejarlo (caché de borde).
+ * @summary Registra una imagen ya subida al final de la galería
+ */
+export const adminAddProductImage = async (id: string,
+    imageAddInput: ImageAddInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminAddProductImageResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminAddProductImageResponse>(getAdminAddProductImageUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(imageAddInput)
+  }
+);}
+
+
+
+
+
+export const getAdminAddProductImageMutationKey = () => ['adminAddProductImage'] as const;
+
+export const getAdminAddProductImageMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAddProductImage>>, TError,AdminAddProductImageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminAddProductImage>>, TError,AdminAddProductImageMutationVariables, TContext> => {
+
+const mutationKey = getAdminAddProductImageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminAddProductImage>>, AdminAddProductImageMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminAddProductImage(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminAddProductImageMutationResult = NonNullable<Awaited<ReturnType<typeof adminAddProductImage>>>
+    export type AdminAddProductImageMutationBody = ImageAddInput
+    export type AdminAddProductImageMutationError = ProblemResponse
+    export type AdminAddProductImageMutationVariables = {id: string;data: ImageAddInput}
+
+    /**
+ * @summary Registra una imagen ya subida al final de la galería
+ */
+export const useAdminAddProductImage = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAddProductImage>>, TError,AdminAddProductImageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminAddProductImage>>,
+        TError,
+        AdminAddProductImageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminAddProductImageMutationOptions(options), queryClient);
+    }
+
+export type adminReorderProductImagesResponse200 = {
+  data: AdminReorderProductImages200
+  status: 200
+}
+
+export type adminReorderProductImagesResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminReorderProductImagesResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminReorderProductImagesResponseSuccess = (adminReorderProductImagesResponse200) & {
+  headers: Headers;
+};
+export type adminReorderProductImagesResponseError = (adminReorderProductImagesResponse400 | adminReorderProductImagesResponse404) & {
+  headers: Headers;
+};
+
+export type adminReorderProductImagesResponse = (adminReorderProductImagesResponseSuccess | adminReorderProductImagesResponseError)
+
+export const getAdminReorderProductImagesUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/products/${id}/images/order`
+}
+
+/**
+ * Debe traer exactamente las imágenes actuales, sin repetir ni agregar ajenas (`400`).
+ * @summary Define el orden completo de la galería
+ */
+export const adminReorderProductImages = async (id: string,
+    imageOrderInput: ImageOrderInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminReorderProductImagesResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminReorderProductImagesResponse>(getAdminReorderProductImagesUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(imageOrderInput)
+  }
+);}
+
+
+
+
+
+export const getAdminReorderProductImagesMutationKey = () => ['adminReorderProductImages'] as const;
+
+export const getAdminReorderProductImagesMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderProductImages>>, TError,AdminReorderProductImagesMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminReorderProductImages>>, TError,AdminReorderProductImagesMutationVariables, TContext> => {
+
+const mutationKey = getAdminReorderProductImagesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminReorderProductImages>>, AdminReorderProductImagesMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminReorderProductImages(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminReorderProductImagesMutationResult = NonNullable<Awaited<ReturnType<typeof adminReorderProductImages>>>
+    export type AdminReorderProductImagesMutationBody = ImageOrderInput
+    export type AdminReorderProductImagesMutationError = ProblemResponse
+    export type AdminReorderProductImagesMutationVariables = {id: string;data: ImageOrderInput}
+
+    /**
+ * @summary Define el orden completo de la galería
+ */
+export const useAdminReorderProductImages = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderProductImages>>, TError,AdminReorderProductImagesMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminReorderProductImages>>,
+        TError,
+        AdminReorderProductImagesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminReorderProductImagesMutationOptions(options), queryClient);
+    }
+
+export type adminDeleteProductImageResponse204 = {
+  data: void
+  status: 204
+}
+
+export type adminDeleteProductImageResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminDeleteProductImageResponseSuccess = (adminDeleteProductImageResponse204) & {
+  headers: Headers;
+};
+export type adminDeleteProductImageResponseError = (adminDeleteProductImageResponse404) & {
+  headers: Headers;
+};
+
+export type adminDeleteProductImageResponse = (adminDeleteProductImageResponseSuccess | adminDeleteProductImageResponseError)
+
+export const getAdminDeleteProductImageUrl = (id: string,
+    imageId: string,) => {
+
+
+
+
+  return `/v1/admin/products/${id}/images/${imageId}`
+}
+
+/**
+ * Borra el registro y compacta las posiciones. El archivo en R2 se conserva.
+ * @summary Quita una imagen de la galería
+ */
+export const adminDeleteProductImage = async (id: string,
+    imageId: string, options?: Parameters<typeof apiFetch>[1]): Promise<adminDeleteProductImageResponse> => {
+
+  return apiFetch<adminDeleteProductImageResponse>(getAdminDeleteProductImageUrl(id,imageId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminDeleteProductImageMutationKey = () => ['adminDeleteProductImage'] as const;
+
+export const getAdminDeleteProductImageMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeleteProductImage>>, TError,AdminDeleteProductImageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminDeleteProductImage>>, TError,AdminDeleteProductImageMutationVariables, TContext> => {
+
+const mutationKey = getAdminDeleteProductImageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminDeleteProductImage>>, AdminDeleteProductImageMutationVariables> = (props) => {
+          const {id,imageId} = props ?? {};
+
+          return  adminDeleteProductImage(id,imageId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminDeleteProductImageMutationResult = NonNullable<Awaited<ReturnType<typeof adminDeleteProductImage>>>
+
+    export type AdminDeleteProductImageMutationError = ProblemResponse
+    export type AdminDeleteProductImageMutationVariables = {id: string;imageId: string}
+
+    /**
+ * @summary Quita una imagen de la galería
+ */
+export const useAdminDeleteProductImage = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeleteProductImage>>, TError,AdminDeleteProductImageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminDeleteProductImage>>,
+        TError,
+        AdminDeleteProductImageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminDeleteProductImageMutationOptions(options), queryClient);
+    }
+
+export type adminListStockAdjustmentsResponse200 = {
+  data: AdminListStockAdjustments200
+  status: 200
+}
+
+export type adminListStockAdjustmentsResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminListStockAdjustmentsResponseSuccess = (adminListStockAdjustmentsResponse200) & {
+  headers: Headers;
+};
+export type adminListStockAdjustmentsResponseError = (adminListStockAdjustmentsResponse404) & {
+  headers: Headers;
+};
+
+export type adminListStockAdjustmentsResponse = (adminListStockAdjustmentsResponseSuccess | adminListStockAdjustmentsResponseError)
+
+export const getAdminListStockAdjustmentsUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/variants/${id}/stock-adjustments`
+}
+
+/**
+ * Los últimos 100, el más reciente primero.
+ * @summary Historial de ajustes de existencia de una variante
+ */
+export const adminListStockAdjustments = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<adminListStockAdjustmentsResponse> => {
+
+  return apiFetch<adminListStockAdjustmentsResponse>(getAdminListStockAdjustmentsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListStockAdjustmentsQueryKey = (id: string,) => {
+    return [
+    `/v1/admin/variants/${id}/stock-adjustments`
+    ] as const;
+    }
+
+
+export const getAdminListStockAdjustmentsQueryOptions = <TData = Awaited<ReturnType<typeof adminListStockAdjustments>>, TError = ProblemResponse>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListStockAdjustments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListStockAdjustmentsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListStockAdjustments>>> = ({ signal }) => adminListStockAdjustments(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListStockAdjustments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminListStockAdjustmentsQueryResult = NonNullable<Awaited<ReturnType<typeof adminListStockAdjustments>>>
+export type AdminListStockAdjustmentsQueryError = ProblemResponse
+
+
+export function useAdminListStockAdjustments<TData = Awaited<ReturnType<typeof adminListStockAdjustments>>, TError = ProblemResponse>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListStockAdjustments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListStockAdjustments>>,
+          TError,
+          Awaited<ReturnType<typeof adminListStockAdjustments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListStockAdjustments<TData = Awaited<ReturnType<typeof adminListStockAdjustments>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListStockAdjustments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListStockAdjustments>>,
+          TError,
+          Awaited<ReturnType<typeof adminListStockAdjustments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListStockAdjustments<TData = Awaited<ReturnType<typeof adminListStockAdjustments>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListStockAdjustments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Historial de ajustes de existencia de una variante
+ */
+
+export function useAdminListStockAdjustments<TData = Awaited<ReturnType<typeof adminListStockAdjustments>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListStockAdjustments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListStockAdjustmentsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminCreateStockAdjustmentResponse201 = {
+  data: StockAdjustment
+  status: 201
+}
+
+export type adminCreateStockAdjustmentResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminCreateStockAdjustmentResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminCreateStockAdjustmentResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type adminCreateStockAdjustmentResponseSuccess = (adminCreateStockAdjustmentResponse201) & {
+  headers: Headers;
+};
+export type adminCreateStockAdjustmentResponseError = (adminCreateStockAdjustmentResponse400 | adminCreateStockAdjustmentResponse404 | adminCreateStockAdjustmentResponse409) & {
+  headers: Headers;
+};
+
+export type adminCreateStockAdjustmentResponse = (adminCreateStockAdjustmentResponseSuccess | adminCreateStockAdjustmentResponseError)
+
+export const getAdminCreateStockAdjustmentUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/variants/${id}/stock-adjustments`
+}
+
+/**
+ * `delta` con signo (suma o resta, distinto de 0, máx. 100,000). Queda en una bitácora de solo agregar con quién, cuándo y cuánto quedó.
+ * `409` si la existencia quedaría negativa o por debajo de lo apartado por pedidos sin pagar. Con motivo `other` la nota es obligatoria.
+ * La carga masiva por CSV y la edición de una variante fijan la existencia directamente y **no** pasan por esta bitácora.
+ * @summary Ajusta la existencia de una variante con motivo
+ */
+export const adminCreateStockAdjustment = async (id: string,
+    stockAdjustmentInput: StockAdjustmentInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateStockAdjustmentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminCreateStockAdjustmentResponse>(getAdminCreateStockAdjustmentUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(stockAdjustmentInput)
+  }
+);}
+
+
+
+
+
+export const getAdminCreateStockAdjustmentMutationKey = () => ['adminCreateStockAdjustment'] as const;
+
+export const getAdminCreateStockAdjustmentMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateStockAdjustment>>, TError,AdminCreateStockAdjustmentMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminCreateStockAdjustment>>, TError,AdminCreateStockAdjustmentMutationVariables, TContext> => {
+
+const mutationKey = getAdminCreateStockAdjustmentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCreateStockAdjustment>>, AdminCreateStockAdjustmentMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminCreateStockAdjustment(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminCreateStockAdjustmentMutationResult = NonNullable<Awaited<ReturnType<typeof adminCreateStockAdjustment>>>
+    export type AdminCreateStockAdjustmentMutationBody = StockAdjustmentInput
+    export type AdminCreateStockAdjustmentMutationError = ProblemResponse
+    export type AdminCreateStockAdjustmentMutationVariables = {id: string;data: StockAdjustmentInput}
+
+    /**
+ * @summary Ajusta la existencia de una variante con motivo
+ */
+export const useAdminCreateStockAdjustment = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateStockAdjustment>>, TError,AdminCreateStockAdjustmentMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminCreateStockAdjustment>>,
+        TError,
+        AdminCreateStockAdjustmentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminCreateStockAdjustmentMutationOptions(options), queryClient);
+    }
+
+export type adminListLowStockResponse200 = {
+  data: AdminListLowStock200
+  status: 200
+}
+
+export type adminListLowStockResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminListLowStockResponseSuccess = (adminListLowStockResponse200) & {
+  headers: Headers;
+};
+export type adminListLowStockResponseError = (adminListLowStockResponse400) & {
+  headers: Headers;
+};
+
+export type adminListLowStockResponse = (adminListLowStockResponseSuccess | adminListLowStockResponseError)
+
+export const getAdminListLowStockUrl = (params?: AdminListLowStockParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/admin/inventory/low-stock?${stringifiedParams}` : `/v1/admin/inventory/low-stock`
+}
+
+/**
+ * Disponible = existencia − apartado, menor o igual al umbral (0 a 10,000; 5 por defecto). Las más urgentes primero, máximo 500.
+ * @summary Variantes activas con poca existencia disponible
+ */
+export const adminListLowStock = async (params?: AdminListLowStockParams, options?: Parameters<typeof apiFetch>[1]): Promise<adminListLowStockResponse> => {
+
+  return apiFetch<adminListLowStockResponse>(getAdminListLowStockUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListLowStockQueryKey = (params?: AdminListLowStockParams,) => {
+    return [
+    `/v1/admin/inventory/low-stock`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminListLowStockQueryOptions = <TData = Awaited<ReturnType<typeof adminListLowStock>>, TError = ProblemResponse>(params?: AdminListLowStockParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLowStock>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListLowStockQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListLowStock>>> = ({ signal }) => adminListLowStock(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListLowStock>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminListLowStockQueryResult = NonNullable<Awaited<ReturnType<typeof adminListLowStock>>>
+export type AdminListLowStockQueryError = ProblemResponse
+
+
+export function useAdminListLowStock<TData = Awaited<ReturnType<typeof adminListLowStock>>, TError = ProblemResponse>(
+ params: undefined |  AdminListLowStockParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLowStock>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListLowStock>>,
+          TError,
+          Awaited<ReturnType<typeof adminListLowStock>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListLowStock<TData = Awaited<ReturnType<typeof adminListLowStock>>, TError = ProblemResponse>(
+ params?: AdminListLowStockParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLowStock>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListLowStock>>,
+          TError,
+          Awaited<ReturnType<typeof adminListLowStock>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListLowStock<TData = Awaited<ReturnType<typeof adminListLowStock>>, TError = ProblemResponse>(
+ params?: AdminListLowStockParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLowStock>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Variantes activas con poca existencia disponible
+ */
+
+export function useAdminListLowStock<TData = Awaited<ReturnType<typeof adminListLowStock>>, TError = ProblemResponse>(
+ params?: AdminListLowStockParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLowStock>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListLowStockQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export type adminCreateBrandResponse201 = {
   data: Brand

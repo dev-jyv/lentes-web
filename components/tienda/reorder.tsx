@@ -6,10 +6,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getGetCartQueryKey } from "@/lib/api/generated/api";
-import type { UnavailableItem } from "@/lib/api/provisional/model";
-import { useGetOrder } from "@/lib/api/generated/api";
-import { reorderOrder } from "@/lib/api/provisional/api";
+import { getGetCartQueryKey, reorderOrder, useGetOrder } from "@/lib/api/generated/api";
+import type { UnavailableItem } from "@/lib/api/generated/model";
 import { formatMxn } from "@/lib/format";
 
 const eyeLabel = { right: "Ojo derecho", left: "Ojo izquierdo", both: "Ambos ojos" } as const;

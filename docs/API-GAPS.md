@@ -3,16 +3,12 @@
 `openapi/openapi.yaml` es una **copia** de `lentes-api/api/openapi.yaml` (fuente de verdad); `pnpm api:sync` la actualiza y regenera `lib/api/generated`.
 Verificado en local contra la API real (Postgres + seed): catálogo, detalle, variante, carrito anónimo (agregar, cambiar cantidad, quitar).
 
-## Lo que la web necesita y la API aún no tiene
+## Estado: sin huecos
 
-Solo queda la **recompra**. Mientras tanto viven en `openapi/provisional/web-ops.yaml` (genera `lib/api/provisional`) y se desvían al mock (`pnpm mock`, `:8081`)
-con `NEXT_PUBLIC_PROVISIONAL_API_URL`. En producción esa variable va vacía.
+Todo lo que la tienda usa ya está en el contrato real; **no queda ningún contrato provisional ni mock** (se retiraron `openapi/provisional`, `lib/api/provisional`,
+`scripts/mock-api.mjs`, el desvío del mutator y `NEXT_PUBLIC_PROVISIONAL_API_URL`). Si falta algo nuevo, se pide en `lentes-api/api/openapi.yaml` y se sincroniza.
 
-| Hueco | Qué pide la web | Impacto hoy |
-|---|---|---|
-| Recompra | `POST /v1/me/orders/{id}/reorder` → `{ added, unavailable[] }` (agrega al carrito del cliente) | Provisional / mock |
-
-## Resuelto en la API
+## Lo que la API fue resolviendo
 
 - **Precio e imagen en el catálogo** (`lentes-api` e9244b9): `Product.from_price_cents` (mínimo entre variantes activas con `stock - reserved > 0`; `null` = agotado)
   e `image_url` (imagen de menor posición; `null` si no hay). La web muestra "Desde $X" o "Agotado", y declara `offers` en el JSON-LD solo si hay precio.
@@ -41,7 +37,12 @@ con `NEXT_PUBLIC_PROVISIONAL_API_URL`. En producción esa variable va vacía.
 - **`purchasable`/`available`** por renglón: si algún renglón no es comprable se deshabilita "Continuar al pago" y se explica por qué.
 - **Prefijo `/v1`.** Las rutas generadas ya lo incluyen; `NEXT_PUBLIC_API_URL` conserva `/v1` (como en el SPEC) y el mutator quita el prefijo duplicado.
 
-## Cuando la API publique un hueco
+- **Recompra** (`lentes-api` 91673c7): `POST /v1/me/orders/{id}/reorder` → `{ added, unavailable[] }`. Deja cada renglón con *al menos* la cantidad pedida (repetir no duplica),
+  es todo o nada por renglón (agotado o descontinuado se avisa y no se agrega) y usa el precio vigente. Un pedido ajeno es `404`. Reglas: `lentes-api/docs/REORDER.md`.
+  La web muestra los renglones no disponibles antes de ir al carrito.
 
-`pnpm api:sync`, cambiar los imports de `@/lib/api/provisional/*` por `@/lib/api/generated/*` (los nombres de operación se conservaron), y borrar de
-`openapi/provisional/web-ops.yaml` lo ya publicado. Al terminar con todo: borrar `scripts/mock-api.mjs`, `lib/api/provisional` y el desvío en `lib/api/mutator.ts`.
+## Pendiente de verificar de punta a punta
+
+Todo el flujo está probado en la API con Postgres real y servicios externos simulados, y la web compila con el contrato real. **No** se ha ejecutado contra:
+Supabase (sesión y Google), Mercado Pago real (checkout y webhook), un bucket de R2 real (recetas; requiere CORS que permita `PUT` con `Content-Type`) ni el
+backend desplegado en Cloudflare Workers/Railway.

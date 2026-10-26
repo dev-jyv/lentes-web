@@ -2,7 +2,6 @@ import { z } from "zod";
 
 const schema = z.object({
   apiUrl: z.string().min(1),
-  provisionalApiUrl: z.string(),
   siteUrl: z.string().min(1),
   imgUrl: z.string(),
   supabaseUrl: z.string(),
@@ -16,8 +15,6 @@ const schema = z.object({
 // Cada variable NEXT_PUBLIC_* se lee literal para que Next la inyecte en el bundle.
 export const env = schema.parse({
   apiUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/v1",
-  // PROVISIONAL: mock de checkout/pedidos/recetas hasta que lentes-api los publique. Vacío = usar apiUrl.
-  provisionalApiUrl: process.env.NEXT_PUBLIC_PROVISIONAL_API_URL ?? "",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   imgUrl: process.env.NEXT_PUBLIC_IMG_URL ?? "",
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
