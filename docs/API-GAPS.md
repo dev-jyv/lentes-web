@@ -5,13 +5,12 @@ Verificado en local contra la API real (Postgres + seed): catálogo, detalle, va
 
 ## Lo que la web necesita y la API aún no tiene
 
-Solo quedan **recompra y recetas**. Mientras tanto viven en `openapi/provisional/web-ops.yaml` (genera `lib/api/provisional`) y se desvían al mock (`pnpm mock`, `:8081`)
+Solo queda la **recompra**. Mientras tanto viven en `openapi/provisional/web-ops.yaml` (genera `lib/api/provisional`) y se desvían al mock (`pnpm mock`, `:8081`)
 con `NEXT_PUBLIC_PROVISIONAL_API_URL`. En producción esa variable va vacía.
 
 | Hueco | Qué pide la web | Impacto hoy |
 |---|---|---|
 | Recompra | `POST /v1/me/orders/{id}/reorder` → `{ added, unavailable[] }` (agrega al carrito del cliente) | Provisional / mock |
-| Recetas | `POST /v1/me/prescriptions/upload-url`, `GET/POST /v1/me/prescriptions` | Provisional / mock |
 
 ## Resuelto en la API
 
@@ -25,6 +24,12 @@ con `NEXT_PUBLIC_PROVISIONAL_API_URL`. En producción esa variable va vacía.
   `GET /v1/me/orders/{id}` con renglones, y `CartItem.product.requires_prescription`. Reglas y decisiones pendientes: `lentes-api/docs/CHECKOUT.md`.
   La web usa el `detail` en español de los `409` para explicar el motivo al cliente.
   **No verificado de punta a punta**: faltan Supabase (sesión) y credenciales de Mercado Pago; la API está probada con Postgres real y Mercado Pago falso.
+
+- **Recetas** (`lentes-api` 49b1752, fase B6): `POST /v1/me/prescriptions/upload-url` (R2, 10 min, máx. 10 MB, tamaño y tipo firmados),
+  `POST/GET /v1/me/prescriptions` y la revisión del admin. La respuesta **no** trae `r2_key`; trae `file_url` (lectura prefirmada de 10 min) y `reject_reason`
+  (la web lo muestra al cliente). Los `400`/`409` traen un `detail` en español que el formulario muestra tal cual. Reglas: `lentes-api/docs/PRESCRIPTIONS.md`.
+  **Sin verificar de punta a punta:** falta un bucket R2 real (la firma y las reglas están probadas con Postgres y un almacén falso). Necesita CORS en R2
+  que permita `PUT` desde el origen de la tienda con la cabecera `Content-Type`.
 
 ## Decisiones de la reconciliación
 

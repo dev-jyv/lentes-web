@@ -1,4 +1,4 @@
-# PROVISIONAL: lo que lentes-web necesita y lentes-api aún no publica (recompra y recetas).
+# PROVISIONAL: lo que lentes-web necesita y lentes-api aún no publica (solo la recompra).
 # Cuando la API lo publique en api/openapi.yaml: borrar este archivo, lib/api/provisional, scripts/mock-api.mjs
 # y el desvío en lib/api/mutator.ts (ver docs/API-GAPS.md).
 openapi: 3.0.3
@@ -31,62 +31,6 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: "#/components/schemas/Problem" }
-  /v1/me/prescriptions/upload-url:
-    post:
-      operationId: createPrescriptionUploadUrl
-      tags: [prescriptions]
-      description: URL prefirmada de R2 (PUT directo desde el navegador, 10 min, máx 10 MB).
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [content_type, size_bytes]
-              properties:
-                content_type: { type: string, enum: [image/jpeg, image/png, image/webp, application/pdf] }
-                size_bytes: { type: integer, maximum: 10485760 }
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [upload_url, r2_key]
-                properties:
-                  upload_url: { type: string }
-                  r2_key: { type: string }
-  /v1/me/prescriptions:
-    get:
-      operationId: listPrescriptions
-      tags: [prescriptions]
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [items]
-                properties:
-                  items:
-                    type: array
-                    items: { $ref: "#/components/schemas/Prescription" }
-    post:
-      operationId: createPrescription
-      tags: [prescriptions]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/PrescriptionInput" }
-      responses:
-        "201":
-          description: Creada (queda pending hasta revisión)
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Prescription" }
 components:
   schemas:
     Problem:
@@ -103,33 +47,3 @@ components:
       properties:
         product_name: { type: string }
         reason: { type: string, enum: [out_of_stock, discontinued] }
-    RxStatus:
-      type: string
-      enum: [pending, approved, rejected]
-    PrescriptionInput:
-      type: object
-      required: [r2_key, od_sphere, os_sphere, issued_at, expires_at, doctor_name]
-      properties:
-        r2_key: { type: string }
-        od_sphere: { type: number }
-        od_cylinder: { type: number, nullable: true }
-        od_axis: { type: integer, nullable: true }
-        od_addition: { type: string, nullable: true }
-        os_sphere: { type: number }
-        os_cylinder: { type: number, nullable: true }
-        os_axis: { type: integer, nullable: true }
-        os_addition: { type: string, nullable: true }
-        issued_at: { type: string, format: date }
-        expires_at: { type: string, format: date }
-        doctor_name: { type: string }
-        doctor_license: { type: string, nullable: true }
-    Prescription:
-      allOf:
-        - $ref: "#/components/schemas/PrescriptionInput"
-        - type: object
-          required: [id, status, created_at]
-          properties:
-            id: { type: string, format: uuid }
-            status: { $ref: "#/components/schemas/RxStatus" }
-            created_at: { type: string, format: date-time }
-            reject_reason: { type: string, nullable: true }

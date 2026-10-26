@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   createAddress, createCheckout, getGetCartQueryKey, getListAddressesQueryKey, useGetCart, useListAddresses,
+  useListPrescriptions,
 } from "@/lib/api/generated/api";
-import { useListPrescriptions } from "@/lib/api/provisional/api";
 import { useTurnstile } from "@/components/turnstile";
 import { track } from "@/lib/analytics";
 import { formatMxn } from "@/lib/format";

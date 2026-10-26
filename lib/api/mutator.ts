@@ -11,7 +11,7 @@ async function getBrowserToken(): Promise<string | undefined> {
 }
 
 // PROVISIONAL: rutas que la API real aún no publica se desvían al mock (docs/API-GAPS.md).
-const PROVISIONAL = /^\/v1\/(me\/orders\/[^/]+\/reorder|me\/prescriptions)/;
+const PROVISIONAL = /^\/v1\/me\/orders\/[^/]+\/reorder/;
 
 // Las rutas generadas son /v1/...; NEXT_PUBLIC_API_URL ya incluye /v1 (como en el SPEC).
 const toUrl = (path: string) => {

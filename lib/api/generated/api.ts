@@ -28,10 +28,13 @@ import type {
   Address,
   AddressInput,
   AdminImportVariants200,
+  AdminListPrescriptions200,
+  AdminListPrescriptionsParams,
   AdminListProducts200,
   AdminListProductsParams,
   AdminListVariants200,
   AdminListVariantsParams,
+  AdminPrescription,
   AdminProduct,
   AdminVariant,
   Brand,
@@ -48,11 +51,17 @@ import type {
   ImportProblem,
   ListAddresses200,
   ListBrands200,
+  ListPrescriptions200,
   ListProducts200,
   ListProductsParams,
   MercadoPagoWebhookBody,
   MercadoPagoWebhookParams,
   Order,
+  Prescription,
+  PrescriptionInput,
+  PrescriptionReview,
+  PrescriptionUpload,
+  PrescriptionUploadInput,
   ProblemResponse,
   ProductDetail,
   ProductInput,
@@ -2249,6 +2258,606 @@ export const useMercadoPagoWebhook = <TError = ProblemResponse,
         TContext
       > => {
       return useMutation(getMercadoPagoWebhookMutationOptions(options), queryClient);
+    }
+
+export type createPrescriptionUploadUrlResponse200 = {
+  data: PrescriptionUpload
+  status: 200
+}
+
+export type createPrescriptionUploadUrlResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type createPrescriptionUploadUrlResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type createPrescriptionUploadUrlResponse502 = {
+  data: ProblemResponse
+  status: 502
+}
+
+export type createPrescriptionUploadUrlResponseSuccess = (createPrescriptionUploadUrlResponse200) & {
+  headers: Headers;
+};
+export type createPrescriptionUploadUrlResponseError = (createPrescriptionUploadUrlResponse400 | createPrescriptionUploadUrlResponse409 | createPrescriptionUploadUrlResponse502) & {
+  headers: Headers;
+};
+
+export type createPrescriptionUploadUrlResponse = (createPrescriptionUploadUrlResponseSuccess | createPrescriptionUploadUrlResponseError)
+
+export const getCreatePrescriptionUploadUrlUrl = () => {
+
+
+
+
+  return `/v1/me/prescriptions/upload-url`
+}
+
+/**
+ * El navegador sube el archivo directo a R2 con `PUT` (cabecera `Content-Type` igual a la declarada; el tamaño exacto va firmado).
+ * Vigencia 10 minutos, máximo 10 MB, solo JPG, PNG, WebP o PDF. Después se registra la receta con `POST /v1/me/prescriptions`.
+ * `409` si el cliente ya tiene 10 recetas en revisión. `503` si el almacenamiento no está configurado.
+ * @summary URL prefirmada de R2 para subir el archivo de una receta
+ */
+export const createPrescriptionUploadUrl = async (prescriptionUploadInput: PrescriptionUploadInput, options?: Parameters<typeof apiFetch>[1]): Promise<createPrescriptionUploadUrlResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createPrescriptionUploadUrlResponse>(getCreatePrescriptionUploadUrlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(prescriptionUploadInput)
+  }
+);}
+
+
+
+
+
+export const getCreatePrescriptionUploadUrlMutationKey = () => ['createPrescriptionUploadUrl'] as const;
+
+export const getCreatePrescriptionUploadUrlMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrescriptionUploadUrl>>, TError,CreatePrescriptionUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPrescriptionUploadUrl>>, TError,CreatePrescriptionUploadUrlMutationVariables, TContext> => {
+
+const mutationKey = getCreatePrescriptionUploadUrlMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPrescriptionUploadUrl>>, CreatePrescriptionUploadUrlMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPrescriptionUploadUrl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePrescriptionUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof createPrescriptionUploadUrl>>>
+    export type CreatePrescriptionUploadUrlMutationBody = PrescriptionUploadInput
+    export type CreatePrescriptionUploadUrlMutationError = ProblemResponse
+    export type CreatePrescriptionUploadUrlMutationVariables = {data: PrescriptionUploadInput}
+
+    /**
+ * @summary URL prefirmada de R2 para subir el archivo de una receta
+ */
+export const useCreatePrescriptionUploadUrl = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrescriptionUploadUrl>>, TError,CreatePrescriptionUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createPrescriptionUploadUrl>>,
+        TError,
+        CreatePrescriptionUploadUrlMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreatePrescriptionUploadUrlMutationOptions(options), queryClient);
+    }
+
+export type listPrescriptionsResponse200 = {
+  data: ListPrescriptions200
+  status: 200
+}
+
+export type listPrescriptionsResponseSuccess = (listPrescriptionsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listPrescriptionsResponse = (listPrescriptionsResponseSuccess)
+
+export const getListPrescriptionsUrl = () => {
+
+
+
+
+  return `/v1/me/prescriptions`
+}
+
+/**
+ * `file_url` es una URL de lectura prefirmada de 10 minutos.
+ * @summary Recetas del cliente, la más reciente primero
+ */
+export const listPrescriptions = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listPrescriptionsResponse> => {
+
+  return apiFetch<listPrescriptionsResponse>(getListPrescriptionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPrescriptionsQueryKey = () => {
+    return [
+    `/v1/me/prescriptions`
+    ] as const;
+    }
+
+
+export const getListPrescriptionsQueryOptions = <TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPrescriptionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPrescriptions>>> = ({ signal }) => listPrescriptions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPrescriptionsQueryResult = NonNullable<Awaited<ReturnType<typeof listPrescriptions>>>
+export type ListPrescriptionsQueryError = unknown
+
+
+export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPrescriptions>>,
+          TError,
+          Awaited<ReturnType<typeof listPrescriptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPrescriptions>>,
+          TError,
+          Awaited<ReturnType<typeof listPrescriptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Recetas del cliente, la más reciente primero
+ */
+
+export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPrescriptionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createPrescriptionResponse201 = {
+  data: Prescription
+  status: 201
+}
+
+export type createPrescriptionResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type createPrescriptionResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type createPrescriptionResponse502 = {
+  data: ProblemResponse
+  status: 502
+}
+
+export type createPrescriptionResponseSuccess = (createPrescriptionResponse201) & {
+  headers: Headers;
+};
+export type createPrescriptionResponseError = (createPrescriptionResponse400 | createPrescriptionResponse409 | createPrescriptionResponse502) & {
+  headers: Headers;
+};
+
+export type createPrescriptionResponse = (createPrescriptionResponseSuccess | createPrescriptionResponseError)
+
+export const getCreatePrescriptionUrl = () => {
+
+
+
+
+  return `/v1/me/prescriptions`
+}
+
+/**
+ * Valida rangos y pasos de 0.25, eje con cilindro, fechas y vigencia, que el archivo sea del cliente y que exista en R2.
+ * La revisión clínica es del admin.
+ * @summary Registra una receta ya subida (queda pendiente de revisión)
+ */
+export const createPrescription = async (prescriptionInput: PrescriptionInput, options?: Parameters<typeof apiFetch>[1]): Promise<createPrescriptionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createPrescriptionResponse>(getCreatePrescriptionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(prescriptionInput)
+  }
+);}
+
+
+
+
+
+export const getCreatePrescriptionMutationKey = () => ['createPrescription'] as const;
+
+export const getCreatePrescriptionMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrescription>>, TError,CreatePrescriptionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPrescription>>, TError,CreatePrescriptionMutationVariables, TContext> => {
+
+const mutationKey = getCreatePrescriptionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPrescription>>, CreatePrescriptionMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPrescription(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePrescriptionMutationResult = NonNullable<Awaited<ReturnType<typeof createPrescription>>>
+    export type CreatePrescriptionMutationBody = PrescriptionInput
+    export type CreatePrescriptionMutationError = ProblemResponse
+    export type CreatePrescriptionMutationVariables = {data: PrescriptionInput}
+
+    /**
+ * @summary Registra una receta ya subida (queda pendiente de revisión)
+ */
+export const useCreatePrescription = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrescription>>, TError,CreatePrescriptionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createPrescription>>,
+        TError,
+        CreatePrescriptionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreatePrescriptionMutationOptions(options), queryClient);
+    }
+
+export type adminListPrescriptionsResponse200 = {
+  data: AdminListPrescriptions200
+  status: 200
+}
+
+export type adminListPrescriptionsResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminListPrescriptionsResponseSuccess = (adminListPrescriptionsResponse200) & {
+  headers: Headers;
+};
+export type adminListPrescriptionsResponseError = (adminListPrescriptionsResponse400) & {
+  headers: Headers;
+};
+
+export type adminListPrescriptionsResponse = (adminListPrescriptionsResponseSuccess | adminListPrescriptionsResponseError)
+
+export const getAdminListPrescriptionsUrl = (params?: AdminListPrescriptionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/admin/prescriptions?${stringifiedParams}` : `/v1/admin/prescriptions`
+}
+
+/**
+ * Pendientes de la más antigua a la más nueva; las demás, la más reciente primero. Máximo 100.
+ * @summary Cola de revisión de recetas
+ */
+export const adminListPrescriptions = async (params?: AdminListPrescriptionsParams, options?: Parameters<typeof apiFetch>[1]): Promise<adminListPrescriptionsResponse> => {
+
+  return apiFetch<adminListPrescriptionsResponse>(getAdminListPrescriptionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListPrescriptionsQueryKey = (params?: AdminListPrescriptionsParams,) => {
+    return [
+    `/v1/admin/prescriptions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminListPrescriptionsQueryOptions = <TData = Awaited<ReturnType<typeof adminListPrescriptions>>, TError = ProblemResponse>(params?: AdminListPrescriptionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListPrescriptionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListPrescriptions>>> = ({ signal }) => adminListPrescriptions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListPrescriptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminListPrescriptionsQueryResult = NonNullable<Awaited<ReturnType<typeof adminListPrescriptions>>>
+export type AdminListPrescriptionsQueryError = ProblemResponse
+
+
+export function useAdminListPrescriptions<TData = Awaited<ReturnType<typeof adminListPrescriptions>>, TError = ProblemResponse>(
+ params: undefined |  AdminListPrescriptionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListPrescriptions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListPrescriptions>>,
+          TError,
+          Awaited<ReturnType<typeof adminListPrescriptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListPrescriptions<TData = Awaited<ReturnType<typeof adminListPrescriptions>>, TError = ProblemResponse>(
+ params?: AdminListPrescriptionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListPrescriptions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListPrescriptions>>,
+          TError,
+          Awaited<ReturnType<typeof adminListPrescriptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListPrescriptions<TData = Awaited<ReturnType<typeof adminListPrescriptions>>, TError = ProblemResponse>(
+ params?: AdminListPrescriptionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Cola de revisión de recetas
+ */
+
+export function useAdminListPrescriptions<TData = Awaited<ReturnType<typeof adminListPrescriptions>>, TError = ProblemResponse>(
+ params?: AdminListPrescriptionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListPrescriptionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminReviewPrescriptionResponse200 = {
+  data: AdminPrescription
+  status: 200
+}
+
+export type adminReviewPrescriptionResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminReviewPrescriptionResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminReviewPrescriptionResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type adminReviewPrescriptionResponseSuccess = (adminReviewPrescriptionResponse200) & {
+  headers: Headers;
+};
+export type adminReviewPrescriptionResponseError = (adminReviewPrescriptionResponse400 | adminReviewPrescriptionResponse404 | adminReviewPrescriptionResponse409) & {
+  headers: Headers;
+};
+
+export type adminReviewPrescriptionResponse = (adminReviewPrescriptionResponseSuccess | adminReviewPrescriptionResponseError)
+
+export const getAdminReviewPrescriptionUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/prescriptions/${id}`
+}
+
+/**
+ * Rechazar exige `reject_reason` (se le muestra al cliente). No se puede aprobar una receta vencida ni revisar dos veces (`409`).
+ * @summary Aprueba o rechaza una receta pendiente
+ */
+export const adminReviewPrescription = async (id: string,
+    prescriptionReview: PrescriptionReview, options?: Parameters<typeof apiFetch>[1]): Promise<adminReviewPrescriptionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminReviewPrescriptionResponse>(getAdminReviewPrescriptionUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(prescriptionReview)
+  }
+);}
+
+
+
+
+
+export const getAdminReviewPrescriptionMutationKey = () => ['adminReviewPrescription'] as const;
+
+export const getAdminReviewPrescriptionMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReviewPrescription>>, TError,AdminReviewPrescriptionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminReviewPrescription>>, TError,AdminReviewPrescriptionMutationVariables, TContext> => {
+
+const mutationKey = getAdminReviewPrescriptionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminReviewPrescription>>, AdminReviewPrescriptionMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminReviewPrescription(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminReviewPrescriptionMutationResult = NonNullable<Awaited<ReturnType<typeof adminReviewPrescription>>>
+    export type AdminReviewPrescriptionMutationBody = PrescriptionReview
+    export type AdminReviewPrescriptionMutationError = ProblemResponse
+    export type AdminReviewPrescriptionMutationVariables = {id: string;data: PrescriptionReview}
+
+    /**
+ * @summary Aprueba o rechaza una receta pendiente
+ */
+export const useAdminReviewPrescription = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReviewPrescription>>, TError,AdminReviewPrescriptionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminReviewPrescription>>,
+        TError,
+        AdminReviewPrescriptionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminReviewPrescriptionMutationOptions(options), queryClient);
     }
 
 export type adminCreateBrandResponse201 = {

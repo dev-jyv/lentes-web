@@ -5,14 +5,7 @@
  * OpenAPI spec version: 0.0.1
  */
 
-export * from './createPrescriptionUploadUrl200';
-export * from './createPrescriptionUploadUrlBody';
-export * from './createPrescriptionUploadUrlBodyContentType';
-export * from './listPrescriptions200';
-export * from './prescription';
-export * from './prescriptionInput';
 export * from './problem';
 export * from './reorderOrder200';
-export * from './rxStatus';
 export * from './unavailableItem';
 export * from './unavailableItemReason';

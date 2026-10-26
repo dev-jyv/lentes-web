@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   createPrescription, createPrescriptionUploadUrl, getListPrescriptionsQueryKey,
-} from "@/lib/api/provisional/api";
+} from "@/lib/api/generated/api";
 import { ALLOWED_TYPES, MAX_FILE_BYTES, type AllowedType } from "@/lib/prescription";
 
 const power = z.string().trim().refine(
@@ -36,6 +36,13 @@ const schema = z.object({
 }).refine((v) => !v.od_cylinder || v.od_axis, { path: ["od_axis"], message: "Requerido con cilindro" })
   .refine((v) => !v.os_cylinder || v.os_axis, { path: ["os_axis"], message: "Requerido con cilindro" });
 type Values = z.infer<typeof schema>;
+
+// La API responde 400/409 con un `detail` en español apto para el cliente (valores inválidos, tope de recetas en revisión).
+function apiMessage(res: { status: number; data?: unknown }, fallback: string) {
+  const detail = (res.data as { detail?: string } | undefined)?.detail;
+  if (res.status === 503) return "Las recetas no están disponibles por ahora. Intenta más tarde.";
+  return (res.status === 400 || res.status === 409) && detail ? detail : fallback;
+}
 
 const num = (v: string) => (v === "" ? null : Number(v));
 const str = (v: string) => (v.trim() === "" ? null : v.trim());
@@ -90,7 +97,7 @@ export function PrescriptionForm() {
     const up = await createPrescriptionUploadUrl({
       content_type: file.type as AllowedType, size_bytes: file.size,
     });
-    if (up.status !== 200) return setError("No pudimos preparar la subida. Intenta de nuevo.");
+    if (up.status !== 200) return setError(apiMessage(up, "No pudimos preparar la subida. Intenta de nuevo."));
     const put = await fetch(up.data.upload_url, {
       method: "PUT", body: file, headers: { "Content-Type": file.type },
     }).catch(() => null);
@@ -105,7 +112,7 @@ export function PrescriptionForm() {
       issued_at: v.issued_at, expires_at: v.expires_at,
       doctor_name: v.doctor_name.trim(), doctor_license: str(v.doctor_license),
     });
-    if (res.status !== 201) return setError("No pudimos guardar tu receta.");
+    if (res.status !== 201) return setError(apiMessage(res, "No pudimos guardar tu receta."));
     await queryClient.invalidateQueries({ queryKey: getListPrescriptionsQueryKey() });
     reset();
     setFile(null);

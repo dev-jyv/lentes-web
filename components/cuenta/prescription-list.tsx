@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useListPrescriptions } from "@/lib/api/provisional/api";
+import { useListPrescriptions } from "@/lib/api/generated/api";
 import { isExpired, rxStatusLabel } from "@/lib/prescription";
 
 export function PrescriptionList() {
@@ -21,6 +21,9 @@ export function PrescriptionList() {
               <span className="optic">OD {r.od_sphere} · OI {r.os_sphere}</span> · vigente hasta {r.expires_at}
             </p>
           </div>
+          {r.status === "rejected" && r.reject_reason && (
+            <p className="basis-full text-sm text-destructive">Motivo: {r.reject_reason}</p>
+          )}
           <div className="flex gap-2">
             {isExpired(r.expires_at) && <Badge variant="outline">Vencida</Badge>}
             <Badge variant={r.status === "rejected" ? "destructive" : "secondary"}>
