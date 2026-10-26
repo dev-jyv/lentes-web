@@ -10,14 +10,18 @@ con `NEXT_PUBLIC_PROVISIONAL_API_URL`. En producción esa variable va vacía.
 
 | Hueco | Qué pide la web | Impacto hoy |
 |---|---|---|
-| Precio en el catálogo | `Product.from_price_cents` (precio mínimo de variantes activas con stock) en `GET /v1/products` y `/v1/products/{slug}` | Las tarjetas muestran "Ver opciones" y la ficha no tiene `offers` en JSON-LD (el frontend no calcula precios) |
-| Imagen en el catálogo | `Product.image_url` en la lista (la ficha ya trae `images`) | Las tarjetas muestran "Sin imagen" |
-| URLs de imagen | Hoy son rutas relativas (`/products/x/1.jpg`). La web las completa con `NEXT_PUBLIC_IMG_URL`; ideal que la API devuelva URLs absolutas (`R2_PUBLIC_BASE_URL`) | Sin `NEXT_PUBLIC_IMG_URL` no se muestran imágenes |
 | `requires_prescription` en el carrito | `CartItem.product.requires_prescription` | El checkout asume que sí requiere (lo normal en lentes de contacto) |
 | Checkout | `POST /v1/checkout` → `{ order_id, init_point }` (409 si cambió precio o stock) | Provisional / mock |
 | Pedido del cliente | `GET /v1/me/orders/{id}` con renglones (para `/checkout/resultado` y `/recompra`) | Provisional / mock |
 | Recompra | `POST /v1/me/orders/{id}/reorder` → `{ added, unavailable[] }` (agrega al carrito del cliente) | Provisional / mock |
 | Recetas | `POST /v1/me/prescriptions/upload-url`, `GET/POST /v1/me/prescriptions` | Provisional / mock |
+
+## Resuelto en la API
+
+- **Precio e imagen en el catálogo** (`lentes-api` e9244b9): `Product.from_price_cents` (mínimo entre variantes activas con `stock - reserved > 0`; `null` = agotado)
+  e `image_url` (imagen de menor posición; `null` si no hay). La web muestra "Desde $X" o "Agotado", y declara `offers` en el JSON-LD solo si hay precio.
+- **URLs de imagen:** la API las arma con `R2_PUBLIC_BASE_URL`. Si esa variable está vacía (desarrollo) devuelve rutas relativas; la web las completa con
+  `NEXT_PUBLIC_IMG_URL` y, si no está definida, no muestra la imagen. En producción `R2_PUBLIC_BASE_URL` debe estar definida.
 
 ## Decisiones de la reconciliación
 

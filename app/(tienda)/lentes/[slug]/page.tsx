@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { getProduct } from "@/lib/api/generated/api";
 import { env } from "@/lib/env";
 import { imageSrc } from "@/lib/images";
-import { lensTypeLabel, replacementLabel } from "@/lib/format";
+import { formatMxn, lensTypeLabel, replacementLabel } from "@/lib/format";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -39,9 +39,17 @@ export default async function ProductPage({ params }: Props) {
     description: p.description ?? undefined,
     brand: { "@type": "Brand", name: p.brand.name },
     image: images,
-    // Sin `offers` hasta que la API exponga el precio mínimo del producto (docs/API-GAPS.md):
-    // el frontend no calcula precios.
     url: `${env.siteUrl}/lentes/${p.slug}`,
+    // El precio lo calcula la API; sin existencias no se declara oferta.
+    ...(p.from_price_cents != null && {
+      offers: {
+        "@type": "AggregateOffer",
+        priceCurrency: "MXN",
+        lowPrice: (p.from_price_cents / 100).toFixed(2),
+        availability: "https://schema.org/InStock",
+        url: `${env.siteUrl}/lentes/${p.slug}`,
+      },
+    }),
   };
 
   return (
@@ -69,6 +77,13 @@ export default async function ProductPage({ params }: Props) {
             <Badge variant="secondary">{replacementLabel[p.replacement]}</Badge>
             <Badge variant="outline">{p.pieces_per_box} piezas por caja</Badge>
           </div>
+          <p className="text-lg">
+            {p.from_price_cents != null ? (
+              <>Desde <strong>{formatMxn(p.from_price_cents)}</strong></>
+            ) : (
+              <strong>Agotado</strong>
+            )}
+          </p>
           {p.description && <p className="text-muted-foreground">{p.description}</p>}
           {p.requires_prescription && (
             <p className="text-sm">Requiere receta vigente de tu optometrista.</p>

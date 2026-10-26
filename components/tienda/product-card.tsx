@@ -6,11 +6,7 @@ import type { Product } from "@/lib/api/generated/model";
 import { imageSrc } from "@/lib/images";
 import { formatMxn, replacementLabel } from "@/lib/format";
 
-// `from_price_cents` e `image_url` aún no existen en el contrato (docs/API-GAPS.md): se muestran
-// solo si la API los incluye, sin calcularlos en el frontend.
-type CardProduct = Product & { from_price_cents?: number; image_url?: string | null };
-
-export function ProductCard({ product }: { product: CardProduct }) {
+export function ProductCard({ product }: { product: Product }) {
   const src = imageSrc(product.image_url);
   return (
     <Link href={`/lentes/${product.slug}`} className="group">
@@ -34,7 +30,7 @@ export function ProductCard({ product }: { product: CardProduct }) {
                 Desde <strong>{formatMxn(product.from_price_cents)}</strong>
               </span>
             ) : (
-              <span className="text-sm text-muted-foreground">Ver opciones</span>
+              <span className="text-sm text-muted-foreground">Agotado</span>
             )}
           </div>
         </CardContent>

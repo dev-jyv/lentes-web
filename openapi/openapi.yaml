@@ -603,7 +603,7 @@ components:
         slug: { type: string }
     Product:
       type: object
-      required: [id, brand, name, slug, lens_type, replacement, pieces_per_box, requires_prescription]
+      required: [id, brand, name, slug, lens_type, replacement, pieces_per_box, requires_prescription, from_price_cents, image_url]
       properties:
         id: { type: string, format: uuid }
         brand: { $ref: "#/components/schemas/Brand" }
@@ -616,6 +616,18 @@ components:
         material: { type: string, nullable: true }
         water_content_pct: { type: number, nullable: true }
         requires_prescription: { type: boolean }
+        from_price_cents:
+          type: integer
+          format: int64
+          nullable: true
+          description: |
+            Precio mínimo (centavos MXN) entre las variantes activas con existencia disponible (stock - reserved > 0).
+            `null` si el modelo no tiene ninguna disponible (agotado).
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Imagen principal (la de menor posición); `null` si el modelo no tiene imágenes.
     ProductImage:
       type: object
       required: [url, position]
