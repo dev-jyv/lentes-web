@@ -21,4 +21,5 @@ export interface CartItem {
   params: CartItemParams;
   /** Stock disponible actual */
   available?: number;
+  requires_prescription?: boolean;
 }

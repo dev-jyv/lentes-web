@@ -26,8 +26,13 @@ import type {
 import type {
   Address,
   AddressInput,
+  CreatePrescriptionUploadUrl200,
+  CreatePrescriptionUploadUrlBody,
   ListAddresses200,
+  ListPrescriptions200,
   Order,
+  Prescription,
+  PrescriptionInput,
   Problem
 } from '../model';
 
@@ -365,3 +370,298 @@ export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError
 
 
 
+export type createPrescriptionUploadUrlResponse200 = {
+  data: CreatePrescriptionUploadUrl200
+  status: 200
+}
+
+export type createPrescriptionUploadUrlResponseSuccess = (createPrescriptionUploadUrlResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createPrescriptionUploadUrlResponse = (createPrescriptionUploadUrlResponseSuccess)
+
+export const getCreatePrescriptionUploadUrlUrl = () => {
+
+
+
+
+  return `/me/prescriptions/upload-url`
+}
+
+/**
+ * URL prefirmada de R2 (PUT directo desde el navegador, 10 min, máx 10 MB).
+ */
+export const createPrescriptionUploadUrl = async (createPrescriptionUploadUrlBody: CreatePrescriptionUploadUrlBody, options?: Parameters<typeof apiFetch>[1]): Promise<createPrescriptionUploadUrlResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createPrescriptionUploadUrlResponse>(getCreatePrescriptionUploadUrlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createPrescriptionUploadUrlBody)
+  }
+);}
+
+
+
+
+
+export const getCreatePrescriptionUploadUrlMutationKey = () => ['createPrescriptionUploadUrl'] as const;
+
+export const getCreatePrescriptionUploadUrlMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrescriptionUploadUrl>>, TError,CreatePrescriptionUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPrescriptionUploadUrl>>, TError,CreatePrescriptionUploadUrlMutationVariables, TContext> => {
+
+const mutationKey = getCreatePrescriptionUploadUrlMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPrescriptionUploadUrl>>, CreatePrescriptionUploadUrlMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPrescriptionUploadUrl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePrescriptionUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof createPrescriptionUploadUrl>>>
+    export type CreatePrescriptionUploadUrlMutationBody = CreatePrescriptionUploadUrlBody
+    export type CreatePrescriptionUploadUrlMutationError = unknown
+    export type CreatePrescriptionUploadUrlMutationVariables = {data: CreatePrescriptionUploadUrlBody}
+
+    export const useCreatePrescriptionUploadUrl = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrescriptionUploadUrl>>, TError,CreatePrescriptionUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createPrescriptionUploadUrl>>,
+        TError,
+        CreatePrescriptionUploadUrlMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreatePrescriptionUploadUrlMutationOptions(options), queryClient);
+    }
+    export type listPrescriptionsResponse200 = {
+  data: ListPrescriptions200
+  status: 200
+}
+
+export type listPrescriptionsResponseSuccess = (listPrescriptionsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listPrescriptionsResponse = (listPrescriptionsResponseSuccess)
+
+export const getListPrescriptionsUrl = () => {
+
+
+
+
+  return `/me/prescriptions`
+}
+
+export const listPrescriptions = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listPrescriptionsResponse> => {
+
+  return apiFetch<listPrescriptionsResponse>(getListPrescriptionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPrescriptionsQueryKey = () => {
+    return [
+    `/me/prescriptions`
+    ] as const;
+    }
+
+
+export const getListPrescriptionsQueryOptions = <TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPrescriptionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPrescriptions>>> = ({ signal }) => listPrescriptions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPrescriptionsQueryResult = NonNullable<Awaited<ReturnType<typeof listPrescriptions>>>
+export type ListPrescriptionsQueryError = unknown
+
+
+export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPrescriptions>>,
+          TError,
+          Awaited<ReturnType<typeof listPrescriptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPrescriptions>>,
+          TError,
+          Awaited<ReturnType<typeof listPrescriptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPrescriptionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type createPrescriptionResponse201 = {
+  data: Prescription
+  status: 201
+}
+
+export type createPrescriptionResponseSuccess = (createPrescriptionResponse201) & {
+  headers: Headers;
+};
+;
+
+export type createPrescriptionResponse = (createPrescriptionResponseSuccess)
+
+export const getCreatePrescriptionUrl = () => {
+
+
+
+
+  return `/me/prescriptions`
+}
+
+export const createPrescription = async (prescriptionInput: PrescriptionInput, options?: Parameters<typeof apiFetch>[1]): Promise<createPrescriptionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createPrescriptionResponse>(getCreatePrescriptionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(prescriptionInput)
+  }
+);}
+
+
+
+
+
+export const getCreatePrescriptionMutationKey = () => ['createPrescription'] as const;
+
+export const getCreatePrescriptionMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrescription>>, TError,CreatePrescriptionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPrescription>>, TError,CreatePrescriptionMutationVariables, TContext> => {
+
+const mutationKey = getCreatePrescriptionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPrescription>>, CreatePrescriptionMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPrescription(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePrescriptionMutationResult = NonNullable<Awaited<ReturnType<typeof createPrescription>>>
+    export type CreatePrescriptionMutationBody = PrescriptionInput
+    export type CreatePrescriptionMutationError = unknown
+    export type CreatePrescriptionMutationVariables = {data: PrescriptionInput}
+
+    export const useCreatePrescription = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrescription>>, TError,CreatePrescriptionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createPrescription>>,
+        TError,
+        CreatePrescriptionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreatePrescriptionMutationOptions(options), queryClient);
+    }

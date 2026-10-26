@@ -13,9 +13,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getGetCartQueryKey, useGetCart } from "@/lib/api/generated/cart/cart";
 import { createCheckout } from "@/lib/api/generated/checkout/checkout";
 import {
-  createAddress, getListAddressesQueryKey, useListAddresses,
+  createAddress, getListAddressesQueryKey, useListAddresses, useListPrescriptions,
 } from "@/lib/api/generated/me/me";
 import { formatMxn } from "@/lib/format";
+import { isUsable, rxStatusLabel } from "@/lib/prescription";
 
 const req = z.string().trim().min(1, "Requerido");
 const schema = z.object({
@@ -71,12 +72,14 @@ export function CheckoutForm() {
   const queryClient = useQueryClient();
   const cartQuery = useGetCart();
   const addressesQuery = useListAddresses();
+  const rxQuery = useListPrescriptions();
+  const [pickedRx, setPickedRx] = useState<string | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (cartQuery.isLoading || addressesQuery.isLoading) return <Skeleton className="h-60 w-full" />;
+  if (cartQuery.isLoading || addressesQuery.isLoading || rxQuery.isLoading) return <Skeleton className="h-60 w-full" />;
   const cart = cartQuery.data?.status === 200 ? cartQuery.data.data : undefined;
   const addresses = addressesQuery.data?.status === 200 ? addressesQuery.data.data.items : [];
   if (!cart || cart.items.length === 0) {
@@ -84,13 +87,18 @@ export function CheckoutForm() {
       Tu carrito está vacío. <Link href="/lentes" className="underline">Ver catálogo</Link>
     </p>;
   }
+  const needsRx = cart.items.some((i) => i.requires_prescription);
+  const prescriptions = (rxQuery.data?.status === 200 ? rxQuery.data.data.items : []).filter(isUsable);
+  const prescriptionId = needsRx
+    ? (pickedRx ?? prescriptions.find((r) => r.status === "approved")?.id ?? prescriptions[0]?.id)
+    : undefined;
   const addressId = picked ?? addresses.find((a) => a.is_default)?.id ?? addresses[0]?.id;
 
   async function pay() {
-    if (!addressId) return;
+    if (!addressId || (needsRx && !prescriptionId)) return;
     setPaying(true);
     setError(null);
-    const res = await createCheckout({ address_id: addressId });
+    const res = await createCheckout({ address_id: addressId, prescription_id: prescriptionId ?? null });
     if (res.status !== 200) {
       setPaying(false);
       setError(
@@ -130,6 +138,32 @@ export function CheckoutForm() {
         ) : (
           <Button variant="outline" size="sm" onClick={() => setAdding(true)}>Agregar otra dirección</Button>
         )}
+        {needsRx && (
+          <>
+            <h2 className="pt-4 text-lg font-semibold">Receta</h2>
+            {prescriptions.length === 0 ? (
+              <p className="text-sm">
+                Tus lentes requieren receta vigente.{" "}
+                <Link href="/cuenta/recetas" className="underline">Sube tu receta</Link> y regresa aquí.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {prescriptions.map((r) => (
+                  <li key={r.id}>
+                    <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm">
+                      <input type="radio" name="rx" className="mt-1"
+                        checked={prescriptionId === r.id} onChange={() => setPickedRx(r.id)} />
+                      <span>
+                        <strong>{r.doctor_name}</strong> · {rxStatusLabel[r.status]}<br />
+                        OD {r.od_sphere} · OI {r.os_sphere} · vigente hasta {r.expires_at}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
       </section>
       <aside className="h-fit space-y-4 rounded-lg border p-4">
         <h2 className="font-semibold">Resumen</h2>
@@ -148,7 +182,7 @@ export function CheckoutForm() {
           El backend valida precios y stock al pagar; el total final puede variar por envío.
         </p>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <Button size="lg" className="w-full" disabled={!addressId || paying} onClick={pay}>
+        <Button size="lg" className="w-full" disabled={!addressId || (needsRx && !prescriptionId) || paying} onClick={pay}>
           {paying ? "Redirigiendo…" : "Pagar con Mercado Pago"}
         </Button>
       </aside>

@@ -47,6 +47,7 @@ const problem = (res, status, title) => {
 
 const carts = new Map(); // token -> items[]
 const addresses = [];
+const prescriptions = [];
 const orders = new Map(); // id -> { id, number, status, total_cents, created }
 let orderNumber = 100;
 
@@ -66,7 +67,7 @@ createServer(async (req, res) => {
   const url = new URL(req.url, "http://x");
   res.setHeader("access-control-allow-origin", "*");
   res.setHeader("access-control-allow-headers", "authorization,content-type,x-cart-token");
-  res.setHeader("access-control-allow-methods", "GET,POST,PATCH,DELETE,OPTIONS");
+  res.setHeader("access-control-allow-methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.setHeader("access-control-expose-headers", "x-cart-token");
   if (req.method === "OPTIONS") return res.writeHead(204).end();
   const json = (body) => {
@@ -103,6 +104,7 @@ createServer(async (req, res) => {
           unit_price_cents: product.from_price_cents, line_total_cents: 0,
           product_name: product.name, product_slug: slug, brand_name: product.brand.name,
           params: { sphere, cylinder, axis, addition, base_curve, diameter }, available: 25,
+          requires_prescription: true,
         });
       items.forEach((i) => (i.line_total_cents = i.unit_price_cents * i.quantity * (i.eye === "both" ? 2 : 1)));
       return json(cartView(items));
@@ -116,6 +118,38 @@ createServer(async (req, res) => {
       items.forEach((i) => (i.line_total_cents = i.unit_price_cents * i.quantity * (i.eye === "both" ? 2 : 1)));
       return json(cartView(items));
     }
+  }
+
+  // --- recetas ---
+  if (p === "/me/prescriptions/upload-url" && req.method === "POST") {
+    const b = await readBody(req);
+    const key = `recetas/${crypto.randomUUID()}`;
+    return json({ upload_url: `http://localhost:8080/uploads/${key}`, r2_key: b.content_type ? key : key });
+  }
+  if (p.startsWith("/uploads/") && req.method === "PUT") {
+    req.resume();
+    return req.on("end", () => res.writeHead(200).end());
+  }
+  if (p === "/me/prescriptions") {
+    if (req.method === "POST") {
+      const r = { id: crypto.randomUUID(), status: "pending", created_at: new Date().toISOString(),
+        customer_email: "cliente@example.com", file_url: null, ...(await readBody(req)) };
+      prescriptions.push(r);
+      res.writeHead(201, { "content-type": "application/json" });
+      return res.end(JSON.stringify(r));
+    }
+    return json({ items: prescriptions });
+  }
+  if (p === "/admin/prescriptions") {
+    const st = q.get("status");
+    return json({ items: prescriptions.filter((r) => !st || r.status === st) });
+  }
+  const pm = p.match(/^\/admin\/prescriptions\/([^/]+)$/);
+  if (pm && req.method === "PATCH") {
+    const r = prescriptions.find((x) => x.id === pm[1]);
+    if (!r) return problem(res, 404, "No encontrado");
+    r.status = (await readBody(req)).status;
+    return json(r);
   }
 
   // --- direcciones ---
