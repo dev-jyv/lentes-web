@@ -352,6 +352,92 @@ paths:
           description: Eliminada
         "404":
           $ref: "#/components/responses/Problem"
+  /v1/checkout:
+    post:
+      operationId: createCheckout
+      summary: Valida el carrito, aparta inventario, crea el pedido y la preferencia de Mercado Pago
+      description: |
+        Aparta las existencias por 15 minutos y devuelve el `init_point` de Checkout Pro. Los precios salen de la base
+        al momento de apartar (nunca del cliente). Un cliente tiene un solo pedido pendiente: crear otro libera el anterior.
+        `409` si el carrito está vacío, no hay existencias (type `out-of-stock`), falta o no sirve la receta.
+        `502` si Mercado Pago falla (el apartado se libera y se puede reintentar). Con Turnstile configurado exige `turnstile_token`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CheckoutInput" }
+      responses:
+        "201":
+          description: Pedido creado; el cliente debe ir al init_point
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutResult" }
+        "400":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        "502":
+          $ref: "#/components/responses/Problem"
+  /v1/me/orders/{id}:
+    get:
+      operationId: getOrder
+      summary: Detalle de un pedido del cliente
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Pedido
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "404":
+          $ref: "#/components/responses/Problem"
+  /v1/webhooks/mercadopago:
+    post:
+      operationId: mercadoPagoWebhook
+      summary: Notificaciones de pago de Mercado Pago
+      description: |
+        Sin sesión: se autentica con la firma `x-signature` (HMAC-SHA256 con el secreto del webhook, con tolerancia de reloj).
+        El cuerpo nunca se usa para decidir: se consulta el pago a Mercado Pago y se valida referencia, monto y moneda.
+        Es idempotente por id de notificación. Responde 200 aunque la notificación no cambie nada; 401 si la firma es inválida.
+      security:
+        - {}
+      parameters:
+        - name: x-signature
+          in: header
+          required: true
+          schema: { type: string }
+        - name: x-request-id
+          in: header
+          required: true
+          schema: { type: string }
+        - name: data.id
+          in: query
+          required: true
+          description: Id del pago; es el que firma Mercado Pago.
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Recibida
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
   /v1/admin/brands:
     post:
       operationId: adminCreateBrand
@@ -809,12 +895,13 @@ components:
         purchasable: { type: boolean, description: "false si la variante o el producto ya no están activos" }
         product:
           type: object
-          required: [name, slug, brand]
+          required: [name, slug, brand, requires_prescription]
           properties:
             name: { type: string }
             slug: { type: string }
             brand: { type: string }
             image_url: { type: string, nullable: true }
+            requires_prescription: { type: boolean }
         sphere: { type: number, format: double, nullable: true }
         cylinder: { type: number, format: double, nullable: true }
         axis: { type: integer, nullable: true }
@@ -835,3 +922,55 @@ components:
           type: string
           nullable: true
           description: Solo cuando se acaba de crear un carrito anónimo
+    CheckoutInput:
+      type: object
+      required: [address_id]
+      properties:
+        address_id: { type: string, format: uuid }
+        prescription_id: { type: string, format: uuid, nullable: true }
+        turnstile_token: { type: string }
+    CheckoutResult:
+      type: object
+      required: [order_id, number, total_cents, init_point]
+      properties:
+        order_id: { type: string, format: uuid }
+        number: { type: integer, format: int64, description: "Folio visible (LC-000123)" }
+        total_cents: { type: integer, format: int64 }
+        init_point: { type: string, format: uri, description: URL de Mercado Pago Checkout Pro }
+    OrderStatus:
+      type: string
+      enum: [pending_payment, paid, preparing, shipped, delivered, cancelled, refunded, expired]
+    OrderItem:
+      type: object
+      required: [product_name, brand_name, product_slug, sku, eye, quantity, unit_price_cents, base_curve, diameter]
+      properties:
+        product_name: { type: string }
+        brand_name: { type: string }
+        product_slug: { type: string }
+        sku: { type: string }
+        eye: { $ref: "#/components/schemas/Eye" }
+        quantity: { type: integer }
+        unit_price_cents: { type: integer, format: int64, description: Precio pagado en ese pedido }
+        sphere: { type: number, format: double, nullable: true }
+        cylinder: { type: number, format: double, nullable: true }
+        axis: { type: integer, nullable: true }
+        addition: { type: string, nullable: true }
+        base_curve: { type: number, format: double }
+        diameter: { type: number, format: double }
+        color: { type: string, nullable: true }
+    Order:
+      type: object
+      required: [id, number, status, subtotal_cents, shipping_cents, discount_cents, total_cents, created_at, items]
+      properties:
+        id: { type: string, format: uuid }
+        number: { type: integer, format: int64 }
+        status: { $ref: "#/components/schemas/OrderStatus" }
+        subtotal_cents: { type: integer, format: int64 }
+        shipping_cents: { type: integer, format: int64 }
+        discount_cents: { type: integer, format: int64 }
+        total_cents: { type: integer, format: int64 }
+        created_at: { type: string, format: date-time }
+        paid_at: { type: string, format: date-time, nullable: true }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/OrderItem" }

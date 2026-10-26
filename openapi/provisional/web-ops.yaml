@@ -1,4 +1,4 @@
-# PROVISIONAL: lo que lentes-web necesita y lentes-api aún no publica (checkout, pedidos, recompra, recetas).
+# PROVISIONAL: lo que lentes-web necesita y lentes-api aún no publica (recompra y recetas).
 # Cuando la API lo publique en api/openapi.yaml: borrar este archivo, lib/api/provisional, scripts/mock-api.mjs
 # y el desvío en lib/api/mutator.ts (ver docs/API-GAPS.md).
 openapi: 3.0.3
@@ -6,55 +6,6 @@ info:
   title: Lentes API - operaciones de tienda (propuesta)
   version: 0.0.1
 paths:
-  /v1/checkout:
-    post:
-      operationId: createCheckout
-      tags: [checkout]
-      description: Valida precios y stock, aparta inventario, crea el pedido y la preferencia de Mercado Pago.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [address_id]
-              properties:
-                address_id: { type: string, format: uuid }
-                prescription_id: { type: string, format: uuid, nullable: true }
-                turnstile_token: { type: string }
-      responses:
-        "200":
-          description: Pedido creado
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [order_id, init_point]
-                properties:
-                  order_id: { type: string, format: uuid }
-                  init_point: { type: string, description: URL de Mercado Pago Checkout Pro }
-        "409":
-          description: Sin stock o cambió el precio
-          content:
-            application/problem+json:
-              schema: { $ref: "#/components/schemas/Problem" }
-  /v1/me/orders/{id}:
-    get:
-      operationId: getOrder
-      tags: [orders]
-      parameters:
-        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Order" }
-        "404":
-          description: No encontrado
-          content:
-            application/problem+json:
-              schema: { $ref: "#/components/schemas/Problem" }
   /v1/me/orders/{id}/reorder:
     post:
       operationId: reorderOrder
@@ -146,39 +97,6 @@ components:
         title: { type: string }
         status: { type: integer }
         detail: { type: string }
-    Eye:
-      type: string
-      enum: [right, left, both]
-    OrderStatus:
-      type: string
-      enum: [pending_payment, paid, preparing, shipped, delivered, cancelled, refunded, expired]
-    OrderItem:
-      type: object
-      required: [product_name, brand_name, eye, quantity, unit_price_cents, base_curve, diameter]
-      properties:
-        product_name: { type: string }
-        brand_name: { type: string }
-        eye: { $ref: "#/components/schemas/Eye" }
-        quantity: { type: integer }
-        unit_price_cents: { type: integer, format: int64, description: Precio pagado en ese pedido }
-        sphere: { type: number, nullable: true }
-        cylinder: { type: number, nullable: true }
-        axis: { type: integer, nullable: true }
-        addition: { type: string, nullable: true }
-        base_curve: { type: number }
-        diameter: { type: number }
-        color: { type: string, nullable: true }
-    Order:
-      type: object
-      required: [id, number, status, total_cents]
-      properties:
-        id: { type: string, format: uuid }
-        number: { type: integer, format: int64 }
-        status: { $ref: "#/components/schemas/OrderStatus" }
-        total_cents: { type: integer, format: int64 }
-        items:
-          type: array
-          items: { $ref: "#/components/schemas/OrderItem" }
     UnavailableItem:
       type: object
       required: [product_name, reason]

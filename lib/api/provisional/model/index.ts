@@ -5,16 +5,10 @@
  * OpenAPI spec version: 0.0.1
  */
 
-export * from './createCheckout200';
-export * from './createCheckoutBody';
 export * from './createPrescriptionUploadUrl200';
 export * from './createPrescriptionUploadUrlBody';
 export * from './createPrescriptionUploadUrlBodyContentType';
-export * from './eye';
 export * from './listPrescriptions200';
-export * from './order';
-export * from './orderItem';
-export * from './orderStatus';
 export * from './prescription';
 export * from './prescriptionInput';
 export * from './problem';

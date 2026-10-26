@@ -39,6 +39,8 @@ import type {
   Cart,
   CartItemInput,
   CartItemUpdate,
+  CheckoutInput,
+  CheckoutResult,
   Customer,
   CustomerUpdate,
   GetHealth200,
@@ -48,6 +50,9 @@ import type {
   ListBrands200,
   ListProducts200,
   ListProductsParams,
+  MercadoPagoWebhookBody,
+  MercadoPagoWebhookParams,
+  Order,
   ProblemResponse,
   ProductDetail,
   ProductInput,
@@ -1870,6 +1875,380 @@ export const useDeleteAddress = <TError = ProblemResponse,
         TContext
       > => {
       return useMutation(getDeleteAddressMutationOptions(options), queryClient);
+    }
+
+export type createCheckoutResponse201 = {
+  data: CheckoutResult
+  status: 201
+}
+
+export type createCheckoutResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type createCheckoutResponse403 = {
+  data: ProblemResponse
+  status: 403
+}
+
+export type createCheckoutResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type createCheckoutResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type createCheckoutResponse502 = {
+  data: ProblemResponse
+  status: 502
+}
+
+export type createCheckoutResponseSuccess = (createCheckoutResponse201) & {
+  headers: Headers;
+};
+export type createCheckoutResponseError = (createCheckoutResponse400 | createCheckoutResponse403 | createCheckoutResponse404 | createCheckoutResponse409 | createCheckoutResponse502) & {
+  headers: Headers;
+};
+
+export type createCheckoutResponse = (createCheckoutResponseSuccess | createCheckoutResponseError)
+
+export const getCreateCheckoutUrl = () => {
+
+
+
+
+  return `/v1/checkout`
+}
+
+/**
+ * Aparta las existencias por 15 minutos y devuelve el `init_point` de Checkout Pro. Los precios salen de la base
+ * al momento de apartar (nunca del cliente). Un cliente tiene un solo pedido pendiente: crear otro libera el anterior.
+ * `409` si el carrito está vacío, no hay existencias (type `out-of-stock`), falta o no sirve la receta.
+ * `502` si Mercado Pago falla (el apartado se libera y se puede reintentar). Con Turnstile configurado exige `turnstile_token`.
+ * @summary Valida el carrito, aparta inventario, crea el pedido y la preferencia de Mercado Pago
+ */
+export const createCheckout = async (checkoutInput: CheckoutInput, options?: Parameters<typeof apiFetch>[1]): Promise<createCheckoutResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createCheckoutResponse>(getCreateCheckoutUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(checkoutInput)
+  }
+);}
+
+
+
+
+
+export const getCreateCheckoutMutationKey = () => ['createCheckout'] as const;
+
+export const getCreateCheckoutMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCheckout>>, TError,CreateCheckoutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCheckout>>, TError,CreateCheckoutMutationVariables, TContext> => {
+
+const mutationKey = getCreateCheckoutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCheckout>>, CreateCheckoutMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCheckout(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCheckoutMutationResult = NonNullable<Awaited<ReturnType<typeof createCheckout>>>
+    export type CreateCheckoutMutationBody = CheckoutInput
+    export type CreateCheckoutMutationError = ProblemResponse
+    export type CreateCheckoutMutationVariables = {data: CheckoutInput}
+
+    /**
+ * @summary Valida el carrito, aparta inventario, crea el pedido y la preferencia de Mercado Pago
+ */
+export const useCreateCheckout = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCheckout>>, TError,CreateCheckoutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createCheckout>>,
+        TError,
+        CreateCheckoutMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateCheckoutMutationOptions(options), queryClient);
+    }
+
+export type getOrderResponse200 = {
+  data: Order
+  status: 200
+}
+
+export type getOrderResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type getOrderResponseSuccess = (getOrderResponse200) & {
+  headers: Headers;
+};
+export type getOrderResponseError = (getOrderResponse404) & {
+  headers: Headers;
+};
+
+export type getOrderResponse = (getOrderResponseSuccess | getOrderResponseError)
+
+export const getGetOrderUrl = (id: string,) => {
+
+
+
+
+  return `/v1/me/orders/${id}`
+}
+
+/**
+ * @summary Detalle de un pedido del cliente
+ */
+export const getOrder = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getOrderResponse> => {
+
+  return apiFetch<getOrderResponse>(getGetOrderUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOrderQueryKey = (id: string,) => {
+    return [
+    `/v1/me/orders/${id}`
+    ] as const;
+    }
+
+
+export const getGetOrderQueryOptions = <TData = Awaited<ReturnType<typeof getOrder>>, TError = ProblemResponse>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOrderQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrder>>> = ({ signal }) => getOrder(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetOrderQueryResult = NonNullable<Awaited<ReturnType<typeof getOrder>>>
+export type GetOrderQueryError = ProblemResponse
+
+
+export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError = ProblemResponse>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOrder>>,
+          TError,
+          Awaited<ReturnType<typeof getOrder>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOrder>>,
+          TError,
+          Awaited<ReturnType<typeof getOrder>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Detalle de un pedido del cliente
+ */
+
+export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetOrderQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type mercadoPagoWebhookResponse200 = {
+  data: void
+  status: 200
+}
+
+export type mercadoPagoWebhookResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type mercadoPagoWebhookResponse401 = {
+  data: ProblemResponse
+  status: 401
+}
+
+export type mercadoPagoWebhookResponseSuccess = (mercadoPagoWebhookResponse200) & {
+  headers: Headers;
+};
+export type mercadoPagoWebhookResponseError = (mercadoPagoWebhookResponse400 | mercadoPagoWebhookResponse401) & {
+  headers: Headers;
+};
+
+export type mercadoPagoWebhookResponse = (mercadoPagoWebhookResponseSuccess | mercadoPagoWebhookResponseError)
+
+export const getMercadoPagoWebhookUrl = (params: MercadoPagoWebhookParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/webhooks/mercadopago?${stringifiedParams}` : `/v1/webhooks/mercadopago`
+}
+
+/**
+ * Sin sesión: se autentica con la firma `x-signature` (HMAC-SHA256 con el secreto del webhook, con tolerancia de reloj).
+ * El cuerpo nunca se usa para decidir: se consulta el pago a Mercado Pago y se valida referencia, monto y moneda.
+ * Es idempotente por id de notificación. Responde 200 aunque la notificación no cambie nada; 401 si la firma es inválida.
+ * @summary Notificaciones de pago de Mercado Pago
+ */
+export const mercadoPagoWebhook = async (mercadoPagoWebhookBody: MercadoPagoWebhookBody,
+    params: MercadoPagoWebhookParams, options?: Parameters<typeof apiFetch>[1]): Promise<mercadoPagoWebhookResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<mercadoPagoWebhookResponse>(getMercadoPagoWebhookUrl(params),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(mercadoPagoWebhookBody)
+  }
+);}
+
+
+
+
+
+export const getMercadoPagoWebhookMutationKey = () => ['mercadoPagoWebhook'] as const;
+
+export const getMercadoPagoWebhookMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mercadoPagoWebhook>>, TError,MercadoPagoWebhookMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mercadoPagoWebhook>>, TError,MercadoPagoWebhookMutationVariables, TContext> => {
+
+const mutationKey = getMercadoPagoWebhookMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mercadoPagoWebhook>>, MercadoPagoWebhookMutationVariables> = (props) => {
+          const {data,params} = props ?? {};
+
+          return  mercadoPagoWebhook(data,params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MercadoPagoWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof mercadoPagoWebhook>>>
+    export type MercadoPagoWebhookMutationBody = MercadoPagoWebhookBody
+    export type MercadoPagoWebhookMutationError = ProblemResponse
+    export type MercadoPagoWebhookMutationVariables = {data: MercadoPagoWebhookBody;params: MercadoPagoWebhookParams}
+
+    /**
+ * @summary Notificaciones de pago de Mercado Pago
+ */
+export const useMercadoPagoWebhook = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mercadoPagoWebhook>>, TError,MercadoPagoWebhookMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mercadoPagoWebhook>>,
+        TError,
+        MercadoPagoWebhookMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMercadoPagoWebhookMutationOptions(options), queryClient);
     }
 
 export type adminCreateBrandResponse201 = {

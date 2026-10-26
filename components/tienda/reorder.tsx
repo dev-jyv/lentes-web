@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getGetCartQueryKey } from "@/lib/api/generated/api";
 import type { UnavailableItem } from "@/lib/api/provisional/model";
-import { reorderOrder, useGetOrder } from "@/lib/api/provisional/api";
+import { useGetOrder } from "@/lib/api/generated/api";
+import { reorderOrder } from "@/lib/api/provisional/api";
 import { formatMxn } from "@/lib/format";
 
 const eyeLabel = { right: "Ojo derecho", left: "Ojo izquierdo", both: "Ambos ojos" } as const;

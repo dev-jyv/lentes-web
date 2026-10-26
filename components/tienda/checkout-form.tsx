@@ -11,9 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  createAddress, getGetCartQueryKey, getListAddressesQueryKey, useGetCart, useListAddresses,
+  createAddress, createCheckout, getGetCartQueryKey, getListAddressesQueryKey, useGetCart, useListAddresses,
 } from "@/lib/api/generated/api";
-import { createCheckout, useListPrescriptions } from "@/lib/api/provisional/api";
+import { useListPrescriptions } from "@/lib/api/provisional/api";
 import { useTurnstile } from "@/components/turnstile";
 import { track } from "@/lib/analytics";
 import { formatMxn } from "@/lib/format";
@@ -69,6 +69,22 @@ function AddressForm({ onSaved }: { onSaved: (id: string) => void }) {
   );
 }
 
+// La API manda `detail` en español y apto para el cliente en 409 (existencias, receta, carrito vacío).
+function checkoutMessage(status: number, detail?: string) {
+  switch (status) {
+    case 409:
+      return detail ?? "Algunos artículos ya no están disponibles. Revisa tu carrito.";
+    case 403:
+      return "No pudimos verificar que eres una persona. Intenta de nuevo.";
+    case 404:
+      return "No encontramos la dirección o la receta. Revísalas e intenta de nuevo.";
+    case 503:
+      return "Los pagos no están disponibles por ahora. Intenta más tarde.";
+    default:
+      return "No pudimos iniciar el pago. Intenta de nuevo.";
+  }
+}
+
 export function CheckoutForm() {
   const queryClient = useQueryClient();
   const cartQuery = useGetCart();
@@ -98,11 +114,7 @@ export function CheckoutForm() {
       Tu carrito está vacío. <Link href="/lentes" className="underline">Ver catálogo</Link>
     </p>;
   }
-  // `requires_prescription` aún no viene en el renglón del carrito (docs/API-GAPS.md);
-  // mientras tanto se asume que sí (lentes de contacto con graduación).
-  const needsRx = cart.items.some(
-    (i) => (i.product as { requires_prescription?: boolean }).requires_prescription ?? true,
-  );
+  const needsRx = cart.items.some((i) => i.product.requires_prescription);
   const prescriptions = (rxQuery.data?.status === 200 ? rxQuery.data.data.items : []).filter(isUsable);
   const prescriptionId = needsRx
     ? (pickedRx ?? prescriptions.find((r) => r.status === "approved")?.id ?? prescriptions[0]?.id)
@@ -114,14 +126,10 @@ export function CheckoutForm() {
     setPaying(true);
     setError(null);
     const res = await createCheckout({ address_id: addressId, prescription_id: prescriptionId ?? null, turnstile_token: turnstile.token });
-    if (res.status !== 200) {
+    if (res.status !== 201) {
       setPaying(false);
       turnstile.reset();
-      setError(
-        res.status === 409
-          ? "Algunos artículos ya no están disponibles o cambió el precio. Revisa tu carrito."
-          : "No pudimos iniciar el pago. Intenta de nuevo.",
-      );
+      setError(checkoutMessage(res.status, (res.data as { detail?: string } | undefined)?.detail));
       return queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
     }
     // El pago ocurre en Mercado Pago; regresamos a /checkout/resultado.

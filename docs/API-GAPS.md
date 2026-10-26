@@ -5,14 +5,11 @@ Verificado en local contra la API real (Postgres + seed): catálogo, detalle, va
 
 ## Lo que la web necesita y la API aún no tiene
 
-Mientras tanto vive en `openapi/provisional/web-ops.yaml` (genera `lib/api/provisional`) y se desvía al mock (`pnpm mock`, `:8081`)
+Solo quedan **recompra y recetas**. Mientras tanto viven en `openapi/provisional/web-ops.yaml` (genera `lib/api/provisional`) y se desvían al mock (`pnpm mock`, `:8081`)
 con `NEXT_PUBLIC_PROVISIONAL_API_URL`. En producción esa variable va vacía.
 
 | Hueco | Qué pide la web | Impacto hoy |
 |---|---|---|
-| `requires_prescription` en el carrito | `CartItem.product.requires_prescription` | El checkout asume que sí requiere (lo normal en lentes de contacto) |
-| Checkout | `POST /v1/checkout` → `{ order_id, init_point }` (409 si cambió precio o stock) | Provisional / mock |
-| Pedido del cliente | `GET /v1/me/orders/{id}` con renglones (para `/checkout/resultado` y `/recompra`) | Provisional / mock |
 | Recompra | `POST /v1/me/orders/{id}/reorder` → `{ added, unavailable[] }` (agrega al carrito del cliente) | Provisional / mock |
 | Recetas | `POST /v1/me/prescriptions/upload-url`, `GET/POST /v1/me/prescriptions` | Provisional / mock |
 
@@ -22,6 +19,12 @@ con `NEXT_PUBLIC_PROVISIONAL_API_URL`. En producción esa variable va vacía.
   e `image_url` (imagen de menor posición; `null` si no hay). La web muestra "Desde $X" o "Agotado", y declara `offers` en el JSON-LD solo si hay precio.
 - **URLs de imagen:** la API las arma con `R2_PUBLIC_BASE_URL`. Si esa variable está vacía (desarrollo) devuelve rutas relativas; la web las completa con
   `NEXT_PUBLIC_IMG_URL` y, si no está definida, no muestra la imagen. En producción `R2_PUBLIC_BASE_URL` debe estar definida.
+
+- **Checkout, pedidos y webhook** (`lentes-api` 8e8551f, fase B5): `POST /v1/checkout` → `201 { order_id, number, total_cents, init_point }`
+  (`409` carrito vacío / sin existencias / receta, `403` Turnstile, `404` dirección o receta ajena, `502` Mercado Pago, `503` sin pagos configurados),
+  `GET /v1/me/orders/{id}` con renglones, y `CartItem.product.requires_prescription`. Reglas y decisiones pendientes: `lentes-api/docs/CHECKOUT.md`.
+  La web usa el `detail` en español de los `409` para explicar el motivo al cliente.
+  **No verificado de punta a punta**: faltan Supabase (sesión) y credenciales de Mercado Pago; la API está probada con Postgres real y Mercado Pago falso.
 
 ## Decisiones de la reconciliación
 
