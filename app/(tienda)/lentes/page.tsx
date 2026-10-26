@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CatalogFilters } from "@/components/tienda/catalog-filters";
 import { ProductCard } from "@/components/tienda/product-card";
-import { listBrands, listProducts } from "@/lib/api/generated/catalog/catalog";
+import { listBrands, listProducts } from "@/lib/api/generated/api";
 import type { LensType, Replacement } from "@/lib/api/generated/model";
 
 export const metadata: Metadata = {

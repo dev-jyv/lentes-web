@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   createPrescription, createPrescriptionUploadUrl, getListPrescriptionsQueryKey,
-} from "@/lib/api/generated/me/me";
+} from "@/lib/api/provisional/api";
 import { ALLOWED_TYPES, MAX_FILE_BYTES, type AllowedType } from "@/lib/prescription";
 
 const power = z.string().trim().refine(

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useGetOrder } from "@/lib/api/generated/me/me";
+import { useGetOrder } from "@/lib/api/provisional/api";
 import { formatMxn } from "@/lib/format";
 
 const FINAL = ["paid", "preparing", "shipped", "delivered", "cancelled", "refunded", "expired"];

@@ -9,7 +9,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { mergeCart } from "@/lib/api/generated/cart/cart";
+import { mergeCart } from "@/lib/api/generated/api";
 import { clearCartToken, getCartToken } from "@/lib/cart-token";
 import { useTurnstile } from "@/components/turnstile";
 import { env } from "@/lib/env";

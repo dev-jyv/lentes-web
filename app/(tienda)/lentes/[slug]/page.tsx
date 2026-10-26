@@ -4,9 +4,10 @@ import { notFound } from "next/navigation";
 import { ProductViewTracker } from "@/components/tienda/product-view-tracker";
 import { RxSelector } from "@/components/tienda/rx-selector";
 import { Badge } from "@/components/ui/badge";
-import { getProduct } from "@/lib/api/generated/catalog/catalog";
+import { getProduct } from "@/lib/api/generated/api";
 import { env } from "@/lib/env";
-import { formatMxn, lensTypeLabel, replacementLabel } from "@/lib/format";
+import { imageSrc } from "@/lib/images";
+import { lensTypeLabel, replacementLabel } from "@/lib/format";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -29,8 +30,7 @@ export default async function ProductPage({ params }: Props) {
   const p = await load((await params).slug);
   if (!p) notFound();
 
-  const img = (key: string) => (env.imgUrl ? `${env.imgUrl}/${key}` : null);
-  const images = p.images.map(img).filter((x): x is string => !!x);
+  const images = p.images.map((i) => imageSrc(i.url)).filter((x): x is string => !!x);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -39,12 +39,9 @@ export default async function ProductPage({ params }: Props) {
     description: p.description ?? undefined,
     brand: { "@type": "Brand", name: p.brand.name },
     image: images,
-    offers: {
-      "@type": "AggregateOffer",
-      priceCurrency: "MXN",
-      lowPrice: (p.from_price_cents / 100).toFixed(2),
-      url: `${env.siteUrl}/lentes/${p.slug}`,
-    },
+    // Sin `offers` hasta que la API exponga el precio mínimo del producto (docs/API-GAPS.md):
+    // el frontend no calcula precios.
+    url: `${env.siteUrl}/lentes/${p.slug}`,
   };
 
   return (
@@ -72,9 +69,6 @@ export default async function ProductPage({ params }: Props) {
             <Badge variant="secondary">{replacementLabel[p.replacement]}</Badge>
             <Badge variant="outline">{p.pieces_per_box} piezas por caja</Badge>
           </div>
-          <p className="text-lg">
-            Desde <strong>{formatMxn(p.from_price_cents)}</strong>
-          </p>
           {p.description && <p className="text-muted-foreground">{p.description}</p>}
           {p.requires_prescription && (
             <p className="text-sm">Requiere receta vigente de tu optometrista.</p>

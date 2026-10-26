@@ -2,13 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import type { ProductSummary } from "@/lib/api/generated/model";
-import { env } from "@/lib/env";
+import type { Product } from "@/lib/api/generated/model";
+import { imageSrc } from "@/lib/images";
 import { formatMxn, replacementLabel } from "@/lib/format";
 
-export function ProductCard({ product }: { product: ProductSummary }) {
-  const src =
-    product.image_key && env.imgUrl ? `${env.imgUrl}/${product.image_key}` : null;
+// `from_price_cents` e `image_url` aún no existen en el contrato (docs/API-GAPS.md): se muestran
+// solo si la API los incluye, sin calcularlos en el frontend.
+type CardProduct = Product & { from_price_cents?: number; image_url?: string | null };
+
+export function ProductCard({ product }: { product: CardProduct }) {
+  const src = imageSrc(product.image_url);
   return (
     <Link href={`/lentes/${product.slug}`} className="group">
       <Card className="h-full overflow-hidden transition-shadow group-hover:shadow-md">
@@ -26,9 +29,13 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           <h3 className="font-medium leading-tight">{product.name}</h3>
           <div className="flex items-center justify-between">
             <Badge variant="secondary">{replacementLabel[product.replacement]}</Badge>
-            <span className="text-sm">
-              Desde <strong>{formatMxn(product.from_price_cents)}</strong>
-            </span>
+            {product.from_price_cents != null ? (
+              <span className="text-sm">
+                Desde <strong>{formatMxn(product.from_price_cents)}</strong>
+              </span>
+            ) : (
+              <span className="text-sm text-muted-foreground">Ver opciones</span>
+            )}
           </div>
         </CardContent>
       </Card>

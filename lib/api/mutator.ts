@@ -10,6 +10,15 @@ async function getBrowserToken(): Promise<string | undefined> {
   return (await createClient().auth.getSession()).data.session?.access_token;
 }
 
+// PROVISIONAL: rutas que la API real aún no publica se desvían al mock (docs/API-GAPS.md).
+const PROVISIONAL = /^\/v1\/(checkout|me\/orders|me\/prescriptions)/;
+
+// Las rutas generadas son /v1/...; NEXT_PUBLIC_API_URL ya incluye /v1 (como en el SPEC).
+const toUrl = (path: string) => {
+  const base = PROVISIONAL.test(path) && env.provisionalApiUrl ? env.provisionalApiUrl : env.apiUrl;
+  return `${base}${path.replace(/^\/v1/, "")}`;
+};
+
 // Mutator de orval: devuelve { data, status, headers } sin lanzar en 4xx/5xx
 // (los errores llegan como application/problem+json en `data`).
 export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
@@ -22,10 +31,12 @@ export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(`${env.apiUrl}${url}`, { ...init, headers });
-  const newCartToken = res.headers.get("X-Cart-Token");
-  if (newCartToken && typeof window !== "undefined") setCartToken(newCartToken);
+  const res = await fetch(toUrl(url), { ...init, headers });
   const text = await res.text();
   const data = text ? JSON.parse(text) : undefined;
+  // La API devuelve el token del carrito anónimo en el cuerpo (`cart_token`) solo al crearlo.
+  if (typeof window !== "undefined" && typeof data?.cart_token === "string") {
+    setCartToken(data.cart_token);
+  }
   return { data, status: res.status, headers: res.headers } as T;
 }

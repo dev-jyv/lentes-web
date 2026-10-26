@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useListPrescriptions } from "@/lib/api/generated/me/me";
+import { useListPrescriptions } from "@/lib/api/provisional/api";
 import { isExpired, rxStatusLabel } from "@/lib/prescription";
 
 export function PrescriptionList() {

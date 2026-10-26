@@ -10,11 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getGetCartQueryKey, useGetCart } from "@/lib/api/generated/cart/cart";
-import { createCheckout } from "@/lib/api/generated/checkout/checkout";
 import {
-  createAddress, getListAddressesQueryKey, useListAddresses, useListPrescriptions,
-} from "@/lib/api/generated/me/me";
+  createAddress, getGetCartQueryKey, getListAddressesQueryKey, useGetCart, useListAddresses,
+} from "@/lib/api/generated/api";
+import { createCheckout, useListPrescriptions } from "@/lib/api/provisional/api";
 import { useTurnstile } from "@/components/turnstile";
 import { track } from "@/lib/analytics";
 import { formatMxn } from "@/lib/format";
@@ -99,7 +98,11 @@ export function CheckoutForm() {
       Tu carrito está vacío. <Link href="/lentes" className="underline">Ver catálogo</Link>
     </p>;
   }
-  const needsRx = cart.items.some((i) => i.requires_prescription);
+  // `requires_prescription` aún no viene en el renglón del carrito (docs/API-GAPS.md);
+  // mientras tanto se asume que sí (lentes de contacto con graduación).
+  const needsRx = cart.items.some(
+    (i) => (i.product as { requires_prescription?: boolean }).requires_prescription ?? true,
+  );
   const prescriptions = (rxQuery.data?.status === 200 ? rxQuery.data.data.items : []).filter(isUsable);
   const prescriptionId = needsRx
     ? (pickedRx ?? prescriptions.find((r) => r.status === "approved")?.id ?? prescriptions[0]?.id)
@@ -183,7 +186,7 @@ export function CheckoutForm() {
         <ul className="space-y-1 text-sm">
           {cart.items.map((i) => (
             <li key={i.id} className="flex justify-between gap-2">
-              <span>{i.quantity}× {i.product_name}</span>
+              <span>{i.quantity}× {i.product.name}</span>
               <span>{formatMxn(i.line_total_cents)}</span>
             </li>
           ))}

@@ -11,9 +11,8 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { addCartItem, getGetCartQueryKey } from "@/lib/api/generated/cart/cart";
-import { resolveVariant, useResolveVariant } from "@/lib/api/generated/catalog/catalog";
-import type { ProductDetail, ProductOptions, ResolveVariantParams } from "@/lib/api/generated/model";
+import { addCartItem, getGetCartQueryKey, getProductVariant, useGetProductVariant } from "@/lib/api/generated/api";
+import type { GetProductVariantParams, ProductDetail, ProductOptions } from "@/lib/api/generated/model";
 import { track } from "@/lib/analytics";
 import { formatMxn } from "@/lib/format";
 
@@ -60,9 +59,9 @@ function Field({
   );
 }
 
-function toParams(eye: EyeValues, base: string, dia: string): ResolveVariantParams | undefined {
+function toParams(eye: EyeValues, base: string, dia: string): GetProductVariantParams | undefined {
   if (!eye.sphere || !base || !dia) return undefined;
-  const p: ResolveVariantParams = {
+  const p: GetProductVariantParams = {
     sphere: Number(eye.sphere), base_curve: Number(base), diameter: Number(dia),
   };
   if (eye.cylinder) p.cylinder = Number(eye.cylinder);
@@ -71,11 +70,13 @@ function toParams(eye: EyeValues, base: string, dia: string): ResolveVariantPara
   return p;
 }
 
-function VariantInfo({ slug, params }: { slug: string; params?: ResolveVariantParams }) {
-  const { data, isFetching } = useResolveVariant(slug, params, {
-    query: { enabled: !!params },
-  });
+function VariantInfo({ slug, params }: { slug: string; params?: GetProductVariantParams }) {
   if (!params) return <p className="text-xs text-muted-foreground">Elige tu graduación.</p>;
+  return <VariantPrice slug={slug} params={params} />;
+}
+
+function VariantPrice({ slug, params }: { slug: string; params: GetProductVariantParams }) {
+  const { data, isFetching } = useGetProductVariant(slug, params);
   if (isFetching) return <p className="text-xs text-muted-foreground">Consultando…</p>;
   if (data?.status !== 200)
     return <p className="text-xs text-destructive">Esta combinación no está disponible.</p>;
@@ -159,8 +160,8 @@ export function RxSelector({ product }: { product: ProductDetail }) {
   const onSubmit = handleSubmit(async (v) => {
     setError(null);
     const [od, os] = await Promise.all([
-      resolveVariant(product.slug, toParams(v.od, v.base_curve, v.diameter)),
-      resolveVariant(product.slug, toParams(v.os, v.base_curve, v.diameter)),
+      getProductVariant(product.slug, toParams(v.od, v.base_curve, v.diameter)!),
+      getProductVariant(product.slug, toParams(v.os, v.base_curve, v.diameter)!),
     ]);
     if (od.status !== 200 || os.status !== 200) {
       return setError("Alguna combinación no está disponible.");
@@ -169,19 +170,23 @@ export function RxSelector({ product }: { product: ProductDetail }) {
       return setError("Alguna combinación está agotada.");
     }
     const quantity = Number(boxes);
-    // Misma variante en ambos ojos: un solo renglón "both" (cajas por ojo).
-    const lines = od.data.id === os.data.id
-      ? [{ variant_id: od.data.id, eye: "both" as const, quantity }]
-      : [
-          { variant_id: od.data.id, eye: "right" as const, quantity },
-          { variant_id: os.data.id, eye: "left" as const, quantity },
-        ];
-    let last;
+    // Un renglón por ojo: así no hay ambigüedad sobre cuántas cajas se cobran.
+    const lines = [
+      { variant_id: od.data.id, eye: "right" as const, quantity },
+      { variant_id: os.data.id, eye: "left" as const, quantity },
+    ];
     for (const line of lines) {
-      last = await addCartItem(line);
-      if (last.status !== 200) return setError("No pudimos agregar al carrito (¿sin stock?).");
+      const res = await addCartItem(line);
+      if (res.status !== 201) {
+        await queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
+        return setError(
+          res.status === 409
+            ? "No hay existencias suficientes para esa graduación."
+            : "No pudimos agregar al carrito. Intenta de nuevo.",
+        );
+      }
     }
-    queryClient.setQueryData(getGetCartQueryKey(), last);
+    await queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
     track("add_to_cart", { slug: product.slug, name: product.name, boxes_per_eye: quantity });
     router.push("/carrito");
   });

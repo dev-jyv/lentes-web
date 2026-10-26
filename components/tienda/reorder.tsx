@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getGetCartQueryKey } from "@/lib/api/generated/cart/cart";
-import type { UnavailableItem } from "@/lib/api/generated/model";
-import { reorderOrder, useGetOrder } from "@/lib/api/generated/me/me";
+import { getGetCartQueryKey } from "@/lib/api/generated/api";
+import type { UnavailableItem } from "@/lib/api/provisional/model";
+import { reorderOrder, useGetOrder } from "@/lib/api/provisional/api";
 import { formatMxn } from "@/lib/format";
 
 const eyeLabel = { right: "Ojo derecho", left: "Ojo izquierdo", both: "Ambos ojos" } as const;
@@ -37,7 +37,7 @@ export function Reorder({ orderId }: { orderId: string }) {
       setBusy(false);
       return setError("No pudimos preparar tu carrito. Intenta de nuevo.");
     }
-    queryClient.setQueryData(getGetCartQueryKey(), { status: 200, data: res.data.cart, headers: res.headers });
+    await queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
     if (res.data.unavailable.length > 0) {
       setBusy(false);
       return setUnavailable(res.data.unavailable);
@@ -61,10 +61,10 @@ export function Reorder({ orderId }: { orderId: string }) {
               <p className="font-medium">{i.product_name} <span className="text-muted-foreground">· {i.brand_name}</span></p>
               <p>{eyeLabel[i.eye]} · {i.quantity} {i.quantity === 1 ? "caja" : "cajas"}</p>
               <p className="text-xs text-muted-foreground">
-                {[i.params.sphere != null && `Esf ${sign(i.params.sphere)}`,
-                  i.params.cylinder != null && `Cil ${sign(i.params.cylinder)}`,
-                  i.params.axis != null && `Eje ${i.params.axis}°`,
-                  i.params.addition && `Add ${i.params.addition}`].filter(Boolean).join(" · ")}
+                {[i.sphere != null && `Esf ${sign(i.sphere)}`,
+                  i.cylinder != null && `Cil ${sign(i.cylinder)}`,
+                  i.axis != null && `Eje ${i.axis}°`,
+                  i.addition && `Add ${i.addition}`].filter(Boolean).join(" · ")}
               </p>
             </div>
             <span className="text-muted-foreground">Antes {formatMxn(i.unit_price_cents)}</span>

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { listBrands, listProducts } from "@/lib/api/generated/catalog/catalog";
+import { listBrands, listProducts } from "@/lib/api/generated/api";
 import { env } from "@/lib/env";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

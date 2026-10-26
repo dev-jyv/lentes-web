@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  getGetCartQueryKey, useGetCart, useRemoveCartItem, useUpdateCartItem,
-} from "@/lib/api/generated/cart/cart";
+  getGetCartQueryKey, useDeleteCartItem, useGetCart, useUpdateCartItem,
+} from "@/lib/api/generated/api";
 import type { CartItem } from "@/lib/api/generated/model";
 import { formatMxn } from "@/lib/format";
 
@@ -14,23 +14,26 @@ const eyeLabel = { right: "Ojo derecho", left: "Ojo izquierdo", both: "Ambos ojo
 const sign = (n?: number | null) => (n == null ? null : n > 0 ? `+${n.toFixed(2)}` : n.toFixed(2));
 
 function describe(i: CartItem) {
-  const p = i.params;
   return [
-    p.sphere != null && `Esf ${sign(p.sphere)}`,
-    p.cylinder != null && `Cil ${sign(p.cylinder)}`,
-    p.axis != null && `Eje ${p.axis}°`,
-    p.addition && `Add ${p.addition}`,
-    `CB ${p.base_curve}`,
-    `Diám ${p.diameter}`,
+    i.sphere != null && `Esf ${sign(i.sphere)}`,
+    i.cylinder != null && `Cil ${sign(i.cylinder)}`,
+    i.axis != null && `Eje ${i.axis}°`,
+    i.addition && `Add ${i.addition}`,
+    `CB ${i.base_curve}`,
+    `Diám ${i.diameter}`,
   ].filter(Boolean).join(" · ");
 }
 
 export function CartView() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useGetCart();
-  const onSuccess = (res: unknown) => queryClient.setQueryData(getGetCartQueryKey(), res);
+  // 200 trae el carrito actualizado; ante 409 (sin existencias) u otro error se vuelve a consultar.
+  const onSuccess = (res: { status: number }) =>
+    res.status === 200
+      ? queryClient.setQueryData(getGetCartQueryKey(), res)
+      : queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
   const update = useUpdateCartItem({ mutation: { onSuccess } });
-  const remove = useRemoveCartItem({ mutation: { onSuccess } });
+  const remove = useDeleteCartItem({ mutation: { onSuccess } });
 
   if (isLoading) return <Skeleton className="h-40 w-full" />;
   const cart = data?.status === 200 ? data.data : undefined;
@@ -49,12 +52,16 @@ export function CartView() {
         {cart.items.map((i) => (
           <li key={i.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">{i.brand_name}</p>
-              <p className="font-medium">{i.product_name}</p>
+              <p className="text-xs text-muted-foreground">{i.product.brand}</p>
+              <p className="font-medium">{i.product.name}</p>
               <p className="text-sm">{eyeLabel[i.eye]}</p>
               <p className="text-xs text-muted-foreground">{describe(i)}</p>
-              {i.available != null && i.available < i.quantity && (
-                <p className="text-xs text-destructive">Solo quedan {i.available} en existencia.</p>
+              {!i.purchasable && (
+                <p role="alert" className="text-xs text-destructive">
+                  {i.available > 0
+                    ? `Solo quedan ${i.available} en existencia.`
+                    : "Agotado: quítalo para continuar."}
+                </p>
               )}
             </div>
             <div className="flex items-center gap-3">
@@ -64,7 +71,7 @@ export function CartView() {
                   onClick={() => update.mutate({ id: i.id, data: { quantity: i.quantity - 1 } })}>−</Button>
                 <span className="w-6 text-center text-sm">{i.quantity}</span>
                 <Button variant="outline" size="sm" aria-label="Más"
-                  disabled={i.quantity >= 12 || update.isPending}
+                  disabled={i.quantity >= Math.min(12, i.available) || update.isPending}
                   onClick={() => update.mutate({ id: i.id, data: { quantity: i.quantity + 1 } })}>+</Button>
               </div>
               <span className="w-24 text-right font-medium">{formatMxn(i.line_total_cents)}</span>
@@ -82,9 +89,13 @@ export function CartView() {
         <p className="text-xs text-muted-foreground">
           Envío e impuestos se confirman en el pago.
         </p>
-        <Button className="w-full" size="lg" render={<Link href="/checkout" />} nativeButton={false}>
-          Continuar al pago
-        </Button>
+        {cart.items.some((i) => !i.purchasable) ? (
+          <Button className="w-full" size="lg" disabled>Continuar al pago</Button>
+        ) : (
+          <Button className="w-full" size="lg" render={<Link href="/checkout" />} nativeButton={false}>
+            Continuar al pago
+          </Button>
+        )}
       </aside>
     </div>
   );
