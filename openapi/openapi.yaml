@@ -1637,15 +1637,19 @@ components:
         image_ids:
           type: array
           items: { type: string, format: uuid }
-    StockReason:
+    ManualStockReason:
       type: string
       enum: [receipt, count_correction, damage, return, other]
+    StockReason:
+      type: string
+      description: "Los cinco manuales más los que registra el sistema (initial = alta de variante, edit = edición directa, import = carga masiva)."
+      enum: [receipt, count_correction, damage, return, other, initial, edit, import]
     StockAdjustmentInput:
       type: object
       required: [delta, reason]
       properties:
         delta: { type: integer, description: "Positivo suma, negativo resta; no puede ser 0" }
-        reason: { $ref: "#/components/schemas/StockReason" }
+        reason: { $ref: "#/components/schemas/ManualStockReason" }
         note: { type: string, maxLength: 500, description: Obligatoria si reason=other }
     StockAdjustment:
       type: object

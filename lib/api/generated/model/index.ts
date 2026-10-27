@@ -61,6 +61,7 @@ export * from './listPrescriptions200';
 export * from './listProducts200';
 export * from './listProductsParams';
 export * from './lowStockItem';
+export * from './manualStockReason';
 export * from './mercadoPagoWebhookBody';
 export * from './mercadoPagoWebhookParams';
 export * from './order';
