@@ -16,6 +16,7 @@ export default async function AccountPage() {
       <h1 className="text-2xl">Mi cuenta</h1>
       <p className="text-muted-foreground">{user.email}</p>
       <nav className="flex gap-4 text-sm underline">
+        <Link href="/cuenta/pedidos">Mis pedidos</Link>
         <Link href="/cuenta/recetas">Mis recetas</Link>
       </nav>
       <SignOutButton />

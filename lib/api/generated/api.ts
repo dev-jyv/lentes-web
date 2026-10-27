@@ -44,6 +44,8 @@ import type {
   AdminPrescription,
   AdminProduct,
   AdminReorderProductImages200,
+  AdminRepurchaseReportParams,
+  AdminSalesReportParams,
   AdminVariant,
   Brand,
   BrandInput,
@@ -63,6 +65,8 @@ import type {
   ImportProblem,
   ListAddresses200,
   ListBrands200,
+  ListMyOrders200,
+  ListMyOrdersParams,
   ListPrescriptions200,
   ListProducts200,
   ListProductsParams,
@@ -80,6 +84,8 @@ import type {
   ProductImageAdmin,
   ProductInput,
   ReorderResult,
+  RepurchaseReport,
+  SalesReport,
   StockAdjustment,
   StockAdjustmentInput,
   Variant,
@@ -2033,6 +2039,134 @@ export const useCreateCheckout = <TError = ProblemResponse,
       > => {
       return useMutation(getCreateCheckoutMutationOptions(options), queryClient);
     }
+
+export type listMyOrdersResponse200 = {
+  data: ListMyOrders200
+  status: 200
+}
+
+export type listMyOrdersResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type listMyOrdersResponseSuccess = (listMyOrdersResponse200) & {
+  headers: Headers;
+};
+export type listMyOrdersResponseError = (listMyOrdersResponse400) & {
+  headers: Headers;
+};
+
+export type listMyOrdersResponse = (listMyOrdersResponseSuccess | listMyOrdersResponseError)
+
+export const getListMyOrdersUrl = (params?: ListMyOrdersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/me/orders?${stringifiedParams}` : `/v1/me/orders`
+}
+
+/**
+ * Del más reciente al más antiguo, paginado por cursor. No incluye pedidos vencidos (`expired`).
+ * @summary Historial de pedidos del cliente
+ */
+export const listMyOrders = async (params?: ListMyOrdersParams, options?: Parameters<typeof apiFetch>[1]): Promise<listMyOrdersResponse> => {
+
+  return apiFetch<listMyOrdersResponse>(getListMyOrdersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyOrdersQueryKey = (params?: ListMyOrdersParams,) => {
+    return [
+    `/v1/me/orders`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyOrdersQueryOptions = <TData = Awaited<ReturnType<typeof listMyOrders>>, TError = ProblemResponse>(params?: ListMyOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyOrders>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyOrdersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyOrders>>> = ({ signal }) => listMyOrders(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyOrders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMyOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof listMyOrders>>>
+export type ListMyOrdersQueryError = ProblemResponse
+
+
+export function useListMyOrders<TData = Awaited<ReturnType<typeof listMyOrders>>, TError = ProblemResponse>(
+ params: undefined |  ListMyOrdersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyOrders>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyOrders>>,
+          TError,
+          Awaited<ReturnType<typeof listMyOrders>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyOrders<TData = Awaited<ReturnType<typeof listMyOrders>>, TError = ProblemResponse>(
+ params?: ListMyOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyOrders>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyOrders>>,
+          TError,
+          Awaited<ReturnType<typeof listMyOrders>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyOrders<TData = Awaited<ReturnType<typeof listMyOrders>>, TError = ProblemResponse>(
+ params?: ListMyOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyOrders>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Historial de pedidos del cliente
+ */
+
+export function useListMyOrders<TData = Awaited<ReturnType<typeof listMyOrders>>, TError = ProblemResponse>(
+ params?: ListMyOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyOrders>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMyOrdersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export type getOrderResponse200 = {
   data: Order
@@ -4275,6 +4409,262 @@ export function useAdminListLowStock<TData = Awaited<ReturnType<typeof adminList
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAdminListLowStockQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminSalesReportResponse200 = {
+  data: SalesReport
+  status: 200
+}
+
+export type adminSalesReportResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminSalesReportResponseSuccess = (adminSalesReportResponse200) & {
+  headers: Headers;
+};
+export type adminSalesReportResponseError = (adminSalesReportResponse400) & {
+  headers: Headers;
+};
+
+export type adminSalesReportResponse = (adminSalesReportResponseSuccess | adminSalesReportResponseError)
+
+export const getAdminSalesReportUrl = (params: AdminSalesReportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/admin/reports/sales?${stringifiedParams}` : `/v1/admin/reports/sales`
+}
+
+/**
+ * Pedidos pagados en adelante (paid, preparing, shipped, delivered; sin cancelados, reembolsados ni expirados) cuyo pago cae en el rango. Días calendario en America/Mexico_City, `to` inclusivo, máximo 366 días. El ingreso es el total cobrado (incluye envío). `daily` trae un renglón por día, con ceros; `top_products` los 10 más vendidos por cajas.
+ * @summary Ventas del rango
+ */
+export const adminSalesReport = async (params: AdminSalesReportParams, options?: Parameters<typeof apiFetch>[1]): Promise<adminSalesReportResponse> => {
+
+  return apiFetch<adminSalesReportResponse>(getAdminSalesReportUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminSalesReportQueryKey = (params?: AdminSalesReportParams,) => {
+    return [
+    `/v1/admin/reports/sales`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminSalesReportQueryOptions = <TData = Awaited<ReturnType<typeof adminSalesReport>>, TError = ProblemResponse>(params: AdminSalesReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSalesReport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminSalesReportQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminSalesReport>>> = ({ signal }) => adminSalesReport(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminSalesReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminSalesReportQueryResult = NonNullable<Awaited<ReturnType<typeof adminSalesReport>>>
+export type AdminSalesReportQueryError = ProblemResponse
+
+
+export function useAdminSalesReport<TData = Awaited<ReturnType<typeof adminSalesReport>>, TError = ProblemResponse>(
+ params: AdminSalesReportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSalesReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSalesReport>>,
+          TError,
+          Awaited<ReturnType<typeof adminSalesReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminSalesReport<TData = Awaited<ReturnType<typeof adminSalesReport>>, TError = ProblemResponse>(
+ params: AdminSalesReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSalesReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminSalesReport>>,
+          TError,
+          Awaited<ReturnType<typeof adminSalesReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminSalesReport<TData = Awaited<ReturnType<typeof adminSalesReport>>, TError = ProblemResponse>(
+ params: AdminSalesReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSalesReport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Ventas del rango
+ */
+
+export function useAdminSalesReport<TData = Awaited<ReturnType<typeof adminSalesReport>>, TError = ProblemResponse>(
+ params: AdminSalesReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSalesReport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminSalesReportQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminRepurchaseReportResponse200 = {
+  data: RepurchaseReport
+  status: 200
+}
+
+export type adminRepurchaseReportResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminRepurchaseReportResponseSuccess = (adminRepurchaseReportResponse200) & {
+  headers: Headers;
+};
+export type adminRepurchaseReportResponseError = (adminRepurchaseReportResponse400) & {
+  headers: Headers;
+};
+
+export type adminRepurchaseReportResponse = (adminRepurchaseReportResponseSuccess | adminRepurchaseReportResponseError)
+
+export const getAdminRepurchaseReportUrl = (params: AdminRepurchaseReportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/admin/reports/repurchase?${stringifiedParams}` : `/v1/admin/reports/repurchase`
+}
+
+/**
+ * Mismas reglas de fechas que ventas. `customers`: clientes con compra pagada en el rango; `repeat_customers`: de ellos, los que ya habían comprado antes del rango. `reminders_sent`: recordatorios enviados en el rango; `reorders_from_reminder`: de esos, los de clientes que pagaron otro pedido después del recordatorio. El pedido no guarda de qué enlace vino, así que la atribución es por tiempo, no por clic.
+ * @summary Recompra del rango
+ */
+export const adminRepurchaseReport = async (params: AdminRepurchaseReportParams, options?: Parameters<typeof apiFetch>[1]): Promise<adminRepurchaseReportResponse> => {
+
+  return apiFetch<adminRepurchaseReportResponse>(getAdminRepurchaseReportUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminRepurchaseReportQueryKey = (params?: AdminRepurchaseReportParams,) => {
+    return [
+    `/v1/admin/reports/repurchase`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminRepurchaseReportQueryOptions = <TData = Awaited<ReturnType<typeof adminRepurchaseReport>>, TError = ProblemResponse>(params: AdminRepurchaseReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminRepurchaseReport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminRepurchaseReportQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminRepurchaseReport>>> = ({ signal }) => adminRepurchaseReport(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminRepurchaseReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminRepurchaseReportQueryResult = NonNullable<Awaited<ReturnType<typeof adminRepurchaseReport>>>
+export type AdminRepurchaseReportQueryError = ProblemResponse
+
+
+export function useAdminRepurchaseReport<TData = Awaited<ReturnType<typeof adminRepurchaseReport>>, TError = ProblemResponse>(
+ params: AdminRepurchaseReportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminRepurchaseReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminRepurchaseReport>>,
+          TError,
+          Awaited<ReturnType<typeof adminRepurchaseReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminRepurchaseReport<TData = Awaited<ReturnType<typeof adminRepurchaseReport>>, TError = ProblemResponse>(
+ params: AdminRepurchaseReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminRepurchaseReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminRepurchaseReport>>,
+          TError,
+          Awaited<ReturnType<typeof adminRepurchaseReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminRepurchaseReport<TData = Awaited<ReturnType<typeof adminRepurchaseReport>>, TError = ProblemResponse>(
+ params: AdminRepurchaseReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminRepurchaseReport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Recompra del rango
+ */
+
+export function useAdminRepurchaseReport<TData = Awaited<ReturnType<typeof adminRepurchaseReport>>, TError = ProblemResponse>(
+ params: AdminRepurchaseReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminRepurchaseReport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminRepurchaseReportQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

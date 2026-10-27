@@ -384,6 +384,35 @@ paths:
           $ref: "#/components/responses/Problem"
         "502":
           $ref: "#/components/responses/Problem"
+  /v1/me/orders:
+    get:
+      operationId: listMyOrders
+      summary: Historial de pedidos del cliente
+      description: Del más reciente al más antiguo, paginado por cursor. No incluye pedidos vencidos (`expired`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: Página de pedidos
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/OrderSummary" }
+                  next_cursor: { type: string }
+        "400":
+          $ref: "#/components/responses/Problem"
   /v1/me/orders/{id}:
     get:
       operationId: getOrder
@@ -858,6 +887,48 @@ paths:
                   items:
                     type: array
                     items: { $ref: "#/components/schemas/LowStockItem" }
+        "400":
+          $ref: "#/components/responses/Problem"
+  /v1/admin/reports/sales:
+    get:
+      operationId: adminSalesReport
+      summary: Ventas del rango
+      description: >
+        Pedidos pagados en adelante (paid, preparing, shipped, delivered; sin cancelados, reembolsados ni expirados) cuyo pago cae en el rango.
+        Días calendario en America/Mexico_City, `to` inclusivo, máximo 366 días. El ingreso es el total cobrado (incluye envío).
+        `daily` trae un renglón por día, con ceros; `top_products` los 10 más vendidos por cajas.
+      security:
+        - bearerAuth: [admin]
+      parameters:
+        - { name: from, in: query, required: true, schema: { type: string, format: date } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Reporte de ventas
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SalesReport" }
+        "400":
+          $ref: "#/components/responses/Problem"
+  /v1/admin/reports/repurchase:
+    get:
+      operationId: adminRepurchaseReport
+      summary: Recompra del rango
+      description: >
+        Mismas reglas de fechas que ventas. `customers`: clientes con compra pagada en el rango; `repeat_customers`: de ellos, los que ya habían comprado antes del rango.
+        `reminders_sent`: recordatorios enviados en el rango; `reorders_from_reminder`: de esos, los de clientes que pagaron otro pedido después del recordatorio.
+        El pedido no guarda de qué enlace vino, así que la atribución es por tiempo, no por clic.
+      security:
+        - bearerAuth: [admin]
+      parameters:
+        - { name: from, in: query, required: true, schema: { type: string, format: date } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Reporte de recompra
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RepurchaseReport" }
         "400":
           $ref: "#/components/responses/Problem"
   /v1/admin/brands:
@@ -1380,10 +1451,25 @@ components:
         base_curve: { type: number, format: double }
         diameter: { type: number, format: double }
         color: { type: string, nullable: true }
+    OrderSummary:
+      type: object
+      required: [id, number, status, total_cents, units, created_at, paid_at, tracking_carrier, tracking_number]
+      properties:
+        id: { type: string, format: uuid }
+        number: { type: integer, format: int64 }
+        status: { $ref: "#/components/schemas/OrderStatus" }
+        total_cents: { type: integer, format: int64 }
+        units: { type: integer, description: "Cajas en el pedido" }
+        created_at: { type: string, format: date-time }
+        paid_at: { type: string, format: date-time, nullable: true }
+        tracking_carrier: { type: string, nullable: true }
+        tracking_number: { type: string, nullable: true }
     Order:
       type: object
       required: [id, number, status, subtotal_cents, shipping_cents, discount_cents, total_cents, created_at, items]
       properties:
+        tracking_carrier: { type: string, nullable: true }
+        tracking_number: { type: string, nullable: true }
         id: { type: string, format: uuid }
         number: { type: integer, format: int64 }
         status: { $ref: "#/components/schemas/OrderStatus" }
@@ -1572,6 +1658,40 @@ components:
         stock_after: { type: integer, description: Existencia resultante }
         created_at: { type: string, format: date-time }
         actor_email: { type: string }
+    SalesReport:
+      type: object
+      required: [orders, revenue_cents, units, daily, top_products]
+      properties:
+        orders: { type: integer }
+        revenue_cents: { type: integer, format: int64 }
+        units: { type: integer, description: "Cajas vendidas" }
+        daily:
+          type: array
+          items:
+            type: object
+            required: [date, orders, revenue_cents]
+            properties:
+              date: { type: string, format: date }
+              orders: { type: integer }
+              revenue_cents: { type: integer, format: int64 }
+        top_products:
+          type: array
+          items:
+            type: object
+            required: [product_name, brand_name, units, revenue_cents]
+            properties:
+              product_name: { type: string }
+              brand_name: { type: string }
+              units: { type: integer }
+              revenue_cents: { type: integer, format: int64 }
+    RepurchaseReport:
+      type: object
+      required: [customers, repeat_customers, reminders_sent, reorders_from_reminder]
+      properties:
+        customers: { type: integer }
+        repeat_customers: { type: integer }
+        reminders_sent: { type: integer }
+        reorders_from_reminder: { type: integer }
     LowStockItem:
       type: object
       required: [variant_id, sku, product_id, product_name, brand_name, stock, reserved, available]

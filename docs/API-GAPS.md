@@ -46,3 +46,6 @@ Todo lo que la tienda usa ya está en el contrato real; **no queda ningún contr
 Todo el flujo está probado en la API con Postgres real y servicios externos simulados, y la web compila con el contrato real. **No** se ha ejecutado contra:
 Supabase (sesión y Google), Mercado Pago real (checkout y webhook), un bucket de R2 real (recetas; requiere CORS que permita `PUT` con `Content-Type`) ni el
 backend desplegado en Cloudflare Workers/Railway.
+
+- **Historial de pedidos** (`lentes-api` 22decae): `GET /v1/me/orders?cursor&limit` (más reciente primero, sin pedidos vencidos) y `tracking_carrier`/`tracking_number`
+  en el pedido. La web los muestra en `/cuenta/pedidos` con "Volver a pedir" (pedidos cobrados). **Sin verificar en navegador:** requiere sesión de Supabase; compila, lint y tipos pasan.
