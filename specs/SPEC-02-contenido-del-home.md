@@ -1,6 +1,6 @@
 # SPEC 02 — Contenido administrable del home
 
-> **Status:** Implemented — lentes-api#create-pr.sh: line 89: label_args[@]: unbound variable, lentes-admin#create-pr.sh: line 89: label_args[@]: unbound variable
+> **Status:** Implemented — lentes-api#2, lentes-admin#1
 > **Depends on:** SPEC 01
 > **Date:** 2026-11-02
 > **Objective:** Permitir que el admin programe desde `lentes-admin` la barra promocional, los banners y los productos destacados del home.

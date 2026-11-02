@@ -1,6 +1,6 @@
 # SPEC 04 — Compra de armazón con micas
 
-> **Status:** Implemented — lentes-api#create-pr.sh: line 89: label_args[@]: unbound variable, lentes-admin#create-pr.sh: line 89: label_args[@]: unbound variable, lentes-web#create-pr.sh: line 89: label_args[@]: unbound variable
+> **Status:** Implemented — lentes-api#2, lentes-admin#1, lentes-web#1
 > **Depends on:** SPEC 01, SPEC 03
 > **Date:** 2026-11-02
 > **Objective:** Permitir que un cliente compre un armazón con un paquete de micas y su receta de armazones.
