@@ -16,9 +16,9 @@ export function PrescriptionList() {
       {items.map((r) => (
         <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
           <div>
-            <p className="font-medium">{r.doctor_name}</p>
+            <p className="font-medium">{r.doctor_name} <span className="font-normal text-muted-foreground">· {r.kind === "glasses" ? "Armazones" : "Lentes de contacto"}</span></p>
             <p className="text-xs text-muted-foreground">
-              <span className="optic">OD {r.od_sphere} · OI {r.os_sphere}</span> · vigente hasta {r.expires_at}
+              <span className="optic">OD {r.od_sphere} · OI {r.os_sphere}</span> · vigente hasta {r.expires_at}{r.pd_mm != null && <> · <span className="optic">DP {r.pd_mm} mm</span></>}
             </p>
           </div>
           {r.status === "rejected" && r.reject_reason && (

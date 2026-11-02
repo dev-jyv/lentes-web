@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useGetOrder } from "@/lib/api/generated/api";
-import { formatMxn } from "@/lib/format";
+import { colorLabel, formatMxn } from "@/lib/format";
 
 const FINAL = ["paid", "preparing", "shipped", "delivered", "cancelled", "refunded", "expired"];
 
@@ -40,6 +40,17 @@ export function OrderStatus({ orderId }: { orderId: string }) {
         {paid ? "¡Gracias por tu compra!" : failed ? "Tu pago no se completó" : "Confirmando tu pago…"}
       </h2>
       <p>Pedido <strong className="optic">LC-{String(o.number).padStart(6, "0")}</strong> · {formatMxn(o.total_cents)}</p>
+      {o.items.some((i) => i.category === "frame") && (
+        <ul className="space-y-1 text-sm">
+          {o.items.filter((i) => i.category === "frame").map((i) => (
+            <li key={i.sku + (i.lens_package_name ?? "")}>
+              {i.quantity}× {i.product_name}
+              {i.color && ` · ${colorLabel[i.color as keyof typeof colorLabel] ?? i.color}`}
+              {i.lens_package_name && ` · ${i.lens_package_name}`}
+            </li>
+          ))}
+        </ul>
+      )}
       {!paid && !failed && (
         <p className="text-sm text-muted-foreground">
           Esto puede tardar unos segundos. Si pagaste en OXXO o SPEI, se confirma cuando recibamos el pago.

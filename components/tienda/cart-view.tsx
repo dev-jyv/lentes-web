@@ -8,7 +8,7 @@ import {
   getGetCartQueryKey, useDeleteCartItem, useGetCart, useUpdateCartItem,
 } from "@/lib/api/generated/api";
 import type { CartItem } from "@/lib/api/generated/model";
-import { formatMxn } from "@/lib/format";
+import { colorLabel, formatMxn, productHref } from "@/lib/format";
 
 const eyeLabel = { right: "Ojo derecho", left: "Ojo izquierdo", both: "Ambos ojos" } as const;
 const sign = (n?: number | null) => (n == null ? null : n > 0 ? `+${n.toFixed(2)}` : n.toFixed(2));
@@ -22,6 +22,23 @@ function describe(i: CartItem) {
     `CB ${i.base_curve}`,
     `Diám ${i.diameter}`,
   ].filter(Boolean).join(" · ");
+}
+
+function FrameLine({ item }: { item: CartItem }) {
+  const color = item.color ? colorLabel[item.color as keyof typeof colorLabel] ?? item.color : null;
+  return (
+    <>
+      <p className="text-sm">{color}{item.lens_package && ` · ${item.lens_package.name}`}</p>
+      {item.frame_price_cents != null && item.package_price_cents != null && (
+        <p className="text-xs text-muted-foreground">
+          Armazón {formatMxn(item.frame_price_cents)} + micas {formatMxn(item.package_price_cents)}
+        </p>
+      )}
+      <Link href={productHref({ category: item.category, slug: item.product.slug })} className="text-xs text-primary underline">
+        Cambiar color o micas
+      </Link>
+    </>
+  );
 }
 
 export function CartView() {
@@ -41,7 +58,10 @@ export function CartView() {
     return (
       <div className="space-y-4 py-10 text-center">
         <p className="text-muted-foreground">Tu carrito está vacío.</p>
-        <Button render={<Link href="/lentes" />} nativeButton={false}>Ver catálogo</Button>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button render={<Link href="/armazones" />} nativeButton={false}>Ver armazones</Button>
+          <Button variant="outline" render={<Link href="/lentes" />} nativeButton={false}>Ver lentes de contacto</Button>
+        </div>
       </div>
     );
   }
@@ -54,13 +74,21 @@ export function CartView() {
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">{i.product.brand}</p>
               <p className="font-medium">{i.product.name}</p>
-              <p className="text-sm">{eyeLabel[i.eye]}</p>
-              <p className="optic text-xs text-muted-foreground">{describe(i)}</p>
+              {i.category === "frame" ? (
+                <FrameLine item={i} />
+              ) : (
+                <>
+                  <p className="text-sm">{eyeLabel[i.eye]}</p>
+                  <p className="optic text-xs text-muted-foreground">{describe(i)}</p>
+                </>
+              )}
               {!i.purchasable && (
                 <p role="alert" className="text-xs text-destructive">
-                  {i.available > 0
-                    ? `Solo quedan ${i.available} en existencia.`
-                    : "Agotado: quítalo para continuar."}
+                  {i.category === "frame"
+                    ? "Este armazón o sus micas ya no están disponibles: quítalo y elige de nuevo."
+                    : i.available > 0
+                      ? `Solo quedan ${i.available} en existencia.`
+                      : "Agotado: quítalo para continuar."}
                 </p>
               )}
             </div>

@@ -17,6 +17,7 @@ import {
 import { useTurnstile } from "@/components/turnstile";
 import { track } from "@/lib/analytics";
 import { formatMxn } from "@/lib/format";
+import type { Prescription } from "@/lib/api/generated/model";
 import { isUsable, rxStatusLabel } from "@/lib/prescription";
 
 const req = z.string().trim().min(1, "Requerido");
@@ -85,6 +86,38 @@ function checkoutMessage(status: number, detail?: string) {
   }
 }
 
+function RxPicker({
+  title, name, emptyText, items, value, onPick,
+}: {
+  title: string; name: string; emptyText: string; items: Prescription[]; value: string | undefined; onPick: (id: string) => void;
+}) {
+  return (
+    <>
+      <h2 className="pt-4 text-lg">{title}</h2>
+      {items.length === 0 ? (
+        <p className="text-sm">
+          {emptyText}{" "}
+          <Link href="/cuenta/recetas" className="underline">Sube tu receta</Link> y regresa aquí.
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {items.map((r) => (
+            <li key={r.id}>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-card p-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-secondary">
+                <input type="radio" name={name} className="mt-1" checked={value === r.id} onChange={() => onPick(r.id)} />
+                <span>
+                  <strong>{r.doctor_name}</strong> · {rxStatusLabel[r.status]}<br />
+                  <span className="optic">OD {r.od_sphere} · OI {r.os_sphere}</span> · vigente hasta {r.expires_at}
+                </span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
 export function CheckoutForm() {
   const queryClient = useQueryClient();
   const cartQuery = useGetCart();
@@ -93,6 +126,7 @@ export function CheckoutForm() {
   const turnstile = useTurnstile();
   const started = useRef(false);
   const [pickedRx, setPickedRx] = useState<string | null>(null);
+  const [pickedGlassesRx, setPickedGlassesRx] = useState<string | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [paying, setPaying] = useState(false);
@@ -111,21 +145,27 @@ export function CheckoutForm() {
   const addresses = addressesQuery.data?.status === 200 ? addressesQuery.data.data.items : [];
   if (!cart || cart.items.length === 0) {
     return <p className="py-10 text-center text-muted-foreground">
-      Tu carrito está vacío. <Link href="/lentes" className="underline">Ver catálogo</Link>
+      Tu carrito está vacío. <Link href="/armazones" className="underline">Ver armazones</Link> o <Link href="/lentes" className="underline">lentes de contacto</Link>
     </p>;
   }
   const needsRx = cart.items.some((i) => i.product.requires_prescription);
-  const prescriptions = (rxQuery.data?.status === 200 ? rxQuery.data.data.items : []).filter(isUsable);
-  const prescriptionId = needsRx
-    ? (pickedRx ?? prescriptions.find((r) => r.status === "approved")?.id ?? prescriptions[0]?.id)
-    : undefined;
+  const needsGlassesRx = cart.items.some((i) => i.lens_package?.requires_prescription);
+  const hasFrames = cart.items.some((i) => i.category === "frame");
+  const usable = (rxQuery.data?.status === 200 ? rxQuery.data.data.items : []).filter(isUsable);
+  // Una receta de armazones y una de lentes de contacto no son intercambiables.
+  const prescriptions = usable.filter((r) => (r.kind ?? "contact_lens") === "contact_lens");
+  const glassesPrescriptions = usable.filter((r) => r.kind === "glasses");
+  const firstUsable = (list: typeof usable) => list.find((r) => r.status === "approved")?.id ?? list[0]?.id;
+  const prescriptionId = needsRx ? (pickedRx ?? firstUsable(prescriptions)) : undefined;
+  const glassesPrescriptionId = needsGlassesRx ? (pickedGlassesRx ?? firstUsable(glassesPrescriptions)) : undefined;
+  const rxMissing = (needsRx && !prescriptionId) || (needsGlassesRx && !glassesPrescriptionId);
   const addressId = picked ?? addresses.find((a) => a.is_default)?.id ?? addresses[0]?.id;
 
   async function pay() {
-    if (!addressId || (needsRx && !prescriptionId) || (turnstile.required && !turnstile.token)) return;
+    if (!addressId || rxMissing || (turnstile.required && !turnstile.token)) return;
     setPaying(true);
     setError(null);
-    const res = await createCheckout({ address_id: addressId, prescription_id: prescriptionId ?? null, turnstile_token: turnstile.token });
+    const res = await createCheckout({ address_id: addressId, prescription_id: prescriptionId ?? null, glasses_prescription_id: glassesPrescriptionId ?? null, turnstile_token: turnstile.token });
     if (res.status !== 201) {
       setPaying(false);
       turnstile.reset();
@@ -163,30 +203,18 @@ export function CheckoutForm() {
           <Button variant="outline" size="sm" onClick={() => setAdding(true)}>Agregar otra dirección</Button>
         )}
         {needsRx && (
-          <>
-            <h2 className="pt-4 text-lg">Receta</h2>
-            {prescriptions.length === 0 ? (
-              <p className="text-sm">
-                Tus lentes requieren receta vigente.{" "}
-                <Link href="/cuenta/recetas" className="underline">Sube tu receta</Link> y regresa aquí.
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {prescriptions.map((r) => (
-                  <li key={r.id}>
-                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-card p-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-secondary">
-                      <input type="radio" name="rx" className="mt-1"
-                        checked={prescriptionId === r.id} onChange={() => setPickedRx(r.id)} />
-                      <span>
-                        <strong>{r.doctor_name}</strong> · {rxStatusLabel[r.status]}<br />
-                        <span className="optic">OD {r.od_sphere} · OI {r.os_sphere}</span> · vigente hasta {r.expires_at}
-                      </span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
+          <RxPicker
+            title={needsGlassesRx ? "Receta de lentes de contacto" : "Receta"} name="rx"
+            emptyText="Tus lentes requieren receta vigente de lentes de contacto."
+            items={prescriptions} value={prescriptionId} onPick={setPickedRx}
+          />
+        )}
+        {needsGlassesRx && (
+          <RxPicker
+            title={needsRx ? "Receta de armazones" : "Receta"} name="glasses-rx"
+            emptyText="Tus micas requieren receta vigente de armazones."
+            items={glassesPrescriptions} value={glassesPrescriptionId} onPick={setPickedGlassesRx}
+          />
         )}
       </section>
       <aside className="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-28">
@@ -205,9 +233,16 @@ export function CheckoutForm() {
         <p className="text-xs text-muted-foreground">
           El backend valida precios y stock al pagar; el total final puede variar por envío.
         </p>
+        {hasFrames && (
+          <p className="text-xs text-muted-foreground">
+            {cart.frame_lead_time_days != null && <>Tus armazones con micas se entregan en unos {cart.frame_lead_time_days} días. </>}
+            Las micas se fabrican a medida: consulta la{" "}
+            <Link href="/cambios-y-devoluciones" className="underline">política de cambios y devoluciones</Link>.
+          </p>
+        )}
         {turnstile.widget}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <Button size="lg" className="w-full" disabled={!addressId || (needsRx && !prescriptionId) || (turnstile.required && !turnstile.token) || paying} onClick={pay}>
+        <Button size="lg" className="w-full" disabled={!addressId || rxMissing || (turnstile.required && !turnstile.token) || paying} onClick={pay}>
           {paying ? "Redirigiendo…" : "Pagar con Mercado Pago"}
         </Button>
       </aside>

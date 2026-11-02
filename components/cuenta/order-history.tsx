@@ -50,8 +50,11 @@ export function OrderHistory() {
             <div>
               <p className="font-medium"><span className="optic">{orderFolio(o.number)}</span> · {formatMxn(o.total_cents)}</p>
               <p className="text-xs text-muted-foreground">
-                {dateFmt.format(new Date(o.created_at))} · {o.units} {o.units === 1 ? "caja" : "cajas"}
+                {dateFmt.format(new Date(o.created_at))} · {o.units} {o.units === 1 ? "artículo" : "artículos"}
               </p>
+              {o.frame_lines.map((line, i) => (
+                <p key={i} className="text-xs text-muted-foreground">{line}</p>
+              ))}
               {o.tracking_number && (
                 <p className="text-xs text-muted-foreground">
                   Guía {o.tracking_carrier ? `${o.tracking_carrier}: ` : ""}<span className="optic">{o.tracking_number}</span>
@@ -62,7 +65,7 @@ export function OrderHistory() {
               <Badge variant={o.status === "cancelled" || o.status === "refunded" ? "destructive" : "secondary"}>
                 {orderStatusLabel[o.status]}
               </Badge>
-              {canReorder(o.status) && (
+              {canReorder(o.status) && o.reorderable && (
                 <Button variant="outline" size="sm" render={<Link href={`/recompra/${o.id}`} />} nativeButton={false}>
                   Volver a pedir
                 </Button>

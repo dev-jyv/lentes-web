@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { ProductViewTracker } from "@/components/tienda/product-view-tracker";
 import { RxSelector } from "@/components/tienda/rx-selector";
 import { Badge } from "@/components/ui/badge";
 import { getProduct } from "@/lib/api/generated/api";
 import { env } from "@/lib/env";
 import { imageSrc } from "@/lib/images";
-import { formatMxn, lensTypeLabel, replacementLabel } from "@/lib/format";
+import { formatMxn, lensTypeLabel, productHref, replacementLabel } from "@/lib/format";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -22,13 +22,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${p.name} | ${p.brand.name}`,
     description: p.description ?? `Compra ${p.name} de ${p.brand.name}.`,
-    alternates: { canonical: `/lentes/${p.slug}` },
+    alternates: { canonical: productHref(p) },
   };
 }
 
 export default async function ProductPage({ params }: Props) {
   const p = await load((await params).slug);
   if (!p) notFound();
+  if (p.category !== "contact_lens") permanentRedirect(productHref(p));
 
   const images = p.images.map((i) => imageSrc(i.url)).filter((x): x is string => !!x);
 
@@ -73,9 +74,9 @@ export default async function ProductPage({ params }: Props) {
           <p className="text-sm text-muted-foreground">{p.brand.name}</p>
           <h1 className="text-3xl sm:text-4xl">{p.name}</h1>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{lensTypeLabel[p.lens_type]}</Badge>
-            <Badge variant="secondary">{replacementLabel[p.replacement]}</Badge>
-            <Badge variant="outline">{p.pieces_per_box} piezas por caja</Badge>
+            {p.lens_type && <Badge variant="secondary">{lensTypeLabel[p.lens_type]}</Badge>}
+            {p.replacement && <Badge variant="secondary">{replacementLabel[p.replacement]}</Badge>}
+            {p.pieces_per_box != null && <Badge variant="outline">{p.pieces_per_box} piezas por caja</Badge>}
           </div>
           <p className="text-lg">
             {p.from_price_cents != null ? (
