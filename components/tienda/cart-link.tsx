@@ -11,7 +11,7 @@ export function CartLink({ icon }: { icon: ReactNode }) {
     <Link
       href="/carrito"
       aria-label={count > 0 ? `Carrito, ${count} artículos` : "Carrito"}
-      className="relative rounded-full p-2 hover:bg-accent"
+      className="relative grid size-11 place-items-center rounded-full hover:bg-accent"
     >
       {icon}
       {count > 0 && (

@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,10 @@ const schema = z.object({
   expires_at: z.string().min(1, "Requerido"),
   doctor_name: z.string().trim().min(2, "Requerido"),
   doctor_license: z.string(),
+  kind: z.enum(["contact_lens", "glasses"]),
+  pd_mm: z.string().trim().refine(
+    (v) => v === "" || (/^\d{2}(\.\d)?$/.test(v) && Number(v) >= 40 && Number(v) <= 80), "Entre 40.0 y 80.0 mm",
+  ),
 }).refine((v) => v.expires_at >= v.issued_at, {
   path: ["expires_at"], message: "Debe ser posterior a la fecha de emisión",
 }).refine((v) => !v.od_cylinder || v.od_axis, { path: ["od_axis"], message: "Requerido con cilindro" })
@@ -69,15 +73,17 @@ export function PrescriptionForm() {
   const [fileError, setFileError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } =
     useForm<Values>({
       resolver: zodResolver(schema),
       defaultValues: {
         od_sphere: "", od_cylinder: "", od_axis: "", od_addition: "",
         os_sphere: "", os_cylinder: "", os_axis: "", os_addition: "",
-        issued_at: "", expires_at: "", doctor_name: "", doctor_license: "",
+        issued_at: "", expires_at: "", doctor_name: "", doctor_license: "", kind: "contact_lens", pd_mm: "",
       },
     });
+
+  const kind = useWatch({ control, name: "kind" });
 
   function pick(f: File | null) {
     setFileError(null);
@@ -111,6 +117,7 @@ export function PrescriptionForm() {
       os_axis: num(v.os_axis), os_addition: str(v.os_addition),
       issued_at: v.issued_at, expires_at: v.expires_at,
       doctor_name: v.doctor_name.trim(), doctor_license: str(v.doctor_license),
+      kind: v.kind, pd_mm: v.kind === "glasses" ? num(v.pd_mm) : null,
     });
     if (res.status !== 201) return setError(apiMessage(res, "No pudimos guardar tu receta."));
     await queryClient.invalidateQueries({ queryKey: getListPrescriptionsQueryKey() });
@@ -122,6 +129,13 @@ export function PrescriptionForm() {
   const e = errors as Record<string, { message?: string } | undefined>;
   return (
     <form onSubmit={onSubmit} className="space-y-6">
+      <div className="space-y-1">
+        <Label htmlFor="kind" className="text-xs">Tipo de receta</Label>
+        <select id="kind" className="h-11 w-full max-w-xs rounded-lg border bg-card px-3 text-sm" {...register("kind")}>
+          <option value="contact_lens">Lentes de contacto</option>
+          <option value="glasses">Armazones</option>
+        </select>
+      </div>
       <div className="space-y-1">
         <Label htmlFor="file">Foto o PDF de tu receta (máx. 10 MB)</Label>
         <Input id="file" type="file" accept={ALLOWED_TYPES.join(",")}
@@ -141,6 +155,12 @@ export function PrescriptionForm() {
           </div>
         </fieldset>
       ))}
+      {kind === "glasses" && (
+        <div className="max-w-xs">
+          <Input2 label="Distancia pupilar en mm (opcional)" name="pd_mm" placeholder="63.5" errors={e} register={register} />
+          <p className="mt-1 text-xs text-muted-foreground">Si tu receta no la trae, te la pediremos antes de fabricar tus micas.</p>
+        </div>
+      )}
       <div className="grid gap-3 sm:grid-cols-2">
         <Input2 label="Fecha de emisión" name="issued_at" type="date" errors={e} register={register} />
         <Input2 label="Vigente hasta" name="expires_at" type="date" errors={e} register={register} />

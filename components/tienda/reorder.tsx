@@ -11,7 +11,7 @@ import type { UnavailableItem } from "@/lib/api/generated/model";
 import { formatMxn } from "@/lib/format";
 
 const eyeLabel = { right: "Ojo derecho", left: "Ojo izquierdo", both: "Ambos ojos" } as const;
-const reasonLabel = { out_of_stock: "agotado", discontinued: "ya no se vende" } as const;
+const reasonLabel = { out_of_stock: "agotado", discontinued: "ya no se vende", not_reorderable: "las micas se fabrican a medida; elígelo de nuevo en su ficha" } as const;
 const sign = (n?: number | null) => (n == null ? null : n > 0 ? `+${n.toFixed(2)}` : n.toFixed(2));
 
 export function Reorder({ orderId }: { orderId: string }) {
@@ -58,7 +58,11 @@ export function Reorder({ orderId }: { orderId: string }) {
           <li key={idx} className="flex flex-wrap justify-between gap-2 p-4 text-sm">
             <div>
               <p className="font-medium">{i.product_name} <span className="text-muted-foreground">· {i.brand_name}</span></p>
-              <p>{eyeLabel[i.eye]} · {i.quantity} {i.quantity === 1 ? "caja" : "cajas"}</p>
+              {i.category === "frame" ? (
+                <p>{i.quantity} {i.quantity === 1 ? "armazón" : "armazones"}{i.lens_package_name ? ` · ${i.lens_package_name}` : ""}</p>
+              ) : (
+                <p>{eyeLabel[i.eye]} · {i.quantity} {i.quantity === 1 ? "caja" : "cajas"}</p>
+              )}
               <p className="optic text-xs text-muted-foreground">
                 {[i.sphere != null && `Esf ${sign(i.sphere)}`,
                   i.cylinder != null && `Cil ${sign(i.cylinder)}`,

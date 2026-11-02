@@ -27,7 +27,14 @@ import type {
 import type {
   Address,
   AddressInput,
+  AdminCreateBannerImageUploadUrlBody,
+  AdminHomeBanner,
   AdminImportVariants200,
+  AdminLensPackage,
+  AdminListHomeBanners200,
+  AdminListHomeFeatured200,
+  AdminListHomeFeaturedParams,
+  AdminListLensPackages200,
   AdminListLowStock200,
   AdminListLowStockParams,
   AdminListOrders200,
@@ -43,28 +50,40 @@ import type {
   AdminOrder,
   AdminPrescription,
   AdminProduct,
+  AdminReorderHomeBanners200,
+  AdminReorderHomeBannersBody,
+  AdminReorderLensPackages200,
+  AdminReorderLensPackagesBody,
   AdminReorderProductImages200,
   AdminRepurchaseReportParams,
   AdminSalesReportParams,
+  AdminSetHomeFeatured200,
+  AdminSetHomeFeaturedBody,
   AdminVariant,
   Brand,
   BrandInput,
   Cart,
   CartItemInput,
   CartItemUpdate,
+  CatalogFacets,
   CheckoutInput,
   CheckoutResult,
   Customer,
   CustomerUpdate,
+  GetCatalogFacetsParams,
   GetHealth200,
   GetProductVariantParams,
+  HomeBannerInput,
+  HomeContent,
   ImageAddInput,
   ImageOrderInput,
   ImageUpload,
   ImageUploadInput,
   ImportProblem,
+  LensPackageInput,
   ListAddresses200,
   ListBrands200,
+  ListBrandsParams,
   ListMyOrders200,
   ListMyOrdersParams,
   ListPrescriptions200,
@@ -364,27 +383,41 @@ export type listBrandsResponse200 = {
   status: 200
 }
 
+export type listBrandsResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
 export type listBrandsResponseSuccess = (listBrandsResponse200) & {
   headers: Headers;
 };
-;
+export type listBrandsResponseError = (listBrandsResponse400) & {
+  headers: Headers;
+};
 
-export type listBrandsResponse = (listBrandsResponseSuccess)
+export type listBrandsResponse = (listBrandsResponseSuccess | listBrandsResponseError)
 
-export const getListBrandsUrl = () => {
+export const getListBrandsUrl = (params?: ListBrandsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/v1/brands`
+  return stringifiedParams.length > 0 ? `/v1/brands?${stringifiedParams}` : `/v1/brands`
 }
 
 /**
  * @summary Lista de marcas
  */
-export const listBrands = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listBrandsResponse> => {
+export const listBrands = async (params?: ListBrandsParams, options?: Parameters<typeof apiFetch>[1]): Promise<listBrandsResponse> => {
 
-  return apiFetch<listBrandsResponse>(getListBrandsUrl(),
+  return apiFetch<listBrandsResponse>(getListBrandsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -397,23 +430,23 @@ export const listBrands = async ( options?: Parameters<typeof apiFetch>[1]): Pro
 
 
 
-export const getListBrandsQueryKey = () => {
+export const getListBrandsQueryKey = (params?: ListBrandsParams,) => {
     return [
-    `/v1/brands`
+    `/v1/brands`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListBrandsQueryOptions = <TData = Awaited<ReturnType<typeof listBrands>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getListBrandsQueryOptions = <TData = Awaited<ReturnType<typeof listBrands>>, TError = ProblemResponse>(params?: ListBrandsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListBrandsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListBrandsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listBrands>>> = ({ signal }) => listBrands({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listBrands>>> = ({ signal }) => listBrands(params, { signal, ...requestOptions });
 
 
 
@@ -423,11 +456,11 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListBrandsQueryResult = NonNullable<Awaited<ReturnType<typeof listBrands>>>
-export type ListBrandsQueryError = unknown
+export type ListBrandsQueryError = ProblemResponse
 
 
-export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>> & Pick<
+export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = ProblemResponse>(
+ params: undefined |  ListBrandsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listBrands>>,
           TError,
@@ -436,8 +469,8 @@ export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TE
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>> & Pick<
+export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = ProblemResponse>(
+ params?: ListBrandsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listBrands>>,
           TError,
@@ -446,20 +479,260 @@ export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TE
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = ProblemResponse>(
+ params?: ListBrandsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Lista de marcas
  */
 
-export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = ProblemResponse>(
+ params?: ListBrandsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListBrandsQueryOptions(options)
+  const queryOptions = getListBrandsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getCatalogFacetsResponse200 = {
+  data: CatalogFacets
+  status: 200
+}
+
+export type getCatalogFacetsResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type getCatalogFacetsResponseSuccess = (getCatalogFacetsResponse200) & {
+  headers: Headers;
+};
+export type getCatalogFacetsResponseError = (getCatalogFacetsResponse400) & {
+  headers: Headers;
+};
+
+export type getCatalogFacetsResponse = (getCatalogFacetsResponseSuccess | getCatalogFacetsResponseError)
+
+export const getGetCatalogFacetsUrl = (params: GetCatalogFacetsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/catalog/facets?${stringifiedParams}` : `/v1/catalog/facets`
+}
+
+/**
+ * @summary Valores de filtro con productos activos en una categoría
+ */
+export const getCatalogFacets = async (params: GetCatalogFacetsParams, options?: Parameters<typeof apiFetch>[1]): Promise<getCatalogFacetsResponse> => {
+
+  return apiFetch<getCatalogFacetsResponse>(getGetCatalogFacetsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCatalogFacetsQueryKey = (params?: GetCatalogFacetsParams,) => {
+    return [
+    `/v1/catalog/facets`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetCatalogFacetsQueryOptions = <TData = Awaited<ReturnType<typeof getCatalogFacets>>, TError = ProblemResponse>(params: GetCatalogFacetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogFacets>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCatalogFacetsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCatalogFacets>>> = ({ signal }) => getCatalogFacets(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCatalogFacets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCatalogFacetsQueryResult = NonNullable<Awaited<ReturnType<typeof getCatalogFacets>>>
+export type GetCatalogFacetsQueryError = ProblemResponse
+
+
+export function useGetCatalogFacets<TData = Awaited<ReturnType<typeof getCatalogFacets>>, TError = ProblemResponse>(
+ params: GetCatalogFacetsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogFacets>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCatalogFacets>>,
+          TError,
+          Awaited<ReturnType<typeof getCatalogFacets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCatalogFacets<TData = Awaited<ReturnType<typeof getCatalogFacets>>, TError = ProblemResponse>(
+ params: GetCatalogFacetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogFacets>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCatalogFacets>>,
+          TError,
+          Awaited<ReturnType<typeof getCatalogFacets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCatalogFacets<TData = Awaited<ReturnType<typeof getCatalogFacets>>, TError = ProblemResponse>(
+ params: GetCatalogFacetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogFacets>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Valores de filtro con productos activos en una categoría
+ */
+
+export function useGetCatalogFacets<TData = Awaited<ReturnType<typeof getCatalogFacets>>, TError = ProblemResponse>(
+ params: GetCatalogFacetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogFacets>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCatalogFacetsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getHomeResponse200 = {
+  data: HomeContent
+  status: 200
+}
+
+export type getHomeResponseSuccess = (getHomeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getHomeResponse = (getHomeResponseSuccess)
+
+export const getGetHomeUrl = () => {
+
+
+
+
+  return `/v1/home`
+}
+
+/**
+ * @summary Contenido vigente del home
+ */
+export const getHome = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getHomeResponse> => {
+
+  return apiFetch<getHomeResponse>(getGetHomeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetHomeQueryKey = () => {
+    return [
+    `/v1/home`
+    ] as const;
+    }
+
+
+export const getGetHomeQueryOptions = <TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHomeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHome>>> = ({ signal }) => getHome({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetHomeQueryResult = NonNullable<Awaited<ReturnType<typeof getHome>>>
+export type GetHomeQueryError = unknown
+
+
+export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHome>>,
+          TError,
+          Awaited<ReturnType<typeof getHome>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHome>>,
+          TError,
+          Awaited<ReturnType<typeof getHome>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Contenido vigente del home
+ */
+
+export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetHomeQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -3396,7 +3669,8 @@ export const getAdminUpdateOrderUrl = (id: string,) => {
  * Transiciones: `paid` → `preparing` | `cancelled`; `preparing` → `shipped` | `cancelled`; `shipped` → `delivered`.
  * `shipped` exige `tracking_carrier` y `tracking_number`. Con el pedido ya enviado se puede corregir la guía sin cambiar el estado.
  * Cancelar un pedido que no salió devuelve su existencia al inventario; **no reembolsa**: el reembolso en Mercado Pago es manual (ver docs/ADMIN_ORDERS.md).
- * `409` si la transición no es válida, falta la guía o el estado cambió mientras tanto.
+ * Un pedido con micas graduadas no pasa a `preparing` sin receta de armazones aprobada y con distancia pupilar.
+ * `409` si la transición no es válida, falta la guía, la receta no está lista o el estado cambió mientras tanto.
  * @summary Cambia el estado de un pedido o corrige su guía
  */
 export const adminUpdateOrder = async (id: string,
@@ -4676,6 +4950,1346 @@ export function useAdminRepurchaseReport<TData = Awaited<ReturnType<typeof admin
 
 
 
+
+export type adminListHomeBannersResponse200 = {
+  data: AdminListHomeBanners200
+  status: 200
+}
+
+export type adminListHomeBannersResponseSuccess = (adminListHomeBannersResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminListHomeBannersResponse = (adminListHomeBannersResponseSuccess)
+
+export const getAdminListHomeBannersUrl = () => {
+
+
+
+
+  return `/v1/admin/home/banners`
+}
+
+/**
+ * @summary Todos los banners, vigentes o no
+ */
+export const adminListHomeBanners = async ( options?: Parameters<typeof apiFetch>[1]): Promise<adminListHomeBannersResponse> => {
+
+  return apiFetch<adminListHomeBannersResponse>(getAdminListHomeBannersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListHomeBannersQueryKey = () => {
+    return [
+    `/v1/admin/home/banners`
+    ] as const;
+    }
+
+
+export const getAdminListHomeBannersQueryOptions = <TData = Awaited<ReturnType<typeof adminListHomeBanners>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeBanners>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListHomeBannersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListHomeBanners>>> = ({ signal }) => adminListHomeBanners({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListHomeBanners>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminListHomeBannersQueryResult = NonNullable<Awaited<ReturnType<typeof adminListHomeBanners>>>
+export type AdminListHomeBannersQueryError = unknown
+
+
+export function useAdminListHomeBanners<TData = Awaited<ReturnType<typeof adminListHomeBanners>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeBanners>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListHomeBanners>>,
+          TError,
+          Awaited<ReturnType<typeof adminListHomeBanners>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListHomeBanners<TData = Awaited<ReturnType<typeof adminListHomeBanners>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeBanners>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListHomeBanners>>,
+          TError,
+          Awaited<ReturnType<typeof adminListHomeBanners>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListHomeBanners<TData = Awaited<ReturnType<typeof adminListHomeBanners>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeBanners>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Todos los banners, vigentes o no
+ */
+
+export function useAdminListHomeBanners<TData = Awaited<ReturnType<typeof adminListHomeBanners>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeBanners>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListHomeBannersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminCreateHomeBannerResponse201 = {
+  data: AdminHomeBanner
+  status: 201
+}
+
+export type adminCreateHomeBannerResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminCreateHomeBannerResponseSuccess = (adminCreateHomeBannerResponse201) & {
+  headers: Headers;
+};
+export type adminCreateHomeBannerResponseError = (adminCreateHomeBannerResponse400) & {
+  headers: Headers;
+};
+
+export type adminCreateHomeBannerResponse = (adminCreateHomeBannerResponseSuccess | adminCreateHomeBannerResponseError)
+
+export const getAdminCreateHomeBannerUrl = () => {
+
+
+
+
+  return `/v1/admin/home/banners`
+}
+
+/**
+ * @summary Crea un banner al final de su ubicación
+ */
+export const adminCreateHomeBanner = async (homeBannerInput: HomeBannerInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateHomeBannerResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminCreateHomeBannerResponse>(getAdminCreateHomeBannerUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(homeBannerInput)
+  }
+);}
+
+
+
+
+
+export const getAdminCreateHomeBannerMutationKey = () => ['adminCreateHomeBanner'] as const;
+
+export const getAdminCreateHomeBannerMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateHomeBanner>>, TError,AdminCreateHomeBannerMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminCreateHomeBanner>>, TError,AdminCreateHomeBannerMutationVariables, TContext> => {
+
+const mutationKey = getAdminCreateHomeBannerMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCreateHomeBanner>>, AdminCreateHomeBannerMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminCreateHomeBanner(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminCreateHomeBannerMutationResult = NonNullable<Awaited<ReturnType<typeof adminCreateHomeBanner>>>
+    export type AdminCreateHomeBannerMutationBody = HomeBannerInput
+    export type AdminCreateHomeBannerMutationError = ProblemResponse
+    export type AdminCreateHomeBannerMutationVariables = {data: HomeBannerInput}
+
+    /**
+ * @summary Crea un banner al final de su ubicación
+ */
+export const useAdminCreateHomeBanner = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateHomeBanner>>, TError,AdminCreateHomeBannerMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminCreateHomeBanner>>,
+        TError,
+        AdminCreateHomeBannerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminCreateHomeBannerMutationOptions(options), queryClient);
+    }
+
+export type adminReorderHomeBannersResponse200 = {
+  data: AdminReorderHomeBanners200
+  status: 200
+}
+
+export type adminReorderHomeBannersResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminReorderHomeBannersResponseSuccess = (adminReorderHomeBannersResponse200) & {
+  headers: Headers;
+};
+export type adminReorderHomeBannersResponseError = (adminReorderHomeBannersResponse400) & {
+  headers: Headers;
+};
+
+export type adminReorderHomeBannersResponse = (adminReorderHomeBannersResponseSuccess | adminReorderHomeBannersResponseError)
+
+export const getAdminReorderHomeBannersUrl = () => {
+
+
+
+
+  return `/v1/admin/home/banners/order`
+}
+
+/**
+ * @summary Fija el orden completo de una ubicación
+ */
+export const adminReorderHomeBanners = async (adminReorderHomeBannersBody: AdminReorderHomeBannersBody, options?: Parameters<typeof apiFetch>[1]): Promise<adminReorderHomeBannersResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminReorderHomeBannersResponse>(getAdminReorderHomeBannersUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(adminReorderHomeBannersBody)
+  }
+);}
+
+
+
+
+
+export const getAdminReorderHomeBannersMutationKey = () => ['adminReorderHomeBanners'] as const;
+
+export const getAdminReorderHomeBannersMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderHomeBanners>>, TError,AdminReorderHomeBannersMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminReorderHomeBanners>>, TError,AdminReorderHomeBannersMutationVariables, TContext> => {
+
+const mutationKey = getAdminReorderHomeBannersMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminReorderHomeBanners>>, AdminReorderHomeBannersMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminReorderHomeBanners(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminReorderHomeBannersMutationResult = NonNullable<Awaited<ReturnType<typeof adminReorderHomeBanners>>>
+    export type AdminReorderHomeBannersMutationBody = AdminReorderHomeBannersBody
+    export type AdminReorderHomeBannersMutationError = ProblemResponse
+    export type AdminReorderHomeBannersMutationVariables = {data: AdminReorderHomeBannersBody}
+
+    /**
+ * @summary Fija el orden completo de una ubicación
+ */
+export const useAdminReorderHomeBanners = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderHomeBanners>>, TError,AdminReorderHomeBannersMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminReorderHomeBanners>>,
+        TError,
+        AdminReorderHomeBannersMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminReorderHomeBannersMutationOptions(options), queryClient);
+    }
+
+export type adminCreateBannerImageUploadUrlResponse200 = {
+  data: ImageUpload
+  status: 200
+}
+
+export type adminCreateBannerImageUploadUrlResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminCreateBannerImageUploadUrlResponse502 = {
+  data: ProblemResponse
+  status: 502
+}
+
+export type adminCreateBannerImageUploadUrlResponse503 = {
+  data: ProblemResponse
+  status: 503
+}
+
+export type adminCreateBannerImageUploadUrlResponseSuccess = (adminCreateBannerImageUploadUrlResponse200) & {
+  headers: Headers;
+};
+export type adminCreateBannerImageUploadUrlResponseError = (adminCreateBannerImageUploadUrlResponse400 | adminCreateBannerImageUploadUrlResponse502 | adminCreateBannerImageUploadUrlResponse503) & {
+  headers: Headers;
+};
+
+export type adminCreateBannerImageUploadUrlResponse = (adminCreateBannerImageUploadUrlResponseSuccess | adminCreateBannerImageUploadUrlResponseError)
+
+export const getAdminCreateBannerImageUploadUrlUrl = () => {
+
+
+
+
+  return `/v1/admin/home/banners/image-url`
+}
+
+/**
+ * PUT directo al bucket público, 10 minutos, tamaño y tipo firmados. Solo JPG, PNG o WebP, máx. 5 MB.
+ * @summary URL prefirmada de R2 para subir la imagen de un banner
+ */
+export const adminCreateBannerImageUploadUrl = async (adminCreateBannerImageUploadUrlBody: AdminCreateBannerImageUploadUrlBody, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateBannerImageUploadUrlResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminCreateBannerImageUploadUrlResponse>(getAdminCreateBannerImageUploadUrlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(adminCreateBannerImageUploadUrlBody)
+  }
+);}
+
+
+
+
+
+export const getAdminCreateBannerImageUploadUrlMutationKey = () => ['adminCreateBannerImageUploadUrl'] as const;
+
+export const getAdminCreateBannerImageUploadUrlMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateBannerImageUploadUrl>>, TError,AdminCreateBannerImageUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminCreateBannerImageUploadUrl>>, TError,AdminCreateBannerImageUploadUrlMutationVariables, TContext> => {
+
+const mutationKey = getAdminCreateBannerImageUploadUrlMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCreateBannerImageUploadUrl>>, AdminCreateBannerImageUploadUrlMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminCreateBannerImageUploadUrl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminCreateBannerImageUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof adminCreateBannerImageUploadUrl>>>
+    export type AdminCreateBannerImageUploadUrlMutationBody = AdminCreateBannerImageUploadUrlBody
+    export type AdminCreateBannerImageUploadUrlMutationError = ProblemResponse
+    export type AdminCreateBannerImageUploadUrlMutationVariables = {data: AdminCreateBannerImageUploadUrlBody}
+
+    /**
+ * @summary URL prefirmada de R2 para subir la imagen de un banner
+ */
+export const useAdminCreateBannerImageUploadUrl = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateBannerImageUploadUrl>>, TError,AdminCreateBannerImageUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminCreateBannerImageUploadUrl>>,
+        TError,
+        AdminCreateBannerImageUploadUrlMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminCreateBannerImageUploadUrlMutationOptions(options), queryClient);
+    }
+
+export type adminUpdateHomeBannerResponse200 = {
+  data: AdminHomeBanner
+  status: 200
+}
+
+export type adminUpdateHomeBannerResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminUpdateHomeBannerResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminUpdateHomeBannerResponseSuccess = (adminUpdateHomeBannerResponse200) & {
+  headers: Headers;
+};
+export type adminUpdateHomeBannerResponseError = (adminUpdateHomeBannerResponse400 | adminUpdateHomeBannerResponse404) & {
+  headers: Headers;
+};
+
+export type adminUpdateHomeBannerResponse = (adminUpdateHomeBannerResponseSuccess | adminUpdateHomeBannerResponseError)
+
+export const getAdminUpdateHomeBannerUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/home/banners/${id}`
+}
+
+/**
+ * @summary Reemplaza los datos de un banner
+ */
+export const adminUpdateHomeBanner = async (id: string,
+    homeBannerInput: HomeBannerInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateHomeBannerResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminUpdateHomeBannerResponse>(getAdminUpdateHomeBannerUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(homeBannerInput)
+  }
+);}
+
+
+
+
+
+export const getAdminUpdateHomeBannerMutationKey = () => ['adminUpdateHomeBanner'] as const;
+
+export const getAdminUpdateHomeBannerMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateHomeBanner>>, TError,AdminUpdateHomeBannerMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUpdateHomeBanner>>, TError,AdminUpdateHomeBannerMutationVariables, TContext> => {
+
+const mutationKey = getAdminUpdateHomeBannerMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUpdateHomeBanner>>, AdminUpdateHomeBannerMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminUpdateHomeBanner(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUpdateHomeBannerMutationResult = NonNullable<Awaited<ReturnType<typeof adminUpdateHomeBanner>>>
+    export type AdminUpdateHomeBannerMutationBody = HomeBannerInput
+    export type AdminUpdateHomeBannerMutationError = ProblemResponse
+    export type AdminUpdateHomeBannerMutationVariables = {id: string;data: HomeBannerInput}
+
+    /**
+ * @summary Reemplaza los datos de un banner
+ */
+export const useAdminUpdateHomeBanner = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateHomeBanner>>, TError,AdminUpdateHomeBannerMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminUpdateHomeBanner>>,
+        TError,
+        AdminUpdateHomeBannerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminUpdateHomeBannerMutationOptions(options), queryClient);
+    }
+
+export type adminDeleteHomeBannerResponse204 = {
+  data: void
+  status: 204
+}
+
+export type adminDeleteHomeBannerResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminDeleteHomeBannerResponseSuccess = (adminDeleteHomeBannerResponse204) & {
+  headers: Headers;
+};
+export type adminDeleteHomeBannerResponseError = (adminDeleteHomeBannerResponse404) & {
+  headers: Headers;
+};
+
+export type adminDeleteHomeBannerResponse = (adminDeleteHomeBannerResponseSuccess | adminDeleteHomeBannerResponseError)
+
+export const getAdminDeleteHomeBannerUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/home/banners/${id}`
+}
+
+/**
+ * @summary Borra un banner; el archivo en R2 se conserva
+ */
+export const adminDeleteHomeBanner = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<adminDeleteHomeBannerResponse> => {
+
+  return apiFetch<adminDeleteHomeBannerResponse>(getAdminDeleteHomeBannerUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminDeleteHomeBannerMutationKey = () => ['adminDeleteHomeBanner'] as const;
+
+export const getAdminDeleteHomeBannerMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeleteHomeBanner>>, TError,AdminDeleteHomeBannerMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminDeleteHomeBanner>>, TError,AdminDeleteHomeBannerMutationVariables, TContext> => {
+
+const mutationKey = getAdminDeleteHomeBannerMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminDeleteHomeBanner>>, AdminDeleteHomeBannerMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  adminDeleteHomeBanner(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminDeleteHomeBannerMutationResult = NonNullable<Awaited<ReturnType<typeof adminDeleteHomeBanner>>>
+
+    export type AdminDeleteHomeBannerMutationError = ProblemResponse
+    export type AdminDeleteHomeBannerMutationVariables = {id: string}
+
+    /**
+ * @summary Borra un banner; el archivo en R2 se conserva
+ */
+export const useAdminDeleteHomeBanner = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeleteHomeBanner>>, TError,AdminDeleteHomeBannerMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminDeleteHomeBanner>>,
+        TError,
+        AdminDeleteHomeBannerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminDeleteHomeBannerMutationOptions(options), queryClient);
+    }
+
+export type adminListHomeFeaturedResponse200 = {
+  data: AdminListHomeFeatured200
+  status: 200
+}
+
+export type adminListHomeFeaturedResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminListHomeFeaturedResponseSuccess = (adminListHomeFeaturedResponse200) & {
+  headers: Headers;
+};
+export type adminListHomeFeaturedResponseError = (adminListHomeFeaturedResponse400) & {
+  headers: Headers;
+};
+
+export type adminListHomeFeaturedResponse = (adminListHomeFeaturedResponseSuccess | adminListHomeFeaturedResponseError)
+
+export const getAdminListHomeFeaturedUrl = (params: AdminListHomeFeaturedParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/admin/home/featured?${stringifiedParams}` : `/v1/admin/home/featured`
+}
+
+/**
+ * @summary Destacados de una categoría, incluidos inactivos y agotados
+ */
+export const adminListHomeFeatured = async (params: AdminListHomeFeaturedParams, options?: Parameters<typeof apiFetch>[1]): Promise<adminListHomeFeaturedResponse> => {
+
+  return apiFetch<adminListHomeFeaturedResponse>(getAdminListHomeFeaturedUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListHomeFeaturedQueryKey = (params?: AdminListHomeFeaturedParams,) => {
+    return [
+    `/v1/admin/home/featured`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminListHomeFeaturedQueryOptions = <TData = Awaited<ReturnType<typeof adminListHomeFeatured>>, TError = ProblemResponse>(params: AdminListHomeFeaturedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeFeatured>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListHomeFeaturedQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListHomeFeatured>>> = ({ signal }) => adminListHomeFeatured(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListHomeFeatured>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminListHomeFeaturedQueryResult = NonNullable<Awaited<ReturnType<typeof adminListHomeFeatured>>>
+export type AdminListHomeFeaturedQueryError = ProblemResponse
+
+
+export function useAdminListHomeFeatured<TData = Awaited<ReturnType<typeof adminListHomeFeatured>>, TError = ProblemResponse>(
+ params: AdminListHomeFeaturedParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeFeatured>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListHomeFeatured>>,
+          TError,
+          Awaited<ReturnType<typeof adminListHomeFeatured>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListHomeFeatured<TData = Awaited<ReturnType<typeof adminListHomeFeatured>>, TError = ProblemResponse>(
+ params: AdminListHomeFeaturedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeFeatured>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListHomeFeatured>>,
+          TError,
+          Awaited<ReturnType<typeof adminListHomeFeatured>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListHomeFeatured<TData = Awaited<ReturnType<typeof adminListHomeFeatured>>, TError = ProblemResponse>(
+ params: AdminListHomeFeaturedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeFeatured>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Destacados de una categoría, incluidos inactivos y agotados
+ */
+
+export function useAdminListHomeFeatured<TData = Awaited<ReturnType<typeof adminListHomeFeatured>>, TError = ProblemResponse>(
+ params: AdminListHomeFeaturedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeFeatured>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListHomeFeaturedQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminSetHomeFeaturedResponse200 = {
+  data: AdminSetHomeFeatured200
+  status: 200
+}
+
+export type adminSetHomeFeaturedResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminSetHomeFeaturedResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminSetHomeFeaturedResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type adminSetHomeFeaturedResponseSuccess = (adminSetHomeFeaturedResponse200) & {
+  headers: Headers;
+};
+export type adminSetHomeFeaturedResponseError = (adminSetHomeFeaturedResponse400 | adminSetHomeFeaturedResponse404 | adminSetHomeFeaturedResponse409) & {
+  headers: Headers;
+};
+
+export type adminSetHomeFeaturedResponse = (adminSetHomeFeaturedResponseSuccess | adminSetHomeFeaturedResponseError)
+
+export const getAdminSetHomeFeaturedUrl = () => {
+
+
+
+
+  return `/v1/admin/home/featured`
+}
+
+/**
+ * @summary Reemplaza la lista de destacados de una categoría y fija su orden
+ */
+export const adminSetHomeFeatured = async (adminSetHomeFeaturedBody: AdminSetHomeFeaturedBody, options?: Parameters<typeof apiFetch>[1]): Promise<adminSetHomeFeaturedResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminSetHomeFeaturedResponse>(getAdminSetHomeFeaturedUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(adminSetHomeFeaturedBody)
+  }
+);}
+
+
+
+
+
+export const getAdminSetHomeFeaturedMutationKey = () => ['adminSetHomeFeatured'] as const;
+
+export const getAdminSetHomeFeaturedMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminSetHomeFeatured>>, TError,AdminSetHomeFeaturedMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminSetHomeFeatured>>, TError,AdminSetHomeFeaturedMutationVariables, TContext> => {
+
+const mutationKey = getAdminSetHomeFeaturedMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminSetHomeFeatured>>, AdminSetHomeFeaturedMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminSetHomeFeatured(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminSetHomeFeaturedMutationResult = NonNullable<Awaited<ReturnType<typeof adminSetHomeFeatured>>>
+    export type AdminSetHomeFeaturedMutationBody = AdminSetHomeFeaturedBody
+    export type AdminSetHomeFeaturedMutationError = ProblemResponse
+    export type AdminSetHomeFeaturedMutationVariables = {data: AdminSetHomeFeaturedBody}
+
+    /**
+ * @summary Reemplaza la lista de destacados de una categoría y fija su orden
+ */
+export const useAdminSetHomeFeatured = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminSetHomeFeatured>>, TError,AdminSetHomeFeaturedMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminSetHomeFeatured>>,
+        TError,
+        AdminSetHomeFeaturedMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminSetHomeFeaturedMutationOptions(options), queryClient);
+    }
+
+export type adminListLensPackagesResponse200 = {
+  data: AdminListLensPackages200
+  status: 200
+}
+
+export type adminListLensPackagesResponseSuccess = (adminListLensPackagesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminListLensPackagesResponse = (adminListLensPackagesResponseSuccess)
+
+export const getAdminListLensPackagesUrl = () => {
+
+
+
+
+  return `/v1/admin/lens-packages`
+}
+
+/**
+ * @summary Todos los paquetes de micas, activos o no
+ */
+export const adminListLensPackages = async ( options?: Parameters<typeof apiFetch>[1]): Promise<adminListLensPackagesResponse> => {
+
+  return apiFetch<adminListLensPackagesResponse>(getAdminListLensPackagesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListLensPackagesQueryKey = () => {
+    return [
+    `/v1/admin/lens-packages`
+    ] as const;
+    }
+
+
+export const getAdminListLensPackagesQueryOptions = <TData = Awaited<ReturnType<typeof adminListLensPackages>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensPackages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListLensPackagesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListLensPackages>>> = ({ signal }) => adminListLensPackages({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListLensPackages>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminListLensPackagesQueryResult = NonNullable<Awaited<ReturnType<typeof adminListLensPackages>>>
+export type AdminListLensPackagesQueryError = unknown
+
+
+export function useAdminListLensPackages<TData = Awaited<ReturnType<typeof adminListLensPackages>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensPackages>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListLensPackages>>,
+          TError,
+          Awaited<ReturnType<typeof adminListLensPackages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListLensPackages<TData = Awaited<ReturnType<typeof adminListLensPackages>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensPackages>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListLensPackages>>,
+          TError,
+          Awaited<ReturnType<typeof adminListLensPackages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListLensPackages<TData = Awaited<ReturnType<typeof adminListLensPackages>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensPackages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Todos los paquetes de micas, activos o no
+ */
+
+export function useAdminListLensPackages<TData = Awaited<ReturnType<typeof adminListLensPackages>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensPackages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListLensPackagesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminCreateLensPackageResponse201 = {
+  data: AdminLensPackage
+  status: 201
+}
+
+export type adminCreateLensPackageResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminCreateLensPackageResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type adminCreateLensPackageResponseSuccess = (adminCreateLensPackageResponse201) & {
+  headers: Headers;
+};
+export type adminCreateLensPackageResponseError = (adminCreateLensPackageResponse400 | adminCreateLensPackageResponse409) & {
+  headers: Headers;
+};
+
+export type adminCreateLensPackageResponse = (adminCreateLensPackageResponseSuccess | adminCreateLensPackageResponseError)
+
+export const getAdminCreateLensPackageUrl = () => {
+
+
+
+
+  return `/v1/admin/lens-packages`
+}
+
+/**
+ * @summary Crea un paquete de micas
+ */
+export const adminCreateLensPackage = async (lensPackageInput: LensPackageInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateLensPackageResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminCreateLensPackageResponse>(getAdminCreateLensPackageUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(lensPackageInput)
+  }
+);}
+
+
+
+
+
+export const getAdminCreateLensPackageMutationKey = () => ['adminCreateLensPackage'] as const;
+
+export const getAdminCreateLensPackageMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateLensPackage>>, TError,AdminCreateLensPackageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminCreateLensPackage>>, TError,AdminCreateLensPackageMutationVariables, TContext> => {
+
+const mutationKey = getAdminCreateLensPackageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCreateLensPackage>>, AdminCreateLensPackageMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminCreateLensPackage(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminCreateLensPackageMutationResult = NonNullable<Awaited<ReturnType<typeof adminCreateLensPackage>>>
+    export type AdminCreateLensPackageMutationBody = LensPackageInput
+    export type AdminCreateLensPackageMutationError = ProblemResponse
+    export type AdminCreateLensPackageMutationVariables = {data: LensPackageInput}
+
+    /**
+ * @summary Crea un paquete de micas
+ */
+export const useAdminCreateLensPackage = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateLensPackage>>, TError,AdminCreateLensPackageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminCreateLensPackage>>,
+        TError,
+        AdminCreateLensPackageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminCreateLensPackageMutationOptions(options), queryClient);
+    }
+
+export type adminReorderLensPackagesResponse200 = {
+  data: AdminReorderLensPackages200
+  status: 200
+}
+
+export type adminReorderLensPackagesResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminReorderLensPackagesResponseSuccess = (adminReorderLensPackagesResponse200) & {
+  headers: Headers;
+};
+export type adminReorderLensPackagesResponseError = (adminReorderLensPackagesResponse400) & {
+  headers: Headers;
+};
+
+export type adminReorderLensPackagesResponse = (adminReorderLensPackagesResponseSuccess | adminReorderLensPackagesResponseError)
+
+export const getAdminReorderLensPackagesUrl = () => {
+
+
+
+
+  return `/v1/admin/lens-packages/order`
+}
+
+/**
+ * @summary Fija el orden completo de los paquetes
+ */
+export const adminReorderLensPackages = async (adminReorderLensPackagesBody: AdminReorderLensPackagesBody, options?: Parameters<typeof apiFetch>[1]): Promise<adminReorderLensPackagesResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminReorderLensPackagesResponse>(getAdminReorderLensPackagesUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(adminReorderLensPackagesBody)
+  }
+);}
+
+
+
+
+
+export const getAdminReorderLensPackagesMutationKey = () => ['adminReorderLensPackages'] as const;
+
+export const getAdminReorderLensPackagesMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderLensPackages>>, TError,AdminReorderLensPackagesMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminReorderLensPackages>>, TError,AdminReorderLensPackagesMutationVariables, TContext> => {
+
+const mutationKey = getAdminReorderLensPackagesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminReorderLensPackages>>, AdminReorderLensPackagesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminReorderLensPackages(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminReorderLensPackagesMutationResult = NonNullable<Awaited<ReturnType<typeof adminReorderLensPackages>>>
+    export type AdminReorderLensPackagesMutationBody = AdminReorderLensPackagesBody
+    export type AdminReorderLensPackagesMutationError = ProblemResponse
+    export type AdminReorderLensPackagesMutationVariables = {data: AdminReorderLensPackagesBody}
+
+    /**
+ * @summary Fija el orden completo de los paquetes
+ */
+export const useAdminReorderLensPackages = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderLensPackages>>, TError,AdminReorderLensPackagesMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminReorderLensPackages>>,
+        TError,
+        AdminReorderLensPackagesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminReorderLensPackagesMutationOptions(options), queryClient);
+    }
+
+export type adminUpdateLensPackageResponse200 = {
+  data: AdminLensPackage
+  status: 200
+}
+
+export type adminUpdateLensPackageResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminUpdateLensPackageResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminUpdateLensPackageResponseSuccess = (adminUpdateLensPackageResponse200) & {
+  headers: Headers;
+};
+export type adminUpdateLensPackageResponseError = (adminUpdateLensPackageResponse400 | adminUpdateLensPackageResponse404) & {
+  headers: Headers;
+};
+
+export type adminUpdateLensPackageResponse = (adminUpdateLensPackageResponseSuccess | adminUpdateLensPackageResponseError)
+
+export const getAdminUpdateLensPackageUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/lens-packages/${id}`
+}
+
+/**
+ * @summary Reemplaza los datos de un paquete; se desactiva, no se borra
+ */
+export const adminUpdateLensPackage = async (id: string,
+    lensPackageInput: LensPackageInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateLensPackageResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminUpdateLensPackageResponse>(getAdminUpdateLensPackageUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(lensPackageInput)
+  }
+);}
+
+
+
+
+
+export const getAdminUpdateLensPackageMutationKey = () => ['adminUpdateLensPackage'] as const;
+
+export const getAdminUpdateLensPackageMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateLensPackage>>, TError,AdminUpdateLensPackageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUpdateLensPackage>>, TError,AdminUpdateLensPackageMutationVariables, TContext> => {
+
+const mutationKey = getAdminUpdateLensPackageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUpdateLensPackage>>, AdminUpdateLensPackageMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminUpdateLensPackage(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUpdateLensPackageMutationResult = NonNullable<Awaited<ReturnType<typeof adminUpdateLensPackage>>>
+    export type AdminUpdateLensPackageMutationBody = LensPackageInput
+    export type AdminUpdateLensPackageMutationError = ProblemResponse
+    export type AdminUpdateLensPackageMutationVariables = {id: string;data: LensPackageInput}
+
+    /**
+ * @summary Reemplaza los datos de un paquete; se desactiva, no se borra
+ */
+export const useAdminUpdateLensPackage = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateLensPackage>>, TError,AdminUpdateLensPackageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminUpdateLensPackage>>,
+        TError,
+        AdminUpdateLensPackageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminUpdateLensPackageMutationOptions(options), queryClient);
+    }
 
 export type adminCreateBrandResponse201 = {
   data: Brand

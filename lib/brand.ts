@@ -2,6 +2,6 @@
 export const BRAND = {
   name: "Pupila",
   wordmark: "pupila",
-  tagline: "Lentes de contacto que llegan antes de que se acaben.",
-  description: "Tienda en línea de lentes de contacto en México: elige tu marca, captura tu graduación y repón en un clic.",
+  tagline: "Armazones y lentes de contacto, con tu receta revisada.",
+  description: "Óptica en línea en México: armazones y lentes de contacto de las mejores marcas, con tu receta revisada antes del envío.",
 } as const;

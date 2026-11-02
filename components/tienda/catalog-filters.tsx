@@ -1,10 +1,16 @@
 import Link from "next/link";
-import type { Brand } from "@/lib/api/generated/model";
-import { lensTypeLabel, replacementLabel } from "@/lib/format";
 
-type Params = { brand?: string; lens_type?: string; replacement?: string };
+export type FilterParams = Record<string, string | undefined>;
 
-function href(base: string, params: Params, key: keyof Params, value?: string) {
+export type FilterGroup = {
+  title: string;
+  name: string;
+  options: { value: string; label: string }[];
+  // Solo aporta la etiqueta de su chip: no se muestra en la barra lateral.
+  chipOnly?: boolean;
+};
+
+function href(base: string, params: FilterParams, key: string, value?: string) {
   const next = { ...params, [key]: value };
   const qs = new URLSearchParams(
     Object.entries(next).filter(([, v]) => v) as [string, string][],
@@ -12,12 +18,8 @@ function href(base: string, params: Params, key: keyof Params, value?: string) {
   return qs ? `${base}?${qs}` : base;
 }
 
-function Group({
-  title, base, params, name, options,
-}: {
-  title: string; base: string; params: Params; name: keyof Params;
-  options: { value: string; label: string }[];
-}) {
+function Group({ group, base, params }: { group: FilterGroup; base: string; params: FilterParams }) {
+  const { title, name, options } = group;
   return (
     <div className="space-y-2">
       <h3 className="optic text-[11px] font-medium tracking-widest text-muted-foreground uppercase">{title}</h3>
@@ -43,33 +45,24 @@ function Group({
 }
 
 export function CatalogFilters({
-  base = "/lentes", params, brands,
-}: { base?: string; params: Params; brands: Brand[] }) {
+  base, params, groups,
+}: { base: string; params: FilterParams; groups: FilterGroup[] }) {
   return (
     <aside aria-label="Filtros" className="space-y-6 md:sticky md:top-28 md:self-start">
-      {base === "/lentes" && (
-        <Group title="Marca" base={base} params={params} name="brand"
-          options={brands.map((b) => ({ value: b.slug, label: b.name }))} />
-      )}
-      <Group title="Tipo" base={base} params={params} name="lens_type"
-        options={Object.entries(lensTypeLabel).map(([value, label]) => ({ value, label }))} />
-      <Group title="Reemplazo" base={base} params={params} name="replacement"
-        options={Object.entries(replacementLabel).map(([value, label]) => ({ value, label }))} />
+      {groups.filter((g) => !g.chipOnly).map((g) => <Group key={g.name} group={g} base={base} params={params} />)}
     </aside>
   );
 }
 
-const labels: Record<string, Record<string, string>> = { lens_type: lensTypeLabel, replacement: replacementLabel };
-
 // Chips de los filtros activos; cada uno quita su filtro.
 export function ActiveFilters({
-  base = "/lentes", params, brands,
-}: { base?: string; params: Params; brands: Brand[] }) {
-  const chips = (Object.keys(params) as (keyof Params)[])
+  base, params, groups,
+}: { base: string; params: FilterParams; groups: FilterGroup[] }) {
+  const chips = Object.keys(params)
     .filter((k) => params[k])
     .map((k) => ({
       key: k,
-      label: k === "brand" ? (brands.find((b) => b.slug === params[k])?.name ?? params[k]!) : (labels[k]?.[params[k]!] ?? params[k]!),
+      label: groups.find((g) => g.name === k)?.options.find((o) => o.value === params[k])?.label ?? params[k]!,
     }));
   if (chips.length === 0) return null;
   return (
@@ -88,3 +81,6 @@ export function ActiveFilters({
     </ul>
   );
 }
+
+export const toOptions = (labels: Record<string, string>) =>
+  Object.entries(labels).map(([value, label]) => ({ value, label }));

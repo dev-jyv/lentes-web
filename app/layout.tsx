@@ -15,7 +15,7 @@ const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"
 const themeScript = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.dataset.theme=t}catch(e){}})()`;
 
 export const metadata: Metadata = {
-  title: { default: `${BRAND.name} · Lentes de contacto`, template: `%s | ${BRAND.name}` },
+  title: { default: `${BRAND.name} · Armazones y lentes de contacto`, template: `%s | ${BRAND.name}` },
   description: BRAND.description,
 };
 

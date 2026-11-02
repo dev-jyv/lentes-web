@@ -22,6 +22,7 @@ export function ThemeToggle() {
       type="button"
       variant="ghost"
       size="icon"
+      className="size-11"
       aria-label={next === "dark" ? "Activar modo oscuro" : "Activar modo claro"}
       onClick={() => {
         document.documentElement.dataset.theme = next;

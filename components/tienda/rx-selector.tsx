@@ -193,7 +193,7 @@ export function RxSelector({ product }: { product: ProductDetail }) {
       }
     }
     await queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
-    track("add_to_cart", { slug: product.slug, name: product.name, boxes_per_eye: quantity });
+    track("add_to_cart", { slug: product.slug, name: product.name, boxes_per_eye: quantity, category: "contact_lens", lens_package: null });
     router.push("/carrito");
   });
 
