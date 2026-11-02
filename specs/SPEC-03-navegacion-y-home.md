@@ -1,6 +1,6 @@
 # SPEC 03 — Navegación y home de la tienda
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-web#create-pr.sh: line 89: label_args[@]: unbound variable
 > **Depends on:** SPEC 01, SPEC 02
 > **Date:** 2026-11-02
 > **Objective:** Rediseñar la navegación y el home de `lentes-web` para separar armazones de lentes de contacto.

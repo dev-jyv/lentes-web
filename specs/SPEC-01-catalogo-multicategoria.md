@@ -1,6 +1,6 @@
 # SPEC 01 — Catálogo multicategoría
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-api#create-pr.sh: line 89: label_args[@]: unbound variable, lentes-admin#create-pr.sh: line 89: label_args[@]: unbound variable
 > **Depends on:** —
 > **Date:** 2026-11-02
 > **Objective:** Permitir que `lentes-api` y `lentes-admin` modelen, filtren y busquen armazones junto a los lentes de contacto.
