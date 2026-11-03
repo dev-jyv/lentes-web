@@ -2233,7 +2233,7 @@ export const getCreateCheckoutUrl = () => {
  * Aparta las existencias por 15 minutos y devuelve el `init_point` de Checkout Pro. Los precios salen de la base
  * al momento de apartar (nunca del cliente). Un cliente tiene un solo pedido pendiente: crear otro libera el anterior.
  * `409` si el carrito está vacío, no hay existencias (type `out-of-stock`), falta o no sirve la receta.
- * `502` si Mercado Pago falla (el apartado se libera y se puede reintentar). Con Turnstile configurado exige `turnstile_token`.
+ * `502` si Mercado Pago falla (el apartado se libera y se puede reintentar).
  * @summary Valida el carrito, aparta inventario, crea el pedido y la preferencia de Mercado Pago
  */
 export const createCheckout = async (checkoutInput: CheckoutInput, options?: Parameters<typeof apiFetch>[1]): Promise<createCheckoutResponse> => {
