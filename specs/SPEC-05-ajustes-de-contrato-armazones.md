@@ -1,6 +1,6 @@
 # SPEC 05 — Ajustes de contrato de armazones
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-api#2, lentes-admin#1, lentes-web#1
 > **Depends on:** SPEC 01, SPEC 02, SPEC 03, SPEC 04
 > **Date:** 2026-11-02
 > **Objective:** Documentar los campos y decisiones que la implementación de SPEC 01 a SPEC 04 agregó a sus contratos.
@@ -72,5 +72,5 @@ AdminOrder:
 
 ## Acceptance criteria
 
-- [ ] El responsable revisa cada punto de "Functional requirements" y lo acepta o pide cambiarlo.
-- [ ] Todo punto rechazado se atiende en un spec nuevo.
+- [x] El responsable revisa cada punto de "Functional requirements" y lo acepta o pide cambiarlo.
+- [x] Todo punto rechazado se atiende en un spec nuevo.
