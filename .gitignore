@@ -50,3 +50,7 @@ next-env.d.ts
 .dev.vars
 cloudflare-env.d.ts
 emails/out/
+
+# Local worktrees
+.worktrees/
+.claude/settings.local.json
