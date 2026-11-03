@@ -14,7 +14,6 @@ import {
   createAddress, createCheckout, getGetCartQueryKey, getListAddressesQueryKey, useGetCart, useListAddresses,
   useListPrescriptions,
 } from "@/lib/api/generated/api";
-import { useTurnstile } from "@/components/turnstile";
 import { track } from "@/lib/analytics";
 import { formatLeadTime, formatMxn } from "@/lib/format";
 import type { Prescription } from "@/lib/api/generated/model";
@@ -123,7 +122,6 @@ export function CheckoutForm() {
   const cartQuery = useGetCart();
   const addressesQuery = useListAddresses();
   const rxQuery = useListPrescriptions();
-  const turnstile = useTurnstile();
   const started = useRef(false);
   const [pickedRx, setPickedRx] = useState<string | null>(null);
   const [pickedGlassesRx, setPickedGlassesRx] = useState<string | null>(null);
@@ -162,13 +160,12 @@ export function CheckoutForm() {
   const addressId = picked ?? addresses.find((a) => a.is_default)?.id ?? addresses[0]?.id;
 
   async function pay() {
-    if (!addressId || rxMissing || (turnstile.required && !turnstile.token)) return;
+    if (!addressId || rxMissing) return;
     setPaying(true);
     setError(null);
-    const res = await createCheckout({ address_id: addressId, prescription_id: prescriptionId ?? null, glasses_prescription_id: glassesPrescriptionId ?? null, turnstile_token: turnstile.token });
+    const res = await createCheckout({ address_id: addressId, prescription_id: prescriptionId ?? null, glasses_prescription_id: glassesPrescriptionId ?? null });
     if (res.status !== 201) {
       setPaying(false);
-      turnstile.reset();
       setError(checkoutMessage(res.status, (res.data as { detail?: string } | undefined)?.detail));
       return queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
     }
@@ -240,9 +237,8 @@ export function CheckoutForm() {
             <Link href="/cambios-y-devoluciones" className="underline">política de cambios y devoluciones</Link>.
           </p>
         )}
-        {turnstile.widget}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <Button size="lg" className="w-full" disabled={!addressId || rxMissing || (turnstile.required && !turnstile.token) || paying} onClick={pay}>
+        <Button size="lg" className="w-full" disabled={!addressId || rxMissing || paying} onClick={pay}>
           {paying ? "Redirigiendo…" : "Pagar con Mercado Pago"}
         </Button>
       </aside>
