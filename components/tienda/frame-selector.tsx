@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { addCartItem, getGetCartQueryKey } from "@/lib/api/generated/api";
 import type { FrameVariant, ProductDetail } from "@/lib/api/generated/model";
 import { track } from "@/lib/analytics";
-import { colorLabel, formatMxn } from "@/lib/format";
+import { colorLabel, formatLeadTime, formatMxn } from "@/lib/format";
 
 // Muestras de color del producto: son datos del catálogo, no parte de la paleta de la marca.
 const swatch: Record<FrameVariant["color"], string> = {
@@ -126,7 +126,7 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
               {adding ? "Agregando…" : "Agregar al carrito"}
             </Button>
             <p className="text-xs text-muted-foreground">
-              Entrega estimada: {product.frame_lead_time_days} días. Las micas se fabrican a medida; consulta la{" "}
+              Entrega estimada: {formatLeadTime(product.frame_lead_time_days!)}. Las micas se fabrican a medida; consulta la{" "}
               <Link href="/cambios-y-devoluciones" className="underline">política de cambios y devoluciones</Link>.
             </p>
           </div>
