@@ -129,16 +129,18 @@ HomeContent:
 
 ## Acceptance criteria
 
-- [ ] `GET /v1/home` sin sesión responde `200` con `Cache-Control: public, s-maxage=60`.
-- [ ] Un banner con `starts_at` futuro o `ends_at` vencido no aparece en `GET /v1/home`, y sí en la lista del admin.
-- [ ] Sin rol admin, cada ruta `/v1/admin/home/*` responde `403`; sin sesión, `401`.
-- [ ] Todos los `cta_href` maliciosos de "Edge cases" responden `400`.
-- [ ] Una llave de imagen fuera de `home/` o con `..` responde `400`.
-- [ ] Un noveno destacado responde `409`, y uno de otra categoría responde `400`.
-- [ ] Un destacado inactivo o agotado no se devuelve en `GET /v1/home`.
-- [ ] En el admin se crean los tres tipos de banner, se programan, se ordenan y su estado calculado es correcto.
-- [ ] Una fecha capturada a las 09:00 de la Ciudad de México se guarda como 15:00 UTC.
-- [ ] `auth_test.go` y los tests del servicio pasan con Postgres real.
+> Aceptados por el responsable el 2026-11-03. La marca registra esa aceptación; no todos se verificaron uno por uno.
+
+- [x] `GET /v1/home` sin sesión responde `200` con `Cache-Control: public, s-maxage=60`.
+- [x] Un banner con `starts_at` futuro o `ends_at` vencido no aparece en `GET /v1/home`, y sí en la lista del admin.
+- [x] Sin rol admin, cada ruta `/v1/admin/home/*` responde `403`; sin sesión, `401`.
+- [x] Todos los `cta_href` maliciosos de "Edge cases" responden `400`.
+- [x] Una llave de imagen fuera de `home/` o con `..` responde `400`.
+- [x] Un noveno destacado responde `409`, y uno de otra categoría responde `400`.
+- [x] Un destacado inactivo o agotado no se devuelve en `GET /v1/home`.
+- [x] En el admin se crean los tres tipos de banner, se programan, se ordenan y su estado calculado es correcto.
+- [x] Una fecha capturada a las 09:00 de la Ciudad de México se guarda como 15:00 UTC.
+- [x] `auth_test.go` y los tests del servicio pasan con Postgres real.
 
 ## Risks
 

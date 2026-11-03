@@ -139,21 +139,23 @@ type NavItem = { label: string; href: string; columns: NavColumn[] };
 
 ## Acceptance criteria
 
-- [ ] Desde cualquier página, Armazones y Lentes de contacto están a un clic, en escritorio y móvil.
-- [ ] Cada enlace de los paneles lleva a una lista con al menos un producto.
-- [ ] Un valor sin productos activos no aparece en el menú.
-- [ ] El megamenú funciona solo con teclado: abrir, recorrer enlaces, `Esc` y retorno del foco.
-- [ ] En 360 px no hay scroll horizontal, y el menú lateral recorre todas las categorías.
-- [ ] Buscar "acuvue" sin JavaScript muestra resultados en `/buscar?q=acuvue`.
-- [ ] `/lentes?replacement=daily` y `/lentes/{slug}` siguen funcionando, y no listan armazones.
-- [ ] `/lentes/{slug-de-armazón}` redirige con estado 308 a `/armazones/{slug}`.
-- [ ] Con la API detenida, el home y el header responden 200 con su contenido mínimo.
-- [ ] Sin armazones en la base, no hay enlaces visibles a un catálogo vacío.
-- [ ] Un banner cuyo `cta_href` sea externo no se renderiza como enlace, aunque la API lo devuelva.
-- [ ] La ficha del armazón no ofrece compra.
-- [ ] Temas claro y oscuro revisados en navegador a 360, 768, 1024 y 1440 px.
-- [ ] `pnpm lint`, `pnpm typecheck` y `pnpm build` pasan.
-- [ ] Una auditoría automática de accesibilidad con axe sobre home, `/armazones` y menú abierto no reporta errores serios ni críticos.
+> Aceptados por el responsable el 2026-11-03. La marca registra esa aceptación; no todos se verificaron uno por uno.
+
+- [x] Desde cualquier página, Armazones y Lentes de contacto están a un clic, en escritorio y móvil.
+- [x] Cada enlace de los paneles lleva a una lista con al menos un producto.
+- [x] Un valor sin productos activos no aparece en el menú.
+- [x] El megamenú funciona solo con teclado: abrir, recorrer enlaces, `Esc` y retorno del foco.
+- [x] En 360 px no hay scroll horizontal, y el menú lateral recorre todas las categorías.
+- [x] Buscar "acuvue" sin JavaScript muestra resultados en `/buscar?q=acuvue`.
+- [x] `/lentes?replacement=daily` y `/lentes/{slug}` siguen funcionando, y no listan armazones.
+- [x] `/lentes/{slug-de-armazón}` redirige con estado 308 a `/armazones/{slug}`.
+- [x] Con la API detenida, el home y el header responden 200 con su contenido mínimo.
+- [x] Sin armazones en la base, no hay enlaces visibles a un catálogo vacío.
+- [x] Un banner cuyo `cta_href` sea externo no se renderiza como enlace, aunque la API lo devuelva.
+- [x] La ficha del armazón no ofrece compra.
+- [x] Temas claro y oscuro revisados en navegador a 360, 768, 1024 y 1440 px.
+- [x] `pnpm lint`, `pnpm typecheck` y `pnpm build` pasan.
+- [x] Una auditoría automática de accesibilidad con axe sobre home, `/armazones` y menú abierto no reporta errores serios ni críticos.
 
 ## Risks
 
