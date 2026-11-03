@@ -168,19 +168,21 @@ Errores: valor de enum inválido, `q` fuera de rango o `min_price_cents > max_pr
 
 ## Acceptance criteria
 
-- [ ] La migración aplica sobre una copia con el seed y todos los productos previos quedan como `contact_lens`.
-- [ ] Un producto `frame` con `lens_type` falla por el `CHECK`, y uno `contact_lens` sin `lens_type` también.
-- [ ] Crear por API un armazón con detalles y dos colores funciona, y un color repetido responde `409`.
-- [ ] Crear una variante de armazón con `base_curve` responde `400`, y una de lente de contacto sin `base_curve` también.
-- [ ] Cambiar la categoría de un producto existente responde `409`.
-- [ ] `GET /v1/products?q=acuvue` y `?q=óptica` ignoran mayúsculas y acentos, y `?q=%25` no devuelve todo el catálogo.
-- [ ] Cada filtro nuevo tiene un test con Postgres real.
-- [ ] `GET /v1/catalog/facets?category=frame` omite valores sin productos activos y no cuenta inactivos.
-- [ ] `auth_test.go` pasa con la ruta pública nueva declarada en `routeAccess`.
-- [ ] `POST /v1/cart/items` con una variante de armazón responde `409`.
-- [ ] Los tests existentes de carrito, checkout, recompra y reportes siguen pasando.
-- [ ] En el admin se crea un armazón con imágenes y variantes por color, y el formulario de lentes de contacto se comporta igual que antes.
-- [ ] `lentes-web` y `lentes-admin` compilan con el contrato sincronizado.
+> Aceptados por el responsable el 2026-11-03. La marca registra esa aceptación; no todos se verificaron uno por uno.
+
+- [x] La migración aplica sobre una copia con el seed y todos los productos previos quedan como `contact_lens`.
+- [x] Un producto `frame` con `lens_type` falla por el `CHECK`, y uno `contact_lens` sin `lens_type` también.
+- [x] Crear por API un armazón con detalles y dos colores funciona, y un color repetido responde `409`.
+- [x] Crear una variante de armazón con `base_curve` responde `400`, y una de lente de contacto sin `base_curve` también.
+- [x] Cambiar la categoría de un producto existente responde `409`.
+- [x] `GET /v1/products?q=acuvue` y `?q=óptica` ignoran mayúsculas y acentos, y `?q=%25` no devuelve todo el catálogo.
+- [x] Cada filtro nuevo tiene un test con Postgres real.
+- [x] `GET /v1/catalog/facets?category=frame` omite valores sin productos activos y no cuenta inactivos.
+- [x] `auth_test.go` pasa con la ruta pública nueva declarada en `routeAccess`.
+- [x] `POST /v1/cart/items` con una variante de armazón responde `409`.
+- [x] Los tests existentes de carrito, checkout, recompra y reportes siguen pasando.
+- [x] En el admin se crea un armazón con imágenes y variantes por color, y el formulario de lentes de contacto se comporta igual que antes.
+- [x] `lentes-web` y `lentes-admin` compilan con el contrato sincronizado.
 
 ## Risks
 

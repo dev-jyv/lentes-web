@@ -154,26 +154,28 @@ Variable de entorno nueva de la API: `FRAME_LEAD_TIME_DAYS`. Es opcional, y func
 
 ## Acceptance criteria
 
-- [ ] Sin `FRAME_LEAD_TIME_DAYS`, la ficha muestra el aviso y `POST /v1/cart/items` con un armazón responde `409`.
-- [ ] `/cambios-y-devoluciones` publica la política y está enlazada desde el pie de página, la ficha y el checkout.
-- [ ] Un armazón de $1,000 con un paquete de $500 aparece a $1,500 en carrito, preferencia y pedido.
-- [ ] Un precio enviado por el cliente nunca altera el total.
-- [ ] Un carrito mixto sin una de las recetas responde `409`, y con ambas crea el pedido.
-- [ ] Una receta del tipo equivocado responde `409`, y una ajena responde `404`.
-- [ ] Un paquete `none` completa el checkout sin receta.
-- [ ] Un pedido con receta `glasses` pendiente se puede pagar, y pasarlo a `preparing` responde `409`.
-- [ ] Un pedido con receta `glasses` aprobada sin `pd_mm` responde `409` al pasar a `preparing`, y avanza tras capturar `pd_mm`.
-- [ ] Un pedido pagado con receta `glasses` rechazada muestra el aviso de reembolso manual en el admin.
-- [ ] Con 8 compradores y 1 armazón disponible, solo 1 reserva tiene éxito.
-- [ ] Solo la variante del armazón cambia de existencias tras el pago.
-- [ ] Cambiar el precio de un paquete después de pagar no altera el pedido.
-- [ ] Un pedido solo de armazones deja `estimated_run_out_at` en `null`, sin recordatorio.
-- [ ] La recompra de un pedido mixto reporta `not_reorderable` y agrega solo los lentes de contacto.
-- [ ] Las recetas existentes quedan como `contact_lens`, y el flujo actual de lentes de contacto pasa sus pruebas sin cambios.
-- [ ] En el admin se gestiona un paquete, y el detalle del pedido permite preparar el trabajo de laboratorio.
-- [ ] El correo de confirmación de un pedido mixto se muestra sin campos vacíos.
-- [ ] No hay datos de receta en eventos de PostHog ni en logs.
-- [ ] La compra completa funciona en navegador con Mercado Pago en sandbox, o se reporta como no verificada si faltan credenciales.
+> Aceptados por el responsable el 2026-11-03. La marca registra esa aceptación; no todos se verificaron uno por uno.
+
+- [x] Sin `FRAME_LEAD_TIME_DAYS`, la ficha muestra el aviso y `POST /v1/cart/items` con un armazón responde `409`.
+- [x] `/cambios-y-devoluciones` publica la política y está enlazada desde el pie de página, la ficha y el checkout.
+- [x] Un armazón de $1,000 con un paquete de $500 aparece a $1,500 en carrito, preferencia y pedido.
+- [x] Un precio enviado por el cliente nunca altera el total.
+- [x] Un carrito mixto sin una de las recetas responde `409`, y con ambas crea el pedido.
+- [x] Una receta del tipo equivocado responde `409`, y una ajena responde `404`.
+- [x] Un paquete `none` completa el checkout sin receta.
+- [x] Un pedido con receta `glasses` pendiente se puede pagar, y pasarlo a `preparing` responde `409`.
+- [x] Un pedido con receta `glasses` aprobada sin `pd_mm` responde `409` al pasar a `preparing`, y avanza tras capturar `pd_mm`.
+- [x] Un pedido pagado con receta `glasses` rechazada muestra el aviso de reembolso manual en el admin.
+- [x] Con 8 compradores y 1 armazón disponible, solo 1 reserva tiene éxito.
+- [x] Solo la variante del armazón cambia de existencias tras el pago.
+- [x] Cambiar el precio de un paquete después de pagar no altera el pedido.
+- [x] Un pedido solo de armazones deja `estimated_run_out_at` en `null`, sin recordatorio.
+- [x] La recompra de un pedido mixto reporta `not_reorderable` y agrega solo los lentes de contacto.
+- [x] Las recetas existentes quedan como `contact_lens`, y el flujo actual de lentes de contacto pasa sus pruebas sin cambios.
+- [x] En el admin se gestiona un paquete, y el detalle del pedido permite preparar el trabajo de laboratorio.
+- [x] El correo de confirmación de un pedido mixto se muestra sin campos vacíos.
+- [x] No hay datos de receta en eventos de PostHog ni en logs.
+- [x] La compra completa funciona en navegador con Mercado Pago en sandbox, o se reporta como no verificada si faltan credenciales.
 
 ## Risks
 
