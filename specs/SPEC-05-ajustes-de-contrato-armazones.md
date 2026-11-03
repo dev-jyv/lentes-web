@@ -1,6 +1,6 @@
 # SPEC 05 — Ajustes de contrato de armazones
 
-> **Status:** Draft
+> **Status:** Approved
 > **Depends on:** SPEC 01, SPEC 02, SPEC 03, SPEC 04
 > **Date:** 2026-11-02
 > **Objective:** Documentar los campos y decisiones que la implementación de SPEC 01 a SPEC 04 agregó a sus contratos.
