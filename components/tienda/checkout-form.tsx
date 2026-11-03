@@ -16,7 +16,7 @@ import {
 } from "@/lib/api/generated/api";
 import { useTurnstile } from "@/components/turnstile";
 import { track } from "@/lib/analytics";
-import { formatMxn } from "@/lib/format";
+import { formatLeadTime, formatMxn } from "@/lib/format";
 import type { Prescription } from "@/lib/api/generated/model";
 import { isUsable, rxStatusLabel } from "@/lib/prescription";
 
@@ -235,7 +235,7 @@ export function CheckoutForm() {
         </p>
         {hasFrames && (
           <p className="text-xs text-muted-foreground">
-            {cart.frame_lead_time_days != null && <>Tus armazones con micas se entregan en unos {cart.frame_lead_time_days} días. </>}
+            {cart.frame_lead_time_days != null && <>Tus armazones con micas se entregan en {formatLeadTime(cart.frame_lead_time_days)}. </>}
             Las micas se fabrican a medida: consulta la{" "}
             <Link href="/cambios-y-devoluciones" className="underline">política de cambios y devoluciones</Link>.
           </p>

@@ -82,3 +82,7 @@ export function pickKey<T extends object>(labels: T, value: string | undefined):
 // Ruta canónica de un producto según su categoría.
 export const productHref = (p: { category: string; slug: string }) =>
   `${p.category === "frame" ? "/armazones" : "/lentes"}/${p.slug}`;
+
+export function formatLeadTime(days: number): string {
+  return days === 1 ? "24 horas" : `${days} días`;
+}
