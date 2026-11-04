@@ -1,15 +1,7 @@
 import type { OrderStatus } from "@/lib/api/generated/model";
+import { t } from "@/lib/i18n";
 
-export const orderStatusLabel: Record<OrderStatus, string> = {
-  pending_payment: "Pago pendiente",
-  paid: "Pagado",
-  preparing: "Preparando",
-  shipped: "Enviado",
-  delivered: "Entregado",
-  cancelled: "Cancelado",
-  refunded: "Reembolsado",
-  expired: "Vencido",
-};
+export const orderStatusLabel: Record<OrderStatus, string> = t("labels.orderStatus", { returnObjects: true });
 
 export const orderFolio = (n: number) => `LC-${String(n).padStart(6, "0")}`;
 

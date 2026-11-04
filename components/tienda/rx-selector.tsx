@@ -15,12 +15,13 @@ import { addCartItem, getGetCartQueryKey, getProductVariant, useGetProductVarian
 import type { GetProductVariantParams, ProductDetail, ProductOptions } from "@/lib/api/generated/model";
 import { track } from "@/lib/analytics";
 import { formatMxn } from "@/lib/format";
+import { t } from "@/lib/i18n";
 
 type EyeValues = { sphere: string; cylinder: string; axis: string; addition: string };
 type FormValues = { od: EyeValues; os: EyeValues; base_curve: string; diameter: string };
 
 const emptyEye: EyeValues = { sphere: "", cylinder: "", axis: "", addition: "" };
-const required = z.string().min(1, "Requerido");
+const required = z.string().min(1, t("validation.required"));
 const maybe = (needed: boolean) => (needed ? required : z.string());
 
 function buildSchema(o: ProductOptions) {
@@ -49,7 +50,7 @@ function Field({
       </Label>
       <Select items={options} value={value || null} onValueChange={(v) => onChange(v ?? "")}>
         <SelectTrigger className="w-full" aria-invalid={!!error}>
-          <SelectValue placeholder="Elegir" className={optical ? "optic" : undefined} />
+          <SelectValue placeholder={t("common.choose")} className={optical ? "optic" : undefined} />
         </SelectTrigger>
         <SelectContent>
           {options.map((o) => (
@@ -74,15 +75,15 @@ function toParams(eye: EyeValues, base: string, dia: string): GetProductVariantP
 }
 
 function VariantInfo({ slug, params }: { slug: string; params?: GetProductVariantParams }) {
-  if (!params) return <p className="text-xs text-muted-foreground">Elige tu graduación.</p>;
+  if (!params) return <p className="text-xs text-muted-foreground">{t("rx.selector.chooseRx")}</p>;
   return <VariantPrice slug={slug} params={params} />;
 }
 
 function VariantPrice({ slug, params }: { slug: string; params: GetProductVariantParams }) {
   const { data, isFetching } = useGetProductVariant(slug, params);
-  if (isFetching) return <p className="text-xs text-muted-foreground">Consultando…</p>;
+  if (isFetching) return <p className="text-xs text-muted-foreground">{t("rx.selector.checking")}</p>;
   if (data?.status !== 200)
-    return <p className="text-xs text-destructive">Esta combinación no está disponible.</p>;
+    return <p className="text-xs text-destructive">{t("rx.selector.comboUnavailable")}</p>;
   return (
     // El precio "rueda" al cambiar la graduación (220 ms); la key reinicia la animación.
     <p className="text-sm">
@@ -90,7 +91,7 @@ function VariantPrice({ slug, params }: { slug: string; params: GetProductVarian
         {formatMxn(data.data.price_cents)}
       </strong>{" "}
       <span className={data.data.available > 0 ? "text-good" : "text-destructive"}>
-        {data.data.available > 0 ? "En existencia" : "Agotado"}
+        {data.data.available > 0 ? t("rx.selector.inStock") : t("product.soldOut")}
       </span>
     </p>
   );
@@ -114,27 +115,27 @@ function EyeBlock({
       <legend className="optic px-1 text-xs font-medium tracking-widest text-muted-foreground uppercase">{title}</legend>
       <div className="grid grid-cols-2 gap-3">
         <Controller control={control} name={`${name}.sphere`} render={({ field }) => (
-          <Field label="Esfera" abbr="PWR" value={field.value} onChange={field.onChange}
+          <Field label={t("rx.form.sphere")} abbr={t("rx.selector.abbr.sphere")} value={field.value} onChange={field.onChange}
             error={errors?.sphere?.message}
             options={o.spheres.map((s) => ({ value: String(s), label: fmtSigned(s) }))} />
         )} />
         {!!o.cylinders?.length && (
           <Controller control={control} name={`${name}.cylinder`} render={({ field }) => (
-            <Field label="Cilindro" abbr="CYL" value={field.value} onChange={field.onChange}
+            <Field label={t("rx.form.cylinder")} abbr={t("rx.selector.abbr.cylinder")} value={field.value} onChange={field.onChange}
               error={errors?.cylinder?.message}
               options={o.cylinders!.map((s) => ({ value: String(s), label: fmtSigned(s) }))} />
           )} />
         )}
         {!!o.axes?.length && (
           <Controller control={control} name={`${name}.axis`} render={({ field }) => (
-            <Field label="Eje" abbr="EJE" value={field.value} onChange={field.onChange}
+            <Field label={t("rx.form.axis")} abbr={t("rx.selector.abbr.axis")} value={field.value} onChange={field.onChange}
               error={errors?.axis?.message}
               options={o.axes!.map((s) => ({ value: String(s), label: `${s}°` }))} />
           )} />
         )}
         {!!o.additions?.length && (
           <Controller control={control} name={`${name}.addition`} render={({ field }) => (
-            <Field label="Adición" abbr="ADD" value={field.value} onChange={field.onChange}
+            <Field label={t("rx.form.addition")} abbr={t("rx.selector.abbr.addition")} value={field.value} onChange={field.onChange}
               error={errors?.addition?.message}
               options={o.additions!.map((s) => ({ value: s, label: s }))} />
           )} />
@@ -170,10 +171,10 @@ export function RxSelector({ product }: { product: ProductDetail }) {
       getProductVariant(product.slug, toParams(v.os, v.base_curve, v.diameter)!),
     ]);
     if (od.status !== 200 || os.status !== 200) {
-      return setError("Alguna combinación no está disponible.");
+      return setError(t("rx.selector.someUnavailable"));
     }
     if (od.data.available < 1 || os.data.available < 1) {
-      return setError("Alguna combinación está agotada.");
+      return setError(t("rx.selector.someSoldOut"));
     }
     const quantity = Number(boxes);
     // Un renglón por ojo: así no hay ambigüedad sobre cuántas cajas se cobran.
@@ -187,8 +188,8 @@ export function RxSelector({ product }: { product: ProductDetail }) {
         await queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
         return setError(
           res.status === 409
-            ? "No hay existencias suficientes para esa graduación."
-            : "No pudimos agregar al carrito. Intenta de nuevo.",
+            ? t("rx.selector.notEnoughStock")
+            : t("frames.addFailed"),
         );
       }
     }
@@ -200,27 +201,27 @@ export function RxSelector({ product }: { product: ProductDetail }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <EyeBlock title="Ojo derecho (OD)" name="od" control={control} product={product}
+        <EyeBlock title={t("rx.form.rightEye")} name="od" control={control} product={product}
           errors={errors.od} />
-        <EyeBlock title="Ojo izquierdo (OI)" name="os" control={control} product={product}
+        <EyeBlock title={t("rx.form.leftEye")} name="os" control={control} product={product}
           errors={errors.os} />
       </div>
       <Button type="button" variant="outline" size="sm"
         onClick={() => setValue("os", { ...getValues("od") }, { shouldValidate: true })}>
-        Misma graduación en ambos ojos
+        {t("rx.selector.sameBoth")}
       </Button>
       {(o.base_curves.length > 1 || o.diameters.length > 1) && (
         <div className="grid grid-cols-2 gap-3">
           {o.base_curves.length > 1 && (
             <Controller control={control} name="base_curve" render={({ field }) => (
-              <Field label="Curva base" abbr="BC" value={field.value} onChange={field.onChange}
+              <Field label={t("rx.selector.baseCurve")} abbr={t("rx.selector.abbr.baseCurve")} value={field.value} onChange={field.onChange}
                 error={errors.base_curve?.message}
                 options={o.base_curves.map((s) => ({ value: String(s), label: s.toFixed(1) }))} />
             )} />
           )}
           {o.diameters.length > 1 && (
             <Controller control={control} name="diameter" render={({ field }) => (
-              <Field label="Diámetro" abbr="DIA" value={field.value} onChange={field.onChange}
+              <Field label={t("rx.selector.diameter")} abbr={t("rx.selector.abbr.diameter")} value={field.value} onChange={field.onChange}
                 error={errors.diameter?.message}
                 options={o.diameters.map((s) => ({ value: String(s), label: s.toFixed(1) }))} />
             )} />
@@ -228,15 +229,15 @@ export function RxSelector({ product }: { product: ProductDetail }) {
         </div>
       )}
       <div className="max-w-[10rem]">
-        <Field label="Cajas por ojo" optical={false} value={boxes} onChange={setBoxes}
+        <Field label={t("rx.selector.boxesPerEye")} optical={false} value={boxes} onChange={setBoxes}
           options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))} />
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-        Agregar al carrito
+        {t("frames.addToCart")}
       </Button>
       <p className="text-xs text-muted-foreground">
-        Curva base {o.base_curves.join(" / ")} · Diámetro {o.diameters.join(" / ")} mm
+        {t("rx.selector.specs", { baseCurves: o.base_curves.join(" / "), diameters: o.diameters.join(" / ") })}
       </p>
     </form>
   );

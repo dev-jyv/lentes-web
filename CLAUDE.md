@@ -67,10 +67,14 @@ Prescriptions and addresses are personal and health data. Sensitive sections car
 
 `emails/` holds React Email templates that export to static HTML for the Go backend to send. Values are Go `html/template` placeholders from `emails/components/tpl.ts` (`v`, `raw`), not React props. Run `pnpm emails:sync` after changing a template.
 
+### Texts
+
+Static UI text lives in `messages/es-MX.json` and is read through i18next, the same library as `lentes-admin`. Use `t("key")` from `lib/i18n.ts` in server and client components; keys are type-checked. For a link or emphasis inside a sentence, put a tag in the message and render it with `rich` from `lib/rich.tsx`. `emails/` stays outside this file.
+
 ### UI and brand
 
 - Components in `components/ui` are shadcn (`base-nova` style, on `@base-ui/react`). Tailwind v4 is configured in `app/globals.css`, with no JS config. Brand tokens live there too.
-- The brand name "Pupila" is a working name. Use `BRAND` from `lib/brand.ts` rather than hardcoding it.
+- The brand name "Pupila" is a working name, set in `messages/es-MX.json`. Use `BRAND` from `lib/brand.ts` or the `{{brand}}` message variable rather than hardcoding it.
 - Optical values (sphere, cylinder, axis, base curve, diameter) use the `.optic` class.
 - The storefront's visual reference is https://www.glassesusa.com. Apply its language to new storefront screens:
   - Dark promo bar with centered white text.

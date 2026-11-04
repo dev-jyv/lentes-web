@@ -2,23 +2,26 @@ import { ArrowRight, FileCheck2, RefreshCw, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { FrameShapeIcon } from "@/components/tienda/frame-shape-icon";
+import { HeroCarousel } from "@/components/tienda/hero-carousel";
 import { HeroLens } from "@/components/tienda/hero-lens";
 import { ProductCard } from "@/components/tienda/product-card";
-import { Button } from "@/components/ui/button";
 import { listProducts } from "@/lib/api/generated/api";
 import type { FrameShape, HomeBanner, Product } from "@/lib/api/generated/model";
-import { BRAND } from "@/lib/brand";
 import { lensNeedLabel, replacementLabel, shapeLabel } from "@/lib/format";
 import { imageSrc } from "@/lib/images";
 import { FRAME_PRICE_BANDS, mergeBrands, priceBandLabel } from "@/lib/navigation";
 import { isInternalHref } from "@/lib/safe-next";
 import { loadFacets, loadHome } from "@/lib/storefront";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/rich";
 
 const promises = [
-  { icon: FileCheck2, title: "Receta revisada", text: "Revisamos tu receta antes de enviar tus lentes." },
-  { icon: RefreshCw, title: "Reposición en un clic", text: "Repite un pedido anterior sin volver a elegir tu graduación." },
-  { icon: ShieldCheck, title: "Pago seguro", text: "Paga con tarjeta, OXXO o SPEI a través de Mercado Pago." },
+  { icon: FileCheck2, title: t("home.promises.prescription") },
+  { icon: RefreshCw, title: t("home.promises.reorder") },
+  { icon: ShieldCheck, title: t("home.promises.payment") },
 ];
+
+const slideCta = "inline-flex h-12 items-center justify-center rounded-full bg-white px-8 font-semibold text-band transition-colors hover:bg-white/85";
 
 const tileClass =
   "flex h-full min-h-16 items-center justify-between gap-2 rounded-xl border bg-card p-4 font-display font-semibold transition-colors hover:border-primary hover:bg-accent";
@@ -30,56 +33,103 @@ async function featuredOrNewest(featured: Product[] | undefined, category: Produ
   return res?.status === 200 ? res.data.items : [];
 }
 
-function BannerCta({ banner }: { banner: HomeBanner }) {
-  if (!banner.cta_label || !isInternalHref(banner.cta_href)) return null;
+// Texto de una diapositiva. Solo la primera lleva el h1 de la página.
+function SlideText({ first, title, subtitle, children }: { first: boolean; title: React.ReactNode; subtitle?: string | null; children: React.ReactNode }) {
+  const Heading = first ? "h1" : "h2";
   return (
-    <Button size="lg" render={<Link href={banner.cta_href} />} nativeButton={false}>
-      {banner.cta_label} <ArrowRight className="size-5" aria-hidden="true" />
-    </Button>
+    <div className="relative mx-auto max-w-xl space-y-5 text-center text-white lg:mx-0 lg:w-1/2 lg:max-w-none lg:px-10">
+      <Heading className="text-4xl leading-[1.05] font-extrabold sm:text-5xl xl:text-6xl">{title}</Heading>
+      {subtitle && <p className="text-lg text-white/90">{subtitle}</p>}
+      <div className="flex flex-wrap justify-center gap-3">{children}</div>
+    </div>
   );
 }
 
-function Hero({ banner, hasFrames }: { banner: HomeBanner | null | undefined; hasFrames: boolean }) {
-  const src = imageSrc(banner?.image_url);
-  if (banner && src) {
-    return (
-      <section className="container-page grid items-center gap-10 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
-        <div className="space-y-6">
-          <h1 className="text-4xl leading-[1.05] sm:text-5xl xl:text-6xl">{banner.title}</h1>
-          {banner.subtitle && <p className="max-w-xl text-lg text-muted-foreground">{banner.subtitle}</p>}
-          <BannerCta banner={banner} />
-        </div>
-        <div className="relative aspect-square overflow-hidden rounded-2xl bg-secondary">
-          <Image src={src} alt={banner.image_alt ?? ""} fill unoptimized priority className="object-cover" />
-        </div>
-      </section>
-    );
-  }
+function BannerSlide({ banner, first }: { banner: HomeBanner; first: boolean }) {
   return (
-    <section className="container-page grid items-center gap-10 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
-      <div className="space-y-6">
-        <p className="optic text-xs font-medium tracking-widest text-primary uppercase">Receta · marca · graduación</p>
-        <h1 className="text-4xl leading-[1.05] sm:text-5xl xl:text-6xl">
-          {hasFrames ? <>Tu vista, con <em className="text-warn not-italic dark:text-amber">tu</em> estilo.</> : <>Lentes de contacto que llegan <em className="text-warn not-italic dark:text-amber">antes</em> de que se acaben.</>}
-        </h1>
-        <p className="max-w-xl text-lg text-muted-foreground">
-          {hasFrames
-            ? `Armazones y lentes de contacto en un solo lugar. En ${BRAND.name} revisamos tu receta antes del envío.`
-            : `Elige tu marca, captura tu graduación y repón en un clic. En ${BRAND.name} revisamos tu receta antes del envío.`}
-        </p>
-        <div className="flex flex-wrap gap-3">
-          {hasFrames && (
-            <Button size="lg" render={<Link href="/armazones" />} nativeButton={false}>
-              Ver armazones <ArrowRight className="size-5" aria-hidden="true" />
-            </Button>
+    <div className="relative flex h-full items-center bg-band">
+      <Image src={imageSrc(banner.image_url)!} alt={banner.image_alt ?? ""} fill unoptimized priority={first} sizes="100vw" className="object-cover" />
+      <span aria-hidden="true" className="absolute inset-0 bg-black/45 lg:bg-gradient-to-r lg:from-black/70 lg:via-black/35 lg:to-transparent" />
+      <div className="container-page relative">
+        <SlideText first={first} title={banner.title} subtitle={banner.subtitle}>
+          {banner.cta_label && isInternalHref(banner.cta_href) && (
+            <Link href={banner.cta_href} className={slideCta}>{banner.cta_label}</Link>
           )}
-          <Button size="lg" variant={hasFrames ? "outline" : "default"} render={<Link href="/lentes" />} nativeButton={false}>
-            Ver lentes de contacto {!hasFrames && <ArrowRight className="size-5" aria-hidden="true" />}
-          </Button>
-        </div>
+        </SlideText>
       </div>
-      <HeroLens />
-    </section>
+    </div>
+  );
+}
+
+// Diapositiva de marca: se usa mientras el admin no publique banners principales con imagen.
+function DefaultSlide({ first, title, subtitle, art, children }: { first: boolean; title: React.ReactNode; subtitle: string; art: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="flex h-full items-center bg-band bg-[radial-gradient(circle_at_78%_50%,color-mix(in_srgb,var(--teal)_55%,transparent),transparent_60%)]">
+      <div className="container-page flex items-center">
+        <SlideText first={first} title={title} subtitle={subtitle}>{children}</SlideText>
+        <div className="hidden w-1/2 justify-center text-white lg:flex">{art}</div>
+      </div>
+    </div>
+  );
+}
+
+function defaultSlides(hasFrames: boolean) {
+  const lensSlide = (first: boolean) => (
+    <DefaultSlide
+      key="lentes"
+      first={first}
+      title={rich(t("home.hero.lenses.title"), { em: (c) => <em className="text-amber not-italic">{c}</em> })}
+      subtitle={t("home.hero.lenses.subtitle")}
+      art={<div className="w-80"><HeroLens /></div>}
+    >
+      <Link href="/lentes" className={slideCta}>{t("common.viewContactLenses")}</Link>
+    </DefaultSlide>
+  );
+  const reorderSlide = (
+    <DefaultSlide
+      key="reposicion"
+      first={false}
+      title={t("home.hero.reorder.title")}
+      subtitle={t("home.hero.reorder.subtitle")}
+      art={<RefreshCw className="size-56" aria-hidden="true" />}
+    >
+      <Link href="/cuenta/pedidos" className={slideCta}>{t("home.hero.reorder.cta")}</Link>
+    </DefaultSlide>
+  );
+  if (!hasFrames) return [lensSlide(true), reorderSlide];
+  return [
+    <DefaultSlide
+      key="armazones"
+      first
+      title={rich(t("home.hero.frames.title"), { em: (c) => <em className="text-amber not-italic">{c}</em> })}
+      subtitle={t("home.hero.frames.subtitle")}
+      art={<FrameShapeIcon shape="round" className="w-96" />}
+    >
+      <Link href="/armazones" className={slideCta}>{t("common.viewFrames")}</Link>
+    </DefaultSlide>,
+    lensSlide(false),
+    reorderSlide,
+  ];
+}
+
+function Hero({ banners, hasFrames }: { banners: HomeBanner[]; hasFrames: boolean }) {
+  const slides = banners.length
+    ? banners.map((banner, i) => <BannerSlide key={banner.id} banner={banner} first={i === 0} />)
+    : defaultSlides(hasFrames);
+  return (
+    <>
+      <HeroCarousel>{slides}</HeroCarousel>
+      <section aria-label={t("home.promisesLabel")} className="container-page relative z-10 -mt-7">
+        <ul className="grid gap-3 rounded-3xl border bg-card px-6 py-4 shadow-md md:grid-cols-3 md:divide-x md:rounded-full">
+          {promises.map(({ icon: Icon, title }) => (
+            <li key={title} className="flex items-center gap-3 font-medium md:justify-center md:px-4">
+              <Icon className="size-6 shrink-0 text-primary" aria-hidden="true" />
+              <span className="text-sm lg:text-base">{title}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </>
   );
 }
 
@@ -89,7 +139,7 @@ function ProductRow({ title, href, products }: { title: string; href: string; pr
     <section className="container-page space-y-4 py-8">
       <div className="flex items-end justify-between">
         <h2 className="text-2xl">{title}</h2>
-        <Link href={href} className="text-sm font-medium text-primary hover:underline">Ver todo</Link>
+        <Link href={href} className="text-sm font-medium text-primary hover:underline">{t("home.viewAll")}</Link>
       </div>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {products.map((p) => <ProductCard key={p.id} product={p} />)}
@@ -114,21 +164,23 @@ export default async function HomePage() {
   const uses = Object.entries(replacementLabel).filter(([v]) => (lenses ? has(lenses, "replacement", v) : v === "daily" || v === "monthly"));
   const needs = Object.entries(lensNeedLabel).filter(([v]) => (lenses ? has(lenses, "lens_type", v) : v !== "cosmetic"));
   const brands = mergeBrands(frames, lenses);
+  // `hero` cubre a una API que aún no publique `heroes`. Un banner sin imagen no entra al carrusel.
+  const heroes = (home?.heroes ?? (home?.hero ? [home.hero] : [])).filter((b) => imageSrc(b.image_url));
   const secondary = (home?.secondary ?? []).filter((b) => imageSrc(b.image_url) && isInternalHref(b.cta_href));
 
   return (
     <>
-      <Hero banner={home?.hero} hasFrames={hasFrames} />
+      <Hero banners={heroes} hasFrames={hasFrames} />
 
-      <section aria-label="Categorías" className="container-page pb-10">
+      <section aria-label={t("home.categoriesLabel")} className="container-page pt-10 pb-4">
         <ul className={`grid gap-4 ${hasFrames ? "md:grid-cols-2" : ""}`}>
           {hasFrames && (
             <li>
               <Link href="/armazones" className="group block rounded-2xl border bg-card p-6 transition-colors hover:border-primary hover:bg-accent">
                 <FrameShapeIcon shape="round" className="mb-4 h-14 text-primary" />
-                <h2 className="text-2xl">Armazones</h2>
-                <p className="text-sm text-muted-foreground">Busca por forma, material, color y precio.</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary">Ver armazones <ArrowRight className="size-4" aria-hidden="true" /></span>
+                <h2 className="text-2xl">{t("common.frames")}</h2>
+                <p className="text-sm text-muted-foreground">{t("home.framesBlurb")}</p>
+                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary">{t("common.viewFrames")} <ArrowRight className="size-4" aria-hidden="true" /></span>
               </Link>
             </li>
           )}
@@ -138,33 +190,17 @@ export default async function HomePage() {
                 <circle cx="24" cy="24" r="19" />
                 <path d="M9 30c6 5 24 5 30 0" />
               </svg>
-              <h2 className="text-2xl">Lentes de contacto</h2>
-              <p className="text-sm text-muted-foreground">Diarios, mensuales, para astigmatismo y más.</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary">Ver lentes de contacto <ArrowRight className="size-4" aria-hidden="true" /></span>
+              <h2 className="text-2xl">{t("common.contactLenses")}</h2>
+              <p className="text-sm text-muted-foreground">{t("home.lensesBlurb")}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary">{t("common.viewContactLenses")} <ArrowRight className="size-4" aria-hidden="true" /></span>
             </Link>
           </li>
         </ul>
       </section>
 
-      <section aria-label="Promesas" className="border-y bg-card">
-        <ul className="container-page grid gap-6 py-8 md:grid-cols-3">
-          {promises.map(({ icon: Icon, title, text }) => (
-            <li key={title} className="flex gap-4">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-primary">
-                <Icon className="size-6" aria-hidden="true" />
-              </span>
-              <div>
-                <h2 className="text-base">{title}</h2>
-                <p className="text-sm text-muted-foreground">{text}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       {shapes.length > 0 && (
         <section className="container-page space-y-4 pt-12 pb-4">
-          <h2 className="text-2xl">Comprar armazones por forma</h2>
+          <h2 className="text-2xl">{t("home.byShape")}</h2>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {shapes.map((shape) => (
               <li key={shape}>
@@ -180,7 +216,7 @@ export default async function HomePage() {
 
       {priceBands.length > 0 && (
         <section className="container-page space-y-4 py-8">
-          <h2 className="text-2xl">Comprar armazones por precio</h2>
+          <h2 className="text-2xl">{t("home.byPrice")}</h2>
           <ul className="grid gap-3 sm:grid-cols-3">
             {priceBands.map((band) => (
               <li key={band}>
@@ -193,10 +229,10 @@ export default async function HomePage() {
         </section>
       )}
 
-      <ProductRow title="Armazones destacados" href="/armazones" products={frameProducts} />
+      <ProductRow title={t("home.featuredFrames")} href="/armazones" products={frameProducts} />
 
       <section className="container-page space-y-4 py-8">
-        <h2 className="text-2xl">Comprar lentes de contacto</h2>
+        <h2 className="text-2xl">{t("home.buyLenses")}</h2>
         <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {uses.map(([value, label]) => (
             <li key={value}>
@@ -215,10 +251,10 @@ export default async function HomePage() {
         </ul>
       </section>
 
-      <ProductRow title="Lentes de contacto destacados" href="/lentes" products={lensProducts} />
+      <ProductRow title={t("home.featuredLenses")} href="/lentes" products={lensProducts} />
 
       {secondary.length > 0 && (
-        <section aria-label="Promociones" className="container-page py-8">
+        <section aria-label={t("home.promotionsLabel")} className="container-page py-8">
           <ul className="grid gap-4 md:grid-cols-3">
             {secondary.map((b) => (
               <li key={b.id}>
@@ -241,8 +277,8 @@ export default async function HomePage() {
       {brands.length > 0 && (
         <section className="container-page space-y-4 py-8">
           <div className="flex items-end justify-between">
-            <h2 className="text-2xl">Marcas</h2>
-            <Link href="/marcas" className="text-sm font-medium text-primary hover:underline">Ver todas</Link>
+            <h2 className="text-2xl">{t("brands.title")}</h2>
+            <Link href="/marcas" className="text-sm font-medium text-primary hover:underline">{t("home.viewAllBrands")}</Link>
           </div>
           <ul className="flex flex-wrap gap-2">
             {brands.map((b) => (

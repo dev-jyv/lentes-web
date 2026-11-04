@@ -1,0 +1,521 @@
+{
+  "brand": {
+    "name": "Pupila",
+    "wordmark": "pupila",
+    "tagline": "Armazones y lentes de contacto, con tu receta revisada.",
+    "description": "Óptica en línea en México: armazones y lentes de contacto de las mejores marcas, con tu receta revisada antes del envío."
+  },
+  "meta": {
+    "defaultTitle": "{{brand}} · Armazones y lentes de contacto",
+    "titleTemplate": "%s | {{brand}}"
+  },
+  "globalError": {
+    "title": "Algo salió mal",
+    "body": "Ya fue reportado. Recarga la página e intenta de nuevo."
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "oauthFailed": "No pudimos completar el inicio de sesión. Intenta de nuevo."
+    },
+    "recover": {
+      "title": "Recuperar contraseña",
+      "sent": "Si el correo existe, te enviamos un enlace para restablecer tu contraseña.",
+      "send": "Enviar enlace"
+    },
+    "register": {
+      "title": "Crear cuenta",
+      "failed": "No se pudo crear la cuenta. Intenta de nuevo.",
+      "checkEmail": "Revisa tu correo para confirmar tu cuenta.",
+      "fullName": "Nombre completo",
+      "haveAccount": "¿Ya tienes cuenta? <link>Inicia sesión</link>"
+    },
+    "newPassword": {
+      "title": "Nueva contraseña",
+      "failed": "No se pudo actualizar la contraseña."
+    },
+    "googleFailed": "No se pudo iniciar con Google.",
+    "completeCaptcha": "Completa la verificación.",
+    "wrongCredentials": "Correo o contraseña incorrectos.",
+    "email": "Correo",
+    "password": "Contraseña",
+    "forgotPassword": "Olvidé mi contraseña",
+    "continueWithGoogle": "Continuar con Google",
+    "signOut": "Cerrar sesión"
+  },
+  "account": {
+    "title": "Mi cuenta",
+    "orders": "Mis pedidos",
+    "prescriptions": "Mis recetas",
+    "uploadPrescription": "Subir una receta"
+  },
+  "reorder": {
+    "metaTitle": "Recompra",
+    "reason": {
+      "outOfStock": "agotado",
+      "discontinued": "ya no se vende",
+      "notReorderable": "las micas se fabrican a medida; elígelo de nuevo en su ficha"
+    },
+    "notFound": "No encontramos este pedido. <link>Ver catálogo</link>",
+    "prepareFailed": "No pudimos preparar tu carrito. Intenta de nuevo.",
+    "title": "Vuelve a pedir tus lentes",
+    "note": "Pedido {{folio}}. Los precios y la existencia se confirman al agregar: pueden haber cambiado.",
+    "frames_one": "{{count}} armazón",
+    "frames_other": "{{count}} armazones",
+    "boxes_one": "{{count}} caja",
+    "boxes_other": "{{count}} cajas",
+    "previousPrice": "Antes {{price}}",
+    "someUnavailable": "Algunos artículos no se pudieron agregar:",
+    "goToCart": "Ir al carrito con lo disponible"
+  },
+  "cart": {
+    "metaTitle": "Carrito",
+    "title": "Tu carrito",
+    "linkWithCount_one": "Carrito, {{count}} artículo",
+    "linkWithCount_other": "Carrito, {{count}} artículos",
+    "rightEye": "Ojo derecho",
+    "leftEye": "Ojo izquierdo",
+    "bothEyes": "Ambos ojos",
+    "rx": {
+      "sphere": "Esf {{value}}",
+      "cylinder": "Cil {{value}}",
+      "axis": "Eje {{value}}°",
+      "addition": "Add {{value}}",
+      "baseCurve": "CB {{value}}",
+      "diameter": "Diám {{value}}"
+    },
+    "framePlusLenses": "Armazón {{frame}} + micas {{lenses}}",
+    "changeFrameOptions": "Cambiar color o micas",
+    "empty": "Tu carrito está vacío.",
+    "frameUnavailable": "Este armazón o sus micas ya no están disponibles: quítalo y elige de nuevo.",
+    "onlyLeft": "Solo quedan {{count}} en existencia.",
+    "soldOut": "Agotado: quítalo para continuar.",
+    "decrease": "Menos",
+    "increase": "Más",
+    "remove": "Quitar",
+    "subtotal": "Subtotal",
+    "shippingNote": "Envío e impuestos se confirman en el pago.",
+    "continue": "Continuar al pago"
+  },
+  "checkout": {
+    "metaTitle": "Checkout",
+    "title": "Finalizar compra",
+    "stepsLabel": "Pasos",
+    "steps": {
+      "address": "Dirección",
+      "prescription": "Receta",
+      "payment": "Pago"
+    },
+    "result": {
+      "metaTitle": "Resultado del pago",
+      "noInfo": "No encontramos información del pago."
+    },
+    "address": {
+      "recipient": "Nombre de quien recibe",
+      "street": "Calle",
+      "extNumber": "No. exterior",
+      "intNumber": "No. interior (opcional)",
+      "neighborhood": "Colonia",
+      "city": "Ciudad",
+      "state": "Estado",
+      "postalCode": "Código postal",
+      "phone": "Teléfono (10 dígitos)",
+      "saveFailed": "No pudimos guardar la dirección.",
+      "save": "Guardar dirección",
+      "title": "Dirección de envío",
+      "addAnother": "Agregar otra dirección",
+      "interior": " int. {{number}}"
+    },
+    "errors": {
+      "unavailable": "Algunos artículos ya no están disponibles. Revisa tu carrito.",
+      "captcha": "No pudimos verificar que eres una persona. Intenta de nuevo.",
+      "notFound": "No encontramos la dirección o la receta. Revísalas e intenta de nuevo.",
+      "paymentsDown": "Los pagos no están disponibles por ahora. Intenta más tarde.",
+      "generic": "No pudimos iniciar el pago. Intenta de nuevo."
+    },
+    "rx": {
+      "lensesTitle": "Receta de lentes de contacto",
+      "title": "Receta",
+      "lensesEmpty": "Tus lentes requieren receta vigente de lentes de contacto.",
+      "framesTitle": "Receta de armazones",
+      "framesEmpty": "Tus micas requieren receta vigente de armazones.",
+      "uploadPrompt": "<link>Sube tu receta</link> y regresa aquí."
+    },
+    "summary": "Resumen",
+    "priceNote": "El backend valida precios y stock al pagar; el total final puede variar por envío.",
+    "redirecting": "Redirigiendo…",
+    "pay": "Pagar con Mercado Pago",
+    "emptyCart": "Tu carrito está vacío. <frames>Ver armazones</frames> o <lenses>lentes de contacto</lenses>",
+    "leadTime": "Tus armazones con micas se entregan en {{time}}.",
+    "customLenses": "Las micas se fabrican a medida: consulta la <link>política de cambios y devoluciones</link>."
+  },
+  "returns": {
+    "title": "Cambios y devoluciones",
+    "description": "Cómo funcionan los cambios y devoluciones de armazones con micas.",
+    "frame": {
+      "title": "Armazón sin graduación",
+      "body": "Puedes cambiarlo dentro de los 30 días posteriores a recibirlo, siempre que no se haya usado."
+    },
+    "lenses": {
+      "title": "Micas a medida",
+      "body": "Las micas graduadas se fabrican especialmente con tu receta, por lo que no tienen devolución, salvo por defecto de fabricación o error de la tienda."
+    },
+    "rejected": {
+      "title": "Si tu receta no se aprueba",
+      "body": "Revisamos tu receta antes de fabricar tus micas. Si no podemos aprobarla, no fabricamos el pedido y te reembolsamos."
+    }
+  },
+  "brands": {
+    "title": "Marcas",
+    "description": "Todas las marcas de armazones y lentes de contacto de la tienda.",
+    "unavailable": "Por ahora no podemos mostrar las marcas.",
+    "metaDescription": "Armazones y lentes de contacto {{brand}} en línea.",
+    "noProducts": "Esta marca no tiene productos disponibles por ahora."
+  },
+  "catalog": {
+    "filters": {
+      "type": "Tipo",
+      "replacement": "Reemplazo",
+      "brand": "Marca",
+      "gender": "Para quién",
+      "shape": "Forma",
+      "material": "Material",
+      "rim": "Aro",
+      "color": "Color",
+      "price": "Precio",
+      "minPrice": "Precio mínimo"
+    },
+    "noLensesFiltered": "No encontramos lentes con esos filtros.",
+    "productCount_one": "{{count}} producto",
+    "productCount_other": "{{count}} productos",
+    "upTo": "Hasta {{price}}",
+    "from": "Desde {{price}}",
+    "all": "Todos",
+    "filtersLabel": "Filtros",
+    "activeFiltersLabel": "Filtros activos",
+    "removeFilter": "Quitar filtro {{label}}"
+  },
+  "common": {
+    "frames": "Armazones",
+    "contactLenses": "Lentes de contacto",
+    "viewContactLenses": "Ver lentes de contacto",
+    "viewFrames": "Ver armazones",
+    "save": "Guardar",
+    "retry": "Reintentar",
+    "loading": "Cargando…",
+    "viewMore": "Ver más",
+    "choose": "Elegir",
+    "close": "Cerrar"
+  },
+  "lenses": {
+    "metaTitle": "Catálogo de lentes de contacto",
+    "description": "Lentes de contacto diarios, quincenales y mensuales de las mejores marcas.",
+    "loadFailed": "No pudimos cargar los lentes. Intenta de nuevo en unos minutos.",
+    "metaDescription": "Compra {{name}} de {{brand}}.",
+    "piecesPerBox": "{{count}} piezas por caja",
+    "requiresPrescription": "Requiere receta vigente de tu optometrista."
+  },
+  "product": {
+    "metaTitle": "{{name}} | {{brand}}",
+    "noImage": "Sin imagen",
+    "fromPrice": "Desde <price>{{price}}</price>",
+    "soldOut": "Agotado",
+    "colorCount_one": "{{count}} color",
+    "colorCount_other": "{{count}} colores"
+  },
+  "frames": {
+    "description": "Armazones de las mejores marcas: busca por forma, material, color y precio.",
+    "loadFailed": "No pudimos cargar los armazones. Intenta de nuevo en unos minutos.",
+    "noResults": "No encontramos armazones con esos filtros.",
+    "metaDescription": "Armazón {{name}} de {{brand}}.",
+    "measures": {
+      "lensWidth": "Ancho de lente",
+      "bridge": "Puente",
+      "temple": "Varilla",
+      "title": "Medidas",
+      "value": "{{value}} mm"
+    },
+    "imageView": "{{name}}, vista {{view}}",
+    "unavailable": "Este armazón no está disponible por ahora.",
+    "addFailed": "No pudimos agregar al carrito. Intenta de nuevo.",
+    "colorSoldOutTitle": "{{color}} (agotado)",
+    "colorSoldOutLabel": "{{color}}, agotado",
+    "frameLabel": "armazón",
+    "available": "Disponible",
+    "chooseLenses": "Elige tus micas",
+    "requiresPrescription": "Requiere receta de armazones.",
+    "included": "Incluido",
+    "packagePrice": "+ {{price}}",
+    "total": "Total",
+    "adding": "Agregando…",
+    "addToCart": "Agregar al carrito",
+    "deliveryNote": "Entrega estimada: {{time}}. Las micas se fabrican a medida; consulta la <link>política de cambios y devoluciones</link>.",
+    "comingSoon": "Muy pronto podrás comprarlo en línea."
+  },
+  "search": {
+    "title": "Buscar",
+    "results": "Resultados para “{{q}}”",
+    "lengthHint": "Escribe entre {{min}} y {{max}} caracteres para buscar.",
+    "failed": "No pudimos completar la búsqueda. Intenta de nuevo en unos minutos.",
+    "empty": "No encontramos productos. Prueba en <frames>Armazones</frames> o en <lenses>Lentes de contacto</lenses>.",
+    "label": "Buscar productos",
+    "placeholder": "Buscar marca o modelo"
+  },
+  "home": {
+    "promises": {
+      "prescription": "Receta revisada antes del envío",
+      "reorder": "Reposición en un clic",
+      "payment": "Pago seguro: tarjeta, OXXO o SPEI"
+    },
+    "hero": {
+      "lenses": {
+        "title": "Lentes de contacto que llegan <em>antes</em> de que se acaben.",
+        "subtitle": "Elige tu marca, captura tu graduación y repón en un clic. En {{brand}} revisamos tu receta antes del envío."
+      },
+      "reorder": {
+        "title": "Repón tus lentes en un clic.",
+        "subtitle": "Repite un pedido anterior sin volver a elegir tu graduación.",
+        "cta": "Ver mis pedidos"
+      },
+      "frames": {
+        "title": "Tu vista, con <em>tu</em> estilo.",
+        "subtitle": "Armazones y lentes de contacto en un solo lugar. En {{brand}} revisamos tu receta antes del envío."
+      }
+    },
+    "promisesLabel": "Promesas",
+    "viewAll": "Ver todo",
+    "categoriesLabel": "Categorías",
+    "framesBlurb": "Busca por forma, material, color y precio.",
+    "lensesBlurb": "Diarios, mensuales, para astigmatismo y más.",
+    "byShape": "Comprar armazones por forma",
+    "byPrice": "Comprar armazones por precio",
+    "featuredFrames": "Armazones destacados",
+    "buyLenses": "Comprar lentes de contacto",
+    "featuredLenses": "Lentes de contacto destacados",
+    "promotionsLabel": "Promociones",
+    "viewAllBrands": "Ver todas",
+    "lens": {
+      "imageLabel": "Lente de contacto",
+      "sampleLabel": "Ejemplo de datos de un lente",
+      "samplePower": "PWR −2.75",
+      "sampleBaseCurve": "BC 8.6",
+      "sampleDiameter": "DIA 14.2"
+    }
+  },
+  "validation": {
+    "invalidEmail": "Correo no válido",
+    "minPassword": "Mínimo 8 caracteres",
+    "required": "Requerido",
+    "powerStep": "Número en pasos de 0.25",
+    "quarterSteps": "Pasos de 0.25",
+    "axisRange": "0 a 180",
+    "pdRange": "Entre 40.0 y 80.0 mm",
+    "expiresAfterIssue": "Debe ser posterior a la fecha de emisión",
+    "axisWithCylinder": "Requerido con cilindro",
+    "fiveDigits": "5 dígitos",
+    "tenDigits": "10 dígitos"
+  },
+  "orders": {
+    "loadFailed": "No pudimos cargar tus pedidos.",
+    "empty": "Aún no tienes pedidos. <link>Ver lentes</link>",
+    "units_one": "{{count}} artículo",
+    "units_other": "{{count}} artículos",
+    "tracking": "Guía",
+    "trackingWithCarrier": "Guía {{carrier}}:",
+    "reorder": "Volver a pedir",
+    "loadMoreFailed": "No pudimos cargar más pedidos."
+  },
+  "rx": {
+    "form": {
+      "unavailable": "Las recetas no están disponibles por ahora. Intenta más tarde.",
+      "badFileType": "Usa JPG, PNG, WebP o PDF.",
+      "fileTooLarge": "El archivo pesa más de 10 MB.",
+      "fileRequired": "Sube una foto o PDF de tu receta.",
+      "prepareFailed": "No pudimos preparar la subida. Intenta de nuevo.",
+      "uploadFailed": "No pudimos subir el archivo. Intenta de nuevo.",
+      "saveFailed": "No pudimos guardar tu receta.",
+      "kind": "Tipo de receta",
+      "file": "Foto o PDF de tu receta (máx. 10 MB)",
+      "rightEye": "Ojo derecho (OD)",
+      "leftEye": "Ojo izquierdo (OI)",
+      "sphere": "Esfera",
+      "cylinder": "Cilindro",
+      "axis": "Eje",
+      "addition": "Adición",
+      "pd": "Distancia pupilar en mm (opcional)",
+      "pdHint": "Si tu receta no la trae, te la pediremos antes de fabricar tus micas.",
+      "issuedAt": "Fecha de emisión",
+      "expiresAt": "Vigente hasta",
+      "doctor": "Nombre del optometrista",
+      "license": "Cédula profesional (opcional)",
+      "sent": "Receta enviada. La revisaremos pronto.",
+      "sending": "Enviando…",
+      "submit": "Enviar receta"
+    },
+    "empty": "Aún no has subido recetas.",
+    "eyes": "OD {{od}} · OI {{os}}",
+    "validUntil": "vigente hasta {{date}}",
+    "pd": "DP {{value}} mm",
+    "rejectReason": "Motivo: {{reason}}",
+    "expired": "Vencida",
+    "selector": {
+      "chooseRx": "Elige tu graduación.",
+      "checking": "Consultando…",
+      "comboUnavailable": "Esta combinación no está disponible.",
+      "inStock": "En existencia",
+      "abbr": {
+        "sphere": "PWR",
+        "cylinder": "CYL",
+        "axis": "EJE",
+        "addition": "ADD",
+        "baseCurve": "BC",
+        "diameter": "DIA"
+      },
+      "someUnavailable": "Alguna combinación no está disponible.",
+      "someSoldOut": "Alguna combinación está agotada.",
+      "notEnoughStock": "No hay existencias suficientes para esa graduación.",
+      "sameBoth": "Misma graduación en ambos ojos",
+      "baseCurve": "Curva base",
+      "diameter": "Diámetro",
+      "boxesPerEye": "Cajas por ojo",
+      "specs": "Curva base {{baseCurves}} · Diámetro {{diameters}} mm"
+    }
+  },
+  "theme": {
+    "dark": "Activar modo oscuro",
+    "light": "Activar modo claro"
+  },
+  "carousel": {
+    "roleDescription": "carrusel",
+    "label": "Promociones destacadas",
+    "slideRole": "diapositiva",
+    "slidePosition": "{{position}} de {{total}}",
+    "previous": "Diapositiva anterior",
+    "next": "Diapositiva siguiente",
+    "goTo": "Ir a la diapositiva {{position}}",
+    "resume": "Reanudar carrusel",
+    "pause": "Pausar carrusel"
+  },
+  "nav": {
+    "categoriesLabel": "Categorías",
+    "openMenu": "Abrir menú",
+    "menu": "Menú",
+    "mobileLabel": "Menú móvil",
+    "myPrescription": "Mi receta",
+    "home": "{{brand}}, inicio",
+    "allFrames": "Ver todos los armazones",
+    "forWomen": "Para mujer",
+    "forMen": "Para hombre",
+    "allLenses": "Ver todos los lentes de contacto",
+    "byUse": "Por uso",
+    "byNeed": "Por necesidad",
+    "yourPrescription": "Tu receta",
+    "uploadPrescription": "Subir mi receta",
+    "daily": "Diarios",
+    "monthly": "Mensuales",
+    "allBrands": "Ver todas las marcas",
+    "allBrandsTitle": "Todas las marcas"
+  },
+  "orderStatus": {
+    "checking": "Consultando tu pedido…",
+    "notFound": "No encontramos este pedido.",
+    "thanks": "¡Gracias por tu compra!",
+    "failed": "Tu pago no se completó",
+    "confirming": "Confirmando tu pago…",
+    "order": "Pedido",
+    "delayNote": "Esto puede tardar unos segundos. Si pagaste en OXXO o SPEI, se confirma cuando recibamos el pago.",
+    "keepShopping": "Seguir comprando",
+    "backToCart": "Volver al carrito"
+  },
+  "promo": {
+    "label": "Promoción",
+    "close": "Cerrar promoción"
+  },
+  "footer": {
+    "copyright": "© {{year}} {{brand}}. Armazones y lentes de contacto en México.",
+    "label": "Pie"
+  },
+  "labels": {
+    "lensType": {
+      "spherical": "Esférico",
+      "toric": "Tórico (astigmatismo)",
+      "multifocal": "Multifocal",
+      "cosmetic": "Cosmético"
+    },
+    "replacement": {
+      "daily": "Diario",
+      "biweekly": "Quincenal",
+      "monthly": "Mensual",
+      "quarterly": "Trimestral",
+      "yearly": "Anual"
+    },
+    "shape": {
+      "rectangular": "Rectangular",
+      "square": "Cuadrado",
+      "round": "Redondo",
+      "oval": "Ovalado",
+      "cat_eye": "Ojo de gato",
+      "aviator": "Aviador",
+      "browline": "Browline",
+      "geometric": "Geométrico"
+    },
+    "frameMaterial": {
+      "acetate": "Acetato",
+      "metal": "Metal",
+      "titanium": "Titanio",
+      "tr90": "TR90",
+      "mixed": "Mixto"
+    },
+    "rim": {
+      "full": "Aro completo",
+      "semi": "Semi al aire",
+      "rimless": "Al aire"
+    },
+    "gender": {
+      "women": "Mujer",
+      "men": "Hombre",
+      "unisex": "Unisex",
+      "kids": "Niños"
+    },
+    "color": {
+      "black": "Negro",
+      "tortoise": "Carey",
+      "brown": "Café",
+      "transparent": "Transparente",
+      "gray": "Gris",
+      "blue": "Azul",
+      "green": "Verde",
+      "red": "Rojo",
+      "pink": "Rosa",
+      "purple": "Morado",
+      "gold": "Dorado",
+      "silver": "Plateado",
+      "multicolor": "Multicolor"
+    },
+    "lensNeed": {
+      "spherical": "Esféricos · miopía e hipermetropía",
+      "toric": "Tóricos · astigmatismo",
+      "multifocal": "Multifocales · presbicia",
+      "cosmetic": "Cosméticos"
+    },
+    "orderStatus": {
+      "pending_payment": "Pago pendiente",
+      "paid": "Pagado",
+      "preparing": "Preparando",
+      "shipped": "Enviado",
+      "delivered": "Entregado",
+      "cancelled": "Cancelado",
+      "refunded": "Reembolsado",
+      "expired": "Vencido"
+    },
+    "rxStatus": {
+      "pending": "En revisión",
+      "approved": "Aprobada",
+      "rejected": "Rechazada"
+    }
+  },
+  "format": {
+    "leadTime24h": "24 horas",
+    "leadTimeDays": "{{days}} días"
+  }
+}

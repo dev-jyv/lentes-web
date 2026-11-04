@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { track } from "@/lib/analytics";
 import type { NavItem } from "@/lib/navigation";
+import { t } from "@/lib/i18n";
 
 const summaryClass =
   "flex min-h-11 cursor-pointer list-none items-center justify-between rounded-md px-2 outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden";
@@ -26,16 +27,16 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
-        aria-label="Abrir menú"
+        aria-label={t("nav.openMenu")}
         className="grid size-11 place-items-center rounded-full outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 lg:hidden"
       >
         <Menu className="size-6" aria-hidden="true" />
       </SheetTrigger>
       <SheetContent side="left" className="w-[min(22rem,100vw)] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Menú</SheetTitle>
+          <SheetTitle>{t("nav.menu")}</SheetTitle>
         </SheetHeader>
-        <nav aria-label="Menú móvil" className="space-y-1 px-4 pb-6 text-sm font-medium">
+        <nav aria-label={t("nav.mobileLabel")} className="space-y-1 px-4 pb-6 text-sm font-medium">
           {items.map((item) => (
             <details key={item.href} className="group/item">
               <summary className={`${summaryClass} text-base font-semibold`}>
@@ -65,8 +66,8 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
             </details>
           ))}
           <hr className="my-2" />
-          <Link href="/cuenta/recetas" onClick={go("cuenta", "cuenta", "Mi receta")} className={linkClass}>Mi receta</Link>
-          <Link href="/cuenta" onClick={go("cuenta", "cuenta", "Mi cuenta")} className={linkClass}>Mi cuenta</Link>
+          <Link href="/cuenta/recetas" onClick={go("cuenta", "cuenta", t("nav.myPrescription"))} className={linkClass}>{t("nav.myPrescription")}</Link>
+          <Link href="/cuenta" onClick={go("cuenta", "cuenta", t("account.title"))} className={linkClass}>{t("account.title")}</Link>
         </nav>
       </SheetContent>
     </Sheet>

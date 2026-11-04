@@ -9,6 +9,8 @@ import { addCartItem, getGetCartQueryKey } from "@/lib/api/generated/api";
 import type { FrameVariant, ProductDetail } from "@/lib/api/generated/model";
 import { track } from "@/lib/analytics";
 import { colorLabel, formatLeadTime, formatMxn } from "@/lib/format";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/rich";
 
 // Muestras de color del producto: son datos del catálogo, no parte de la paleta de la marca.
 const swatch: Record<FrameVariant["color"], string> = {
@@ -32,7 +34,7 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
   // Sin paquetes o sin tiempo de entrega, la venta de armazones sigue apagada.
   const canBuy = product.frame_lead_time_days != null && packages.length > 0;
 
-  if (variants.length === 0) return <p className="text-muted-foreground">Este armazón no está disponible por ahora.</p>;
+  if (variants.length === 0) return <p className="text-muted-foreground">{t("frames.unavailable")}</p>;
 
   async function add() {
     if (!selected || !pack) return;
@@ -43,7 +45,7 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
     if (res?.status !== 201) {
       setAdding(false);
       const detail = (res?.data as { detail?: string } | undefined)?.detail;
-      return setError(res?.status === 409 && detail ? detail : "No pudimos agregar al carrito. Intenta de nuevo.");
+      return setError(res?.status === 409 && detail ? detail : t("frames.addFailed"));
     }
     track("add_to_cart", { slug: product.slug, name: product.name, category: "frame", lens_package: pack.slug });
     router.push("/carrito");
@@ -53,13 +55,13 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
     <div className="space-y-5">
       <fieldset>
         <legend className="mb-2 text-sm font-medium">
-          Color{selected && <span className="font-normal text-muted-foreground">: {colorLabel[selected.color]}</span>}
+          {t("catalog.filters.color")}{selected && <span className="font-normal text-muted-foreground">: {colorLabel[selected.color]}</span>}
         </legend>
         <div className="flex flex-wrap gap-2">
           {variants.map((v) => (
             <label
               key={v.id}
-              title={v.in_stock ? colorLabel[v.color] : `${colorLabel[v.color]} (agotado)`}
+              title={v.in_stock ? colorLabel[v.color] : t("frames.colorSoldOutTitle", { color: colorLabel[v.color] })}
               className={`grid size-11 place-items-center rounded-full border-2 ${v.id === selectedId ? "border-primary" : "border-transparent"} ${v.in_stock ? "cursor-pointer" : "cursor-not-allowed opacity-40"} has-focus-visible:ring-3 has-focus-visible:ring-ring/50`}
             >
               <input
@@ -70,7 +72,7 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
                 disabled={!v.in_stock}
                 checked={v.id === selectedId}
                 onChange={() => setSelectedId(v.id)}
-                aria-label={v.in_stock ? colorLabel[v.color] : `${colorLabel[v.color]}, agotado`}
+                aria-label={v.in_stock ? colorLabel[v.color] : t("frames.colorSoldOutLabel", { color: colorLabel[v.color] })}
               />
               <span className="size-8 rounded-full border" style={{ background: swatch[v.color] }} aria-hidden="true" />
             </label>
@@ -84,9 +86,9 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
           {selected.compare_at_cents != null && selected.compare_at_cents > selected.price_cents && (
             <s className="ml-2 text-sm text-muted-foreground">{formatMxn(selected.compare_at_cents)}</s>
           )}
-          <span className="ml-2 text-sm text-muted-foreground">armazón</span>
+          <span className="ml-2 text-sm text-muted-foreground">{t("frames.frameLabel")}</span>
           <span className={`ml-3 text-sm ${selected.in_stock ? "text-good" : "text-warn"}`}>
-            {selected.in_stock ? "Disponible" : "Agotado"}
+            {selected.in_stock ? t("frames.available") : t("product.soldOut")}
           </span>
         </p>
       )}
@@ -94,7 +96,7 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
       {canBuy ? (
         <>
           <fieldset>
-            <legend className="mb-2 text-sm font-medium">Elige tus micas</legend>
+            <legend className="mb-2 text-sm font-medium">{t("frames.chooseLenses")}</legend>
             <div className="space-y-2">
               {packages.map((p) => (
                 <label
@@ -106,33 +108,34 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
                     <span>
                       <strong>{p.name}</strong>
                       {p.description && <span className="block text-muted-foreground">{p.description}</span>}
-                      {p.requires_prescription && <span className="block text-xs text-muted-foreground">Requiere receta de armazones.</span>}
+                      {p.requires_prescription && <span className="block text-xs text-muted-foreground">{t("frames.requiresPrescription")}</span>}
                     </span>
                   </span>
-                  <strong className="shrink-0">{p.price_cents === 0 ? "Incluido" : `+ ${formatMxn(p.price_cents)}`}</strong>
+                  <strong className="shrink-0">{p.price_cents === 0 ? t("frames.included") : t("frames.packagePrice", { price: formatMxn(p.price_cents) })}</strong>
                 </label>
               ))}
             </div>
           </fieldset>
           <div className="space-y-3 rounded-xl border bg-card p-4">
             <p className="flex justify-between">
-              <span>Total</span>
+              <span>{t("frames.total")}</span>
               <strong className="font-display text-xl">
-                {selected && pack ? formatMxn(selected.price_cents + pack.price_cents) : "Elige tus micas"}
+                {selected && pack ? formatMxn(selected.price_cents + pack.price_cents) : t("frames.chooseLenses")}
               </strong>
             </p>
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
             <Button size="lg" className="w-full" disabled={!selected?.in_stock || !pack || adding} onClick={add}>
-              {adding ? "Agregando…" : "Agregar al carrito"}
+              {adding ? t("frames.adding") : t("frames.addToCart")}
             </Button>
             <p className="text-xs text-muted-foreground">
-              Entrega estimada: {formatLeadTime(product.frame_lead_time_days!)}. Las micas se fabrican a medida; consulta la{" "}
-              <Link href="/cambios-y-devoluciones" className="underline">política de cambios y devoluciones</Link>.
+              {rich(t("frames.deliveryNote", { time: formatLeadTime(product.frame_lead_time_days!) }), {
+                link: (c) => <Link href="/cambios-y-devoluciones" className="underline">{c}</Link>,
+              })}
             </p>
           </div>
         </>
       ) : (
-        <p className="rounded-xl bg-secondary p-4 text-sm">Muy pronto podrás comprarlo en línea.</p>
+        <p className="rounded-xl bg-secondary p-4 text-sm">{t("frames.comingSoon")}</p>
       )}
     </div>
   );

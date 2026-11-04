@@ -3,6 +3,7 @@
 import { Moon, Sun } from "lucide-react";
 import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
+import { t } from "@/lib/i18n";
 
 type Theme = "light" | "dark";
 
@@ -23,7 +24,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       className="size-11"
-      aria-label={next === "dark" ? "Activar modo oscuro" : "Activar modo claro"}
+      aria-label={next === "dark" ? t("theme.dark") : t("theme.light")}
       onClick={() => {
         document.documentElement.dataset.theme = next;
         try {

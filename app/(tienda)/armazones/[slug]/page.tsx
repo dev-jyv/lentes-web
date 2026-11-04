@@ -8,6 +8,7 @@ import { getProduct } from "@/lib/api/generated/api";
 import { env } from "@/lib/env";
 import { frameMaterialLabel, genderLabel, productHref, rimLabel, shapeLabel } from "@/lib/format";
 import { imageSrc } from "@/lib/images";
+import { t } from "@/lib/i18n";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -20,8 +21,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await load((await params).slug);
   if (!p) return {};
   return {
-    title: `${p.name} | ${p.brand.name}`,
-    description: p.description ?? `Armazón ${p.name} de ${p.brand.name}.`,
+    title: t("product.metaTitle", { name: p.name, brand: p.brand.name }),
+    description: p.description ?? t("frames.metaDescription", { name: p.name, brand: p.brand.name }),
     alternates: { canonical: productHref(p) },
   };
 }
@@ -54,9 +55,9 @@ export default async function FramePage({ params }: Props) {
   };
   const { frame } = p;
   const measures = [
-    { label: "Ancho de lente", value: frame.lens_width_mm },
-    { label: "Puente", value: frame.bridge_mm },
-    { label: "Varilla", value: frame.temple_mm },
+    { label: t("frames.measures.lensWidth"), value: frame.lens_width_mm },
+    { label: t("frames.measures.bridge"), value: frame.bridge_mm },
+    { label: t("frames.measures.temple"), value: frame.temple_mm },
   ];
 
   return (
@@ -71,14 +72,14 @@ export default async function FramePage({ params }: Props) {
           {images[0] ? (
             <Image src={images[0]} alt={p.name} fill unoptimized className="object-contain p-8" />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Sin imagen</div>
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{t("product.noImage")}</div>
           )}
         </div>
         {images.length > 1 && (
           <ul className="grid grid-cols-4 gap-3">
             {images.slice(1).map((src, i) => (
               <li key={src} className="relative aspect-square overflow-hidden rounded-xl bg-secondary">
-                <Image src={src} alt={`${p.name}, vista ${i + 2}`} fill unoptimized className="object-contain p-2" />
+                <Image src={src} alt={t("frames.imageView", { name: p.name, view: i + 2 })} fill unoptimized className="object-contain p-2" />
               </li>
             ))}
           </ul>
@@ -98,12 +99,12 @@ export default async function FramePage({ params }: Props) {
         </div>
         <FrameSelector product={p} />
         <section aria-labelledby="medidas">
-          <h2 id="medidas" className="mb-2 text-base">Medidas</h2>
+          <h2 id="medidas" className="mb-2 text-base">{t("frames.measures.title")}</h2>
           <dl className="grid grid-cols-3 gap-3 text-sm">
             {measures.map((m) => (
               <div key={m.label} className="rounded-xl border p-3">
                 <dt className="text-muted-foreground">{m.label}</dt>
-                <dd className="optic font-medium">{m.value} mm</dd>
+                <dd className="optic font-medium">{t("frames.measures.value", { value: m.value })}</dd>
               </div>
             ))}
           </dl>
