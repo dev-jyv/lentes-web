@@ -8,6 +8,8 @@ import { getProduct } from "@/lib/api/generated/api";
 import { env } from "@/lib/env";
 import { imageSrc } from "@/lib/images";
 import { formatMxn, lensTypeLabel, productHref, replacementLabel } from "@/lib/format";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/rich";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -20,8 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await load((await params).slug);
   if (!p) return {};
   return {
-    title: `${p.name} | ${p.brand.name}`,
-    description: p.description ?? `Compra ${p.name} de ${p.brand.name}.`,
+    title: t("product.metaTitle", { name: p.name, brand: p.brand.name }),
+    description: p.description ?? t("lenses.metaDescription", { name: p.name, brand: p.brand.name }),
     alternates: { canonical: productHref(p) },
   };
 }
@@ -65,7 +67,7 @@ export default async function ProductPage({ params }: Props) {
           <Image src={images[0]} alt={p.name} fill unoptimized className="object-contain p-8" />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-            Sin imagen
+            {t("product.noImage")}
           </div>
         )}
       </div>
@@ -76,18 +78,18 @@ export default async function ProductPage({ params }: Props) {
           <div className="flex flex-wrap gap-2">
             {p.lens_type && <Badge variant="secondary">{lensTypeLabel[p.lens_type]}</Badge>}
             {p.replacement && <Badge variant="secondary">{replacementLabel[p.replacement]}</Badge>}
-            {p.pieces_per_box != null && <Badge variant="outline">{p.pieces_per_box} piezas por caja</Badge>}
+            {p.pieces_per_box != null && <Badge variant="outline">{t("lenses.piecesPerBox", { count: p.pieces_per_box })}</Badge>}
           </div>
           <p className="text-lg">
             {p.from_price_cents != null ? (
-              <>Desde <strong className="font-display text-2xl">{formatMxn(p.from_price_cents)}</strong></>
+              rich(t("product.fromPrice", { price: formatMxn(p.from_price_cents) }), { price: (c) => <strong className="font-display text-2xl">{c}</strong> })
             ) : (
-              <strong>Agotado</strong>
+              <strong>{t("product.soldOut")}</strong>
             )}
           </p>
           {p.description && <p className="text-muted-foreground">{p.description}</p>}
           {p.requires_prescription && (
-            <p className="text-sm">Requiere receta vigente de tu optometrista.</p>
+            <p className="text-sm">{t("lenses.requiresPrescription")}</p>
           )}
         </div>
         <RxSelector product={p} />

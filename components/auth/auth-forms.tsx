@@ -15,9 +15,11 @@ import { useTurnstile } from "@/components/turnstile";
 import { env } from "@/lib/env";
 import { safeNext } from "@/lib/safe-next";
 import { createClient } from "@/lib/supabase/client";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/rich";
 
-const email = z.string().email("Correo no válido");
-const password = z.string().min(8, "Mínimo 8 caracteres");
+const email = z.string().email(t("validation.invalidEmail"));
+const password = z.string().min(8, t("validation.minPassword"));
 
 function Row({
   id, label, type = "text", error, autoComplete, reg,
@@ -51,9 +53,9 @@ export function GoogleButton({ next }: { next: string }) {
           provider: "google",
           options: { redirectTo: `${origin()}/auth/callback?next=${encodeURIComponent(next)}` },
         });
-        if (error) setError("No se pudo iniciar con Google.");
+        if (error) setError(t("auth.googleFailed"));
       }}>
-        Continuar con Google
+        {t("auth.continueWithGoogle")}
       </Button>
       <Notice error={error} />
     </div>
@@ -66,34 +68,34 @@ export function LoginForm({ next }: { next?: string }) {
   const [error, setError] = useState<string | null>(null);
   const turnstile = useTurnstile();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
-    resolver: zodResolver(z.object({ email, password: z.string().min(1, "Requerido") })),
+    resolver: zodResolver(z.object({ email, password: z.string().min(1, t("validation.required")) })),
   });
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit(async (v) => {
       setError(null);
-      if (turnstile.required && !turnstile.token) return setError("Completa la verificación.");
+      if (turnstile.required && !turnstile.token) return setError(t("auth.completeCaptcha"));
       const { error } = await createClient().auth.signInWithPassword({
         ...v, options: { captchaToken: turnstile.token },
       });
       turnstile.reset();
-      if (error) return setError("Correo o contraseña incorrectos.");
+      if (error) return setError(t("auth.wrongCredentials"));
       // Une el carrito anónimo al del cliente; si falla, el carrito anónimo se conserva.
       if (getCartToken() && (await mergeCart()).status === 200) clearCartToken();
       router.replace(target);
       router.refresh();
     })}>
-      <Row id="email" label="Correo" type="email" autoComplete="email"
+      <Row id="email" label={t("auth.email")} type="email" autoComplete="email"
         error={errors.email?.message} reg={register("email")} />
-      <Row id="password" label="Contraseña" type="password" autoComplete="current-password"
+      <Row id="password" label={t("auth.password")} type="password" autoComplete="current-password"
         error={errors.password?.message} reg={register("password")} />
       {turnstile.widget}
       <Notice error={error} />
-      <Button type="submit" className="w-full" disabled={isSubmitting}>Iniciar sesión</Button>
+      <Button type="submit" className="w-full" disabled={isSubmitting}>{t("auth.login.title")}</Button>
       <GoogleButton next={target} />
       <div className="flex justify-between text-sm">
-        <Link href="/recuperar" className="underline">Olvidé mi contraseña</Link>
-        <Link href="/registro" className="underline">Crear cuenta</Link>
+        <Link href="/recuperar" className="underline">{t("auth.forgotPassword")}</Link>
+        <Link href="/registro" className="underline">{t("auth.register.title")}</Link>
       </div>
     </form>
   );
@@ -104,13 +106,13 @@ export function RegisterForm() {
   const [info, setInfo] = useState<string | null>(null);
   const turnstile = useTurnstile();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
-    resolver: zodResolver(z.object({ full_name: z.string().min(2, "Requerido"), email, password })),
+    resolver: zodResolver(z.object({ full_name: z.string().min(2, t("validation.required")), email, password })),
   });
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit(async ({ full_name, ...v }) => {
       setError(null);
-      if (turnstile.required && !turnstile.token) return setError("Completa la verificación.");
+      if (turnstile.required && !turnstile.token) return setError(t("auth.completeCaptcha"));
       const { error } = await createClient().auth.signUp({
         ...v,
         options: {
@@ -120,21 +122,21 @@ export function RegisterForm() {
         },
       });
       turnstile.reset();
-      if (error) return setError("No se pudo crear la cuenta. Intenta de nuevo.");
-      setInfo("Revisa tu correo para confirmar tu cuenta.");
+      if (error) return setError(t("auth.register.failed"));
+      setInfo(t("auth.register.checkEmail"));
     })}>
-      <Row id="full_name" label="Nombre completo" autoComplete="name"
+      <Row id="full_name" label={t("auth.register.fullName")} autoComplete="name"
         error={errors.full_name?.message} reg={register("full_name")} />
-      <Row id="email" label="Correo" type="email" autoComplete="email"
+      <Row id="email" label={t("auth.email")} type="email" autoComplete="email"
         error={errors.email?.message} reg={register("email")} />
-      <Row id="password" label="Contraseña" type="password" autoComplete="new-password"
+      <Row id="password" label={t("auth.password")} type="password" autoComplete="new-password"
         error={errors.password?.message} reg={register("password")} />
       {turnstile.widget}
       <Notice error={error} info={info} />
-      <Button type="submit" className="w-full" disabled={isSubmitting}>Crear cuenta</Button>
+      <Button type="submit" className="w-full" disabled={isSubmitting}>{t("auth.register.title")}</Button>
       <GoogleButton next="/cuenta" />
       <p className="text-sm">
-        ¿Ya tienes cuenta? <Link href="/login" className="underline">Inicia sesión</Link>
+        {rich(t("auth.register.haveAccount"), { link: (c) => <Link href="/login" className="underline">{c}</Link> })}
       </p>
     </form>
   );
@@ -152,12 +154,12 @@ export function RecoverForm() {
         redirectTo: `${origin()}/auth/callback?next=/cuenta/contrasena`,
       });
       // Respuesta neutra: no revela si el correo existe.
-      setInfo("Si el correo existe, te enviamos un enlace para restablecer tu contraseña.");
+      setInfo(t("auth.recover.sent"));
     })}>
-      <Row id="email" label="Correo" type="email" autoComplete="email"
+      <Row id="email" label={t("auth.email")} type="email" autoComplete="email"
         error={errors.email?.message} reg={register("email")} />
       <Notice info={info} />
-      <Button type="submit" className="w-full" disabled={isSubmitting}>Enviar enlace</Button>
+      <Button type="submit" className="w-full" disabled={isSubmitting}>{t("auth.recover.send")}</Button>
     </form>
   );
 }
@@ -172,13 +174,13 @@ export function NewPasswordForm() {
   return (
     <form className="space-y-4" onSubmit={handleSubmit(async (v) => {
       const { error } = await createClient().auth.updateUser(v);
-      if (error) return setError("No se pudo actualizar la contraseña.");
+      if (error) return setError(t("auth.newPassword.failed"));
       router.replace("/cuenta");
     })}>
-      <Row id="password" label="Nueva contraseña" type="password" autoComplete="new-password"
+      <Row id="password" label={t("auth.newPassword.title")} type="password" autoComplete="new-password"
         error={errors.password?.message} reg={register("password")} />
       <Notice error={error} />
-      <Button type="submit" className="w-full" disabled={isSubmitting}>Guardar</Button>
+      <Button type="submit" className="w-full" disabled={isSubmitting}>{t("common.save")}</Button>
     </form>
   );
 }
@@ -191,7 +193,7 @@ export function SignOutButton() {
       router.replace("/");
       router.refresh();
     }}>
-      Cerrar sesión
+      {t("auth.signOut")}
     </Button>
   );
 }

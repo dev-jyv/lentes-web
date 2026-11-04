@@ -9,6 +9,8 @@ import { listMyOrders } from "@/lib/api/generated/api";
 import type { OrderSummary } from "@/lib/api/generated/model";
 import { formatMxn } from "@/lib/format";
 import { canReorder, orderFolio, orderStatusLabel } from "@/lib/order";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/rich";
 
 const dateFmt = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Mexico_City" });
 
@@ -29,15 +31,15 @@ export function OrderHistory() {
   if (isError && items.length === 0) {
     return (
       <div className="space-y-2 text-sm">
-        <p className="text-destructive">No pudimos cargar tus pedidos.</p>
-        <Button variant="outline" onClick={() => void refetch()}>Reintentar</Button>
+        <p className="text-destructive">{t("orders.loadFailed")}</p>
+        <Button variant="outline" onClick={() => void refetch()}>{t("common.retry")}</Button>
       </div>
     );
   }
   if (items.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Aún no tienes pedidos. <Link href="/lentes" className="underline">Ver lentes</Link>
+        {rich(t("orders.empty"), { link: (c) => <Link href="/lentes" className="underline">{c}</Link> })}
       </p>
     );
   }
@@ -50,14 +52,14 @@ export function OrderHistory() {
             <div>
               <p className="font-medium"><span className="optic">{orderFolio(o.number)}</span> · {formatMxn(o.total_cents)}</p>
               <p className="text-xs text-muted-foreground">
-                {dateFmt.format(new Date(o.created_at))} · {o.units} {o.units === 1 ? "artículo" : "artículos"}
+                {dateFmt.format(new Date(o.created_at))} · {t("orders.units", { count: o.units })}
               </p>
               {o.frame_lines.map((line, i) => (
                 <p key={i} className="text-xs text-muted-foreground">{line}</p>
               ))}
               {o.tracking_number && (
                 <p className="text-xs text-muted-foreground">
-                  Guía {o.tracking_carrier ? `${o.tracking_carrier}: ` : ""}<span className="optic">{o.tracking_number}</span>
+                  {o.tracking_carrier ? t("orders.trackingWithCarrier", { carrier: o.tracking_carrier }) : t("orders.tracking")} <span className="optic">{o.tracking_number}</span>
                 </p>
               )}
             </div>
@@ -67,17 +69,17 @@ export function OrderHistory() {
               </Badge>
               {canReorder(o.status) && o.reorderable && (
                 <Button variant="outline" size="sm" render={<Link href={`/recompra/${o.id}`} />} nativeButton={false}>
-                  Volver a pedir
+                  {t("orders.reorder")}
                 </Button>
               )}
             </div>
           </li>
         ))}
       </ul>
-      {isError && <p className="text-sm text-destructive">No pudimos cargar más pedidos.</p>}
+      {isError && <p className="text-sm text-destructive">{t("orders.loadMoreFailed")}</p>}
       {hasNextPage && (
         <Button variant="outline" disabled={isFetchingNextPage} onClick={() => void fetchNextPage()}>
-          {isFetchingNextPage ? "Cargando…" : "Ver más"}
+          {isFetchingNextPage ? t("common.loading") : t("common.viewMore")}
         </Button>
       )}
     </div>

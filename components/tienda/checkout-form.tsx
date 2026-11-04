@@ -18,26 +18,28 @@ import { track } from "@/lib/analytics";
 import { formatLeadTime, formatMxn } from "@/lib/format";
 import type { Prescription } from "@/lib/api/generated/model";
 import { isUsable, rxStatusLabel } from "@/lib/prescription";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/rich";
 
-const req = z.string().trim().min(1, "Requerido");
+const req = z.string().trim().min(1, t("validation.required"));
 const schema = z.object({
   recipient: req, street: req, ext_number: req, int_number: z.string(),
   neighborhood: req, city: req, state: req,
-  postal_code: z.string().regex(/^\d{5}$/, "5 dígitos"),
-  phone: z.string().regex(/^\d{10}$/, "10 dígitos"),
+  postal_code: z.string().regex(/^\d{5}$/, t("validation.fiveDigits")),
+  phone: z.string().regex(/^\d{10}$/, t("validation.tenDigits")),
 });
 type AddressValues = z.infer<typeof schema>;
 
 const fields: { name: keyof AddressValues; label: string; wide?: boolean }[] = [
-  { name: "recipient", label: "Nombre de quien recibe", wide: true },
-  { name: "street", label: "Calle", wide: true },
-  { name: "ext_number", label: "No. exterior" },
-  { name: "int_number", label: "No. interior (opcional)" },
-  { name: "neighborhood", label: "Colonia", wide: true },
-  { name: "city", label: "Ciudad" },
-  { name: "state", label: "Estado" },
-  { name: "postal_code", label: "Código postal" },
-  { name: "phone", label: "Teléfono (10 dígitos)" },
+  { name: "recipient", label: t("checkout.address.recipient"), wide: true },
+  { name: "street", label: t("checkout.address.street"), wide: true },
+  { name: "ext_number", label: t("checkout.address.extNumber") },
+  { name: "int_number", label: t("checkout.address.intNumber") },
+  { name: "neighborhood", label: t("checkout.address.neighborhood"), wide: true },
+  { name: "city", label: t("checkout.address.city") },
+  { name: "state", label: t("checkout.address.state") },
+  { name: "postal_code", label: t("checkout.address.postalCode") },
+  { name: "phone", label: t("checkout.address.phone") },
 ];
 
 function AddressForm({ onSaved }: { onSaved: (id: string) => void }) {
@@ -52,7 +54,7 @@ function AddressForm({ onSaved }: { onSaved: (id: string) => void }) {
       const res = await createAddress({
         ...v, int_number: v.int_number || null, is_default: true,
       });
-      if (res.status !== 201) return setError("No pudimos guardar la dirección.");
+      if (res.status !== 201) return setError(t("checkout.address.saveFailed"));
       await queryClient.invalidateQueries({ queryKey: getListAddressesQueryKey() });
       onSaved(res.data.id);
     })}>
@@ -64,7 +66,7 @@ function AddressForm({ onSaved }: { onSaved: (id: string) => void }) {
         </div>
       ))}
       {error && <p role="alert" className="text-sm text-destructive sm:col-span-2">{error}</p>}
-      <Button type="submit" disabled={isSubmitting} className="sm:col-span-2">Guardar dirección</Button>
+      <Button type="submit" disabled={isSubmitting} className="sm:col-span-2">{t("checkout.address.save")}</Button>
     </form>
   );
 }
@@ -73,15 +75,15 @@ function AddressForm({ onSaved }: { onSaved: (id: string) => void }) {
 function checkoutMessage(status: number, detail?: string) {
   switch (status) {
     case 409:
-      return detail ?? "Algunos artículos ya no están disponibles. Revisa tu carrito.";
+      return detail ?? t("checkout.errors.unavailable");
     case 403:
-      return "No pudimos verificar que eres una persona. Intenta de nuevo.";
+      return t("checkout.errors.captcha");
     case 404:
-      return "No encontramos la dirección o la receta. Revísalas e intenta de nuevo.";
+      return t("checkout.errors.notFound");
     case 503:
-      return "Los pagos no están disponibles por ahora. Intenta más tarde.";
+      return t("checkout.errors.paymentsDown");
     default:
-      return "No pudimos iniciar el pago. Intenta de nuevo.";
+      return t("checkout.errors.generic");
   }
 }
 
@@ -96,7 +98,7 @@ function RxPicker({
       {items.length === 0 ? (
         <p className="text-sm">
           {emptyText}{" "}
-          <Link href="/cuenta/recetas" className="underline">Sube tu receta</Link> y regresa aquí.
+          {rich(t("checkout.rx.uploadPrompt"), { link: (c) => <Link href="/cuenta/recetas" className="underline">{c}</Link> })}
         </p>
       ) : (
         <ul className="space-y-2">
@@ -106,7 +108,7 @@ function RxPicker({
                 <input type="radio" name={name} className="mt-1" checked={value === r.id} onChange={() => onPick(r.id)} />
                 <span>
                   <strong>{r.doctor_name}</strong> · {rxStatusLabel[r.status]}<br />
-                  <span className="optic">OD {r.od_sphere} · OI {r.os_sphere}</span> · vigente hasta {r.expires_at}
+                  <span className="optic">{t("rx.eyes", { od: r.od_sphere, os: r.os_sphere })}</span> · {t("rx.validUntil", { date: r.expires_at })}
                 </span>
               </label>
             </li>
@@ -143,7 +145,10 @@ export function CheckoutForm() {
   const addresses = addressesQuery.data?.status === 200 ? addressesQuery.data.data.items : [];
   if (!cart || cart.items.length === 0) {
     return <p className="py-10 text-center text-muted-foreground">
-      Tu carrito está vacío. <Link href="/armazones" className="underline">Ver armazones</Link> o <Link href="/lentes" className="underline">lentes de contacto</Link>
+      {rich(t("checkout.emptyCart"), {
+        frames: (c) => <Link href="/armazones" className="underline">{c}</Link>,
+        lenses: (c) => <Link href="/lentes" className="underline">{c}</Link>,
+      })}
     </p>;
   }
   const needsRx = cart.items.some((i) => i.product.requires_prescription);
@@ -176,7 +181,7 @@ export function CheckoutForm() {
   return (
     <div className="ph-no-capture grid gap-8 lg:grid-cols-[1fr_380px]">
       <section className="space-y-4">
-        <h2 className="text-lg">Dirección de envío</h2>
+        <h2 className="text-lg">{t("checkout.address.title")}</h2>
         {addresses.length > 0 && !adding && (
           <ul className="space-y-2">
             {addresses.map((a) => (
@@ -186,7 +191,7 @@ export function CheckoutForm() {
                     checked={addressId === a.id} onChange={() => setPicked(a.id)} />
                   <span>
                     <strong>{a.recipient}</strong><br />
-                    {a.street} {a.ext_number}{a.int_number ? ` int. ${a.int_number}` : ""}, {a.neighborhood}<br />
+                    {a.street} {a.ext_number}{a.int_number ? t("checkout.address.interior", { number: a.int_number }) : ""}, {a.neighborhood}<br />
                     {a.city}, {a.state} {a.postal_code} · {a.phone}
                   </span>
                 </label>
@@ -197,25 +202,25 @@ export function CheckoutForm() {
         {(adding || addresses.length === 0) ? (
           <AddressForm onSaved={(id) => { setPicked(id); setAdding(false); }} />
         ) : (
-          <Button variant="outline" size="sm" onClick={() => setAdding(true)}>Agregar otra dirección</Button>
+          <Button variant="outline" size="sm" onClick={() => setAdding(true)}>{t("checkout.address.addAnother")}</Button>
         )}
         {needsRx && (
           <RxPicker
-            title={needsGlassesRx ? "Receta de lentes de contacto" : "Receta"} name="rx"
-            emptyText="Tus lentes requieren receta vigente de lentes de contacto."
+            title={needsGlassesRx ? t("checkout.rx.lensesTitle") : t("checkout.rx.title")} name="rx"
+            emptyText={t("checkout.rx.lensesEmpty")}
             items={prescriptions} value={prescriptionId} onPick={setPickedRx}
           />
         )}
         {needsGlassesRx && (
           <RxPicker
-            title={needsRx ? "Receta de armazones" : "Receta"} name="glasses-rx"
-            emptyText="Tus micas requieren receta vigente de armazones."
+            title={needsRx ? t("checkout.rx.framesTitle") : t("checkout.rx.title")} name="glasses-rx"
+            emptyText={t("checkout.rx.framesEmpty")}
             items={glassesPrescriptions} value={glassesPrescriptionId} onPick={setPickedGlassesRx}
           />
         )}
       </section>
       <aside className="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-28">
-        <h2 className="text-lg">Resumen</h2>
+        <h2 className="text-lg">{t("checkout.summary")}</h2>
         <ul className="space-y-1 text-sm">
           {cart.items.map((i) => (
             <li key={i.id} className="flex justify-between gap-2">
@@ -225,21 +230,20 @@ export function CheckoutForm() {
           ))}
         </ul>
         <div className="flex justify-between border-t pt-3">
-          <span>Subtotal</span><strong>{formatMxn(cart.subtotal_cents)}</strong>
+          <span>{t("cart.subtotal")}</span><strong>{formatMxn(cart.subtotal_cents)}</strong>
         </div>
         <p className="text-xs text-muted-foreground">
-          El backend valida precios y stock al pagar; el total final puede variar por envío.
+          {t("checkout.priceNote")}
         </p>
         {hasFrames && (
           <p className="text-xs text-muted-foreground">
-            {cart.frame_lead_time_days != null && <>Tus armazones con micas se entregan en {formatLeadTime(cart.frame_lead_time_days)}. </>}
-            Las micas se fabrican a medida: consulta la{" "}
-            <Link href="/cambios-y-devoluciones" className="underline">política de cambios y devoluciones</Link>.
+            {cart.frame_lead_time_days != null && <>{t("checkout.leadTime", { time: formatLeadTime(cart.frame_lead_time_days) })} </>}
+            {rich(t("checkout.customLenses"), { link: (c) => <Link href="/cambios-y-devoluciones" className="underline">{c}</Link> })}
           </p>
         )}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         <Button size="lg" className="w-full" disabled={!addressId || rxMissing || paying} onClick={pay}>
-          {paying ? "Redirigiendo…" : "Pagar con Mercado Pago"}
+          {paying ? t("checkout.redirecting") : t("checkout.pay")}
         </Button>
       </aside>
     </div>

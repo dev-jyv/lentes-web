@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import type { HomeBanner } from "@/lib/api/generated/model";
 import { isInternalHref } from "@/lib/safe-next";
+import { t } from "@/lib/i18n";
 
 const STORAGE_KEY = "promo-bar-closed";
 const listeners = new Set<() => void>();
@@ -37,9 +38,9 @@ export function PromoBar({ banner }: { banner: HomeBanner }) {
   };
 
   return (
-    <aside aria-label="Promoción" className="bg-primary text-primary-foreground">
+    <aside aria-label={t("promo.label")} className="relative z-40 bg-band text-white">
       <div className="container-page flex min-h-10 items-center justify-between gap-2 py-1 text-sm">
-        <p className="flex-1 text-center">
+        <p className="flex-1 text-center font-medium">
           {banner.title}
           {banner.cta_label && isInternalHref(banner.cta_href) && (
             <>
@@ -53,8 +54,8 @@ export function PromoBar({ banner }: { banner: HomeBanner }) {
         <button
           type="button"
           onClick={close}
-          aria-label="Cerrar promoción"
-          className="grid size-11 shrink-0 place-items-center rounded-full hover:bg-primary-foreground/15"
+          aria-label={t("promo.close")}
+          className="grid size-11 shrink-0 place-items-center rounded-full hover:bg-white/15"
         >
           <X className="size-4" aria-hidden="true" />
         </button>

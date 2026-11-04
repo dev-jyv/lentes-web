@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { t } from "@/lib/i18n";
 
 export type FilterParams = Record<string, string | undefined>;
 
@@ -26,7 +27,7 @@ function Group({ group, base, params }: { group: FilterGroup; base: string; para
       <ul className="space-y-1 text-sm">
         <li>
           <Link href={href(base, params, name)} className={!params[name] ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground"}>
-            Todos
+            {t("catalog.all")}
           </Link>
         </li>
         {options.map((o) => (
@@ -48,7 +49,7 @@ export function CatalogFilters({
   base, params, groups,
 }: { base: string; params: FilterParams; groups: FilterGroup[] }) {
   return (
-    <aside aria-label="Filtros" className="space-y-6 md:sticky md:top-28 md:self-start">
+    <aside aria-label={t("catalog.filtersLabel")} className="space-y-6 md:sticky md:top-28 md:self-start">
       {groups.filter((g) => !g.chipOnly).map((g) => <Group key={g.name} group={g} base={base} params={params} />)}
     </aside>
   );
@@ -66,13 +67,13 @@ export function ActiveFilters({
     }));
   if (chips.length === 0) return null;
   return (
-    <ul aria-label="Filtros activos" className="mb-4 flex flex-wrap gap-2">
+    <ul aria-label={t("catalog.activeFiltersLabel")} className="mb-4 flex flex-wrap gap-2">
       {chips.map((c) => (
         <li key={c.key}>
           <Link
             href={href(base, params, c.key)}
             className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm font-medium hover:bg-accent"
-            aria-label={`Quitar filtro ${c.label}`}
+            aria-label={t("catalog.removeFilter", { label: c.label })}
           >
             {c.label} <span aria-hidden="true">×</span>
           </Link>

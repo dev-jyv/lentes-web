@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useGetOrder } from "@/lib/api/generated/api";
 import { colorLabel, formatMxn } from "@/lib/format";
+import { t } from "@/lib/i18n";
 
 const FINAL = ["paid", "preparing", "shipped", "delivered", "cancelled", "refunded", "expired"];
 
@@ -19,8 +20,8 @@ export function OrderStatus({ orderId }: { orderId: string }) {
     },
   });
 
-  if (isLoading) return <p className="text-muted-foreground">Consultando tu pedido…</p>;
-  if (data?.status !== 200) return <p>No encontramos este pedido.</p>;
+  if (isLoading) return <p className="text-muted-foreground">{t("orderStatus.checking")}</p>;
+  if (data?.status !== 200) return <p>{t("orderStatus.notFound")}</p>;
   const o = data.data;
   const paid = ["paid", "preparing", "shipped", "delivered"].includes(o.status);
   const failed = ["cancelled", "refunded", "expired"].includes(o.status);
@@ -37,9 +38,9 @@ export function OrderStatus({ orderId }: { orderId: string }) {
         </div>
       )}
       <h2 className="text-2xl font-semibold">
-        {paid ? "¡Gracias por tu compra!" : failed ? "Tu pago no se completó" : "Confirmando tu pago…"}
+        {paid ? t("orderStatus.thanks") : failed ? t("orderStatus.failed") : t("orderStatus.confirming")}
       </h2>
-      <p>Pedido <strong className="optic">LC-{String(o.number).padStart(6, "0")}</strong> · {formatMxn(o.total_cents)}</p>
+      <p>{t("orderStatus.order")} <strong className="optic">LC-{String(o.number).padStart(6, "0")}</strong> · {formatMxn(o.total_cents)}</p>
       {o.items.some((i) => i.category === "frame") && (
         <ul className="space-y-1 text-sm">
           {o.items.filter((i) => i.category === "frame").map((i) => (
@@ -53,11 +54,11 @@ export function OrderStatus({ orderId }: { orderId: string }) {
       )}
       {!paid && !failed && (
         <p className="text-sm text-muted-foreground">
-          Esto puede tardar unos segundos. Si pagaste en OXXO o SPEI, se confirma cuando recibamos el pago.
+          {t("orderStatus.delayNote")}
         </p>
       )}
       <Button render={<Link href={paid ? "/lentes" : "/carrito"} />} nativeButton={false}>
-        {paid ? "Seguir comprando" : "Volver al carrito"}
+        {paid ? t("orderStatus.keepShopping") : t("orderStatus.backToCart")}
       </Button>
     </div>
   );

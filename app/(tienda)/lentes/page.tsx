@@ -4,10 +4,11 @@ import { ProductCard } from "@/components/tienda/product-card";
 import { listBrands, listProducts } from "@/lib/api/generated/api";
 import type { LensType, Replacement } from "@/lib/api/generated/model";
 import { lensTypeLabel, pickKey, replacementLabel } from "@/lib/format";
+import { t } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "Catálogo de lentes de contacto",
-  description: "Lentes de contacto diarios, quincenales y mensuales de las mejores marcas.",
+  title: t("lenses.metaTitle"),
+  description: t("lenses.description"),
 };
 
 type SearchParams = Promise<{ brand?: string; lens_type?: string; replacement?: string }>;
@@ -31,25 +32,25 @@ export default async function CatalogPage({ searchParams }: { searchParams: Sear
   const failed = products?.status !== 200;
   const items = products?.status === 200 ? products.data.items : [];
   const groups: FilterGroup[] = [
-    { title: "Marca", name: "brand", options: brandList.map((b) => ({ value: b.slug, label: b.name })) },
-    { title: "Tipo", name: "lens_type", options: toOptions(lensTypeLabel) },
-    { title: "Reemplazo", name: "replacement", options: toOptions(replacementLabel) },
+    { title: t("catalog.filters.brand"), name: "brand", options: brandList.map((b) => ({ value: b.slug, label: b.name })) },
+    { title: t("catalog.filters.type"), name: "lens_type", options: toOptions(lensTypeLabel) },
+    { title: t("catalog.filters.replacement"), name: "replacement", options: toOptions(replacementLabel) },
   ];
 
   return (
     <div className="container-page py-10">
-      <h1 className="mb-8 text-3xl">Lentes de contacto</h1>
+      <h1 className="mb-8 text-3xl">{t("common.contactLenses")}</h1>
       <div className="grid gap-8 md:grid-cols-[250px_1fr]">
         <CatalogFilters base="/lentes" params={params} groups={groups} />
         <div>
           <ActiveFilters base="/lentes" params={params} groups={groups} />
           {failed ? (
-            <p role="alert" className="text-muted-foreground">No pudimos cargar los lentes. Intenta de nuevo en unos minutos.</p>
+            <p role="alert" className="text-muted-foreground">{t("lenses.loadFailed")}</p>
           ) : items.length === 0 ? (
-            <p className="text-muted-foreground">No encontramos lentes con esos filtros.</p>
+            <p className="text-muted-foreground">{t("catalog.noLensesFiltered")}</p>
           ) : (
             <>
-              <p className="optic mb-4 text-sm text-muted-foreground">{items.length} {items.length === 1 ? "producto" : "productos"}</p>
+              <p className="optic mb-4 text-sm text-muted-foreground">{t("catalog.productCount", { count: items.length })}</p>
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                 {items.map((p) => <ProductCard key={p.id} product={p} />)}
               </div>

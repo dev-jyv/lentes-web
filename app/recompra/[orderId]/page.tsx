@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Reorder } from "@/components/tienda/reorder";
+import { t } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Recompra", robots: { index: false } };
+export const metadata: Metadata = { title: t("reorder.metaTitle"), robots: { index: false } };
 
 export default async function ReorderPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;

@@ -9,18 +9,19 @@ import {
 } from "@/lib/api/generated/api";
 import type { CartItem } from "@/lib/api/generated/model";
 import { colorLabel, formatMxn, productHref } from "@/lib/format";
+import { t } from "@/lib/i18n";
 
-const eyeLabel = { right: "Ojo derecho", left: "Ojo izquierdo", both: "Ambos ojos" } as const;
+const eyeLabel = { right: t("cart.rightEye"), left: t("cart.leftEye"), both: t("cart.bothEyes") } as const;
 const sign = (n?: number | null) => (n == null ? null : n > 0 ? `+${n.toFixed(2)}` : n.toFixed(2));
 
 function describe(i: CartItem) {
   return [
-    i.sphere != null && `Esf ${sign(i.sphere)}`,
-    i.cylinder != null && `Cil ${sign(i.cylinder)}`,
-    i.axis != null && `Eje ${i.axis}°`,
-    i.addition && `Add ${i.addition}`,
-    `CB ${i.base_curve}`,
-    `Diám ${i.diameter}`,
+    i.sphere != null && t("cart.rx.sphere", { value: sign(i.sphere) }),
+    i.cylinder != null && t("cart.rx.cylinder", { value: sign(i.cylinder) }),
+    i.axis != null && t("cart.rx.axis", { value: i.axis }),
+    i.addition && t("cart.rx.addition", { value: i.addition }),
+    t("cart.rx.baseCurve", { value: i.base_curve }),
+    t("cart.rx.diameter", { value: i.diameter }),
   ].filter(Boolean).join(" · ");
 }
 
@@ -31,11 +32,11 @@ function FrameLine({ item }: { item: CartItem }) {
       <p className="text-sm">{color}{item.lens_package && ` · ${item.lens_package.name}`}</p>
       {item.frame_price_cents != null && item.package_price_cents != null && (
         <p className="text-xs text-muted-foreground">
-          Armazón {formatMxn(item.frame_price_cents)} + micas {formatMxn(item.package_price_cents)}
+          {t("cart.framePlusLenses", { frame: formatMxn(item.frame_price_cents), lenses: formatMxn(item.package_price_cents) })}
         </p>
       )}
       <Link href={productHref({ category: item.category, slug: item.product.slug })} className="text-xs text-primary underline">
-        Cambiar color o micas
+        {t("cart.changeFrameOptions")}
       </Link>
     </>
   );
@@ -57,10 +58,10 @@ export function CartView() {
   if (!cart || cart.items.length === 0) {
     return (
       <div className="space-y-4 py-10 text-center">
-        <p className="text-muted-foreground">Tu carrito está vacío.</p>
+        <p className="text-muted-foreground">{t("cart.empty")}</p>
         <div className="flex flex-wrap justify-center gap-3">
-          <Button render={<Link href="/armazones" />} nativeButton={false}>Ver armazones</Button>
-          <Button variant="outline" render={<Link href="/lentes" />} nativeButton={false}>Ver lentes de contacto</Button>
+          <Button render={<Link href="/armazones" />} nativeButton={false}>{t("common.viewFrames")}</Button>
+          <Button variant="outline" render={<Link href="/lentes" />} nativeButton={false}>{t("common.viewContactLenses")}</Button>
         </div>
       </div>
     );
@@ -85,43 +86,43 @@ export function CartView() {
               {!i.purchasable && (
                 <p role="alert" className="text-xs text-destructive">
                   {i.category === "frame"
-                    ? "Este armazón o sus micas ya no están disponibles: quítalo y elige de nuevo."
+                    ? t("cart.frameUnavailable")
                     : i.available > 0
-                      ? `Solo quedan ${i.available} en existencia.`
-                      : "Agotado: quítalo para continuar."}
+                      ? t("cart.onlyLeft", { count: i.available })
+                      : t("cart.soldOut")}
                 </p>
               )}
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" aria-label="Menos"
+                <Button variant="outline" size="sm" aria-label={t("cart.decrease")}
                   disabled={i.quantity <= 1 || update.isPending}
                   onClick={() => update.mutate({ id: i.id, data: { quantity: i.quantity - 1 } })}>−</Button>
                 <span className="w-6 text-center text-sm">{i.quantity}</span>
-                <Button variant="outline" size="sm" aria-label="Más"
+                <Button variant="outline" size="sm" aria-label={t("cart.increase")}
                   disabled={i.quantity >= Math.min(12, i.available) || update.isPending}
                   onClick={() => update.mutate({ id: i.id, data: { quantity: i.quantity + 1 } })}>+</Button>
               </div>
               <span className="w-24 text-right font-medium">{formatMxn(i.line_total_cents)}</span>
               <Button variant="ghost" size="sm" disabled={remove.isPending}
-                onClick={() => remove.mutate({ id: i.id })}>Quitar</Button>
+                onClick={() => remove.mutate({ id: i.id })}>{t("cart.remove")}</Button>
             </div>
           </li>
         ))}
       </ul>
       <aside className="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-28">
         <div className="flex justify-between">
-          <span>Subtotal</span>
+          <span>{t("cart.subtotal")}</span>
           <strong>{formatMxn(cart.subtotal_cents)}</strong>
         </div>
         <p className="text-xs text-muted-foreground">
-          Envío e impuestos se confirman en el pago.
+          {t("cart.shippingNote")}
         </p>
         {cart.items.some((i) => !i.purchasable) ? (
-          <Button className="w-full" size="lg" disabled>Continuar al pago</Button>
+          <Button className="w-full" size="lg" disabled>{t("cart.continue")}</Button>
         ) : (
           <Button className="w-full" size="lg" render={<Link href="/checkout" />} nativeButton={false}>
-            Continuar al pago
+            {t("cart.continue")}
           </Button>
         )}
       </aside>

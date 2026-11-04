@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useGetCart } from "@/lib/api/generated/api";
+import { t } from "@/lib/i18n";
 
 export function CartLink({ icon }: { icon: ReactNode }) {
   const { data } = useGetCart();
@@ -10,7 +11,7 @@ export function CartLink({ icon }: { icon: ReactNode }) {
   return (
     <Link
       href="/carrito"
-      aria-label={count > 0 ? `Carrito, ${count} artículos` : "Carrito"}
+      aria-label={count > 0 ? t("cart.linkWithCount", { count }) : t("cart.metaTitle")}
       className="relative grid size-11 place-items-center rounded-full hover:bg-accent"
     >
       {icon}
