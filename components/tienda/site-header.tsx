@@ -7,9 +7,9 @@ import { MobileMenu } from "@/components/tienda/mobile-menu";
 import { PromoBar } from "@/components/tienda/promo-bar";
 import { SearchForm } from "@/components/tienda/search-form";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { BRAND } from "@/lib/brand";
 import { buildNavigation, mergeBrands } from "@/lib/navigation";
 import { loadFacets, loadHome } from "@/lib/storefront";
+import { t } from "@/lib/i18n";
 
 export async function SiteHeader() {
   const [frames, lenses, home] = await Promise.all([loadFacets("frame"), loadFacets("contact_lens"), loadHome()]);
@@ -18,26 +18,30 @@ export async function SiteHeader() {
   return (
     <>
       {home?.promo_bar && <PromoBar banner={home.promo_bar} />}
-      <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
-        <div className="container-page flex h-16 items-center justify-between gap-3">
-          <div className="flex items-center gap-1 lg:gap-4">
-            <MobileMenu items={items} />
-            <Link href="/" aria-label={`${BRAND.name}, inicio`} className="flex min-h-11 shrink-0 items-center">
-              <Wordmark />
-            </Link>
-            <MegaMenu items={items} />
-          </div>
-          <SearchForm id="buscar-escritorio" className="hidden max-w-sm flex-1 lg:block" />
-          <div className="flex items-center gap-1">
+      <header id="site-header" className="sticky top-0 z-40 border-b bg-card">
+        <div className="container-page flex h-16 items-center gap-3">
+          <MobileMenu items={items} />
+          <Link href="/" aria-label={t("nav.home")} className="flex min-h-11 shrink-0 items-center">
+            <Wordmark />
+          </Link>
+          <MegaMenu items={items} />
+          <SearchForm id="buscar-escritorio" className="ml-auto hidden w-full max-w-xs lg:block" />
+          <div className="ml-auto flex items-center gap-1 lg:ml-2">
             <Link
               href="/cuenta/recetas"
-              className="hidden min-h-11 items-center rounded-full px-3 text-sm font-medium hover:bg-accent sm:flex"
+              className="hidden min-h-11 items-center rounded-full px-3 text-sm font-medium whitespace-nowrap hover:bg-accent sm:flex"
             >
-              Mi receta
+              {t("nav.myPrescription")}
             </Link>
             <CartLink icon={<ShoppingBag className="size-6" aria-hidden="true" />} />
-            <Link href="/cuenta" aria-label="Mi cuenta" className="hidden size-11 place-items-center rounded-full hover:bg-accent sm:grid">
+            <span aria-hidden="true" className="mx-1 hidden h-6 w-px bg-border sm:block" />
+            <Link
+              href="/cuenta"
+              aria-label={t("account.title")}
+              className="hidden min-h-11 min-w-11 items-center justify-center gap-2 rounded-full text-sm font-medium whitespace-nowrap hover:bg-accent sm:flex lg:px-3"
+            >
               <UserRound className="size-6" aria-hidden="true" />
+              <span className="hidden lg:inline">{t("account.title")}</span>
             </Link>
             <ThemeToggle />
           </div>

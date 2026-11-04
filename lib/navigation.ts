@@ -1,5 +1,6 @@
 import type { CatalogFacets } from "@/lib/api/generated/model";
 import { formatMxn, genderLabel, frameMaterialLabel, lensNeedLabel, replacementLabel, shapeLabel } from "@/lib/format";
+import { t } from "@/lib/i18n";
 
 export type NavLink = { label: string; href: string; value?: string };
 export type NavColumn = {
@@ -7,7 +8,9 @@ export type NavColumn = {
   facet?: string; // llave de CatalogFacets.values; filtra valores sin productos
   links: NavLink[];
 };
-export type NavItem = { label: string; href: string; allLabel: string; columns: NavColumn[] };
+// Tarjeta visual del megamenú. Las imágenes de public/menu son genéricas: se reemplazan por fotos propias.
+export type NavCard = { label: string; href: string; image: string };
+export type NavItem = { label: string; href: string; allLabel: string; columns: NavColumn[]; cards?: NavCard[] };
 
 // Rangos de precio de armazones (SPEC 03), en centavos MXN.
 export const FRAME_PRICE_BANDS = [99900, 149900, 249900];
@@ -17,7 +20,7 @@ const MAX_BRANDS_IN_COLUMN = 8;
 const fromLabels = (labels: Record<string, string>, param: string, base: string): NavLink[] =>
   Object.entries(labels).map(([value, label]) => ({ label, value, href: `${base}?${param}=${value}` }));
 
-export const priceBandLabel = (cents: number) => `Hasta ${formatMxn(cents).replace(/\.00$/, "")}`;
+export const priceBandLabel = (cents: number) => t("catalog.upTo", { price: formatMxn(cents).replace(/\.00$/, "") });
 
 // Valor de una faceta que tiene al menos un producto.
 const available = (facets: CatalogFacets, key: string, value: string) =>
@@ -34,8 +37,8 @@ function brandColumn(base: string, facets: CatalogFacets | null): NavColumn | nu
   const links: NavLink[] = facets.brands
     .slice(0, MAX_BRANDS_IN_COLUMN)
     .map((b) => ({ label: b.name, href: `${base}?brand=${b.slug}` }));
-  if (facets.brands.length > MAX_BRANDS_IN_COLUMN) links.push({ label: "Ver todas", href: "/marcas" });
-  return { title: "Marcas", links };
+  if (facets.brands.length > MAX_BRANDS_IN_COLUMN) links.push({ label: t("home.viewAllBrands"), href: "/marcas" });
+  return { title: t("brands.title"), links };
 }
 
 function priceColumn(facets: CatalogFacets | null): NavColumn | null {
@@ -46,7 +49,13 @@ function priceColumn(facets: CatalogFacets | null): NavColumn | null {
     label: priceBandLabel(band),
     href: `/armazones?max_price_cents=${band}`,
   }));
-  return links.length ? { title: "Precio", links } : null;
+  return links.length ? { title: t("catalog.filters.price"), links } : null;
+}
+
+// Una tarjeta solo aparece si su filtro lleva al menos a un producto.
+function cards(facets: CatalogFacets | null, facet: string, options: (NavCard & { value: string })[]): NavCard[] {
+  if (!facets) return [];
+  return options.filter((o) => available(facets, facet, o.value)).map(({ label, href, image }) => ({ label, href, image }));
 }
 
 const compact = (columns: (NavColumn | null)[]) => columns.filter((c): c is NavColumn => c !== null);
@@ -64,43 +73,51 @@ export function buildNavigation({ frames, lenses, brands }: NavData): NavItem[] 
   // Sin armazones activos no hay a dónde llevar. Si la API falló, no se sabe: se muestra.
   if (!frames || frames.total > 0) {
     items.push({
-      label: "Armazones",
+      label: t("common.frames"),
       href: "/armazones",
-      allLabel: "Ver todos los armazones",
+      allLabel: t("nav.allFrames"),
       columns: compact([
-        facetColumn("Para quién", "gender", fromLabels(genderLabel, "gender", "/armazones"), frames),
-        facetColumn("Forma", "shape", fromLabels(shapeLabel, "shape", "/armazones"), frames),
-        facetColumn("Material", "material", fromLabels(frameMaterialLabel, "frame_material", "/armazones"), frames),
+        facetColumn(t("catalog.filters.gender"), "gender", fromLabels(genderLabel, "gender", "/armazones"), frames),
+        facetColumn(t("catalog.filters.shape"), "shape", fromLabels(shapeLabel, "shape", "/armazones"), frames),
+        facetColumn(t("catalog.filters.material"), "material", fromLabels(frameMaterialLabel, "frame_material", "/armazones"), frames),
         priceColumn(frames),
         brandColumn("/armazones", frames),
+      ]),
+      cards: cards(frames, "gender", [
+        { value: "women", label: t("nav.forWomen"), href: "/armazones?gender=women", image: "/menu/armazones.svg" },
+        { value: "men", label: t("nav.forMen"), href: "/armazones?gender=men", image: "/menu/armazones.svg" },
       ]),
     });
   }
 
   items.push({
-    label: "Lentes de contacto",
+    label: t("common.contactLenses"),
     href: "/lentes",
-    allLabel: "Ver todos los lentes de contacto",
+    allLabel: t("nav.allLenses"),
     columns: compact([
-      facetColumn("Por uso", "replacement", fromLabels(replacementLabel, "replacement", "/lentes"), lenses),
-      facetColumn("Por necesidad", "lens_type", fromLabels(lensNeedLabel, "lens_type", "/lentes"), lenses),
+      facetColumn(t("nav.byUse"), "replacement", fromLabels(replacementLabel, "replacement", "/lentes"), lenses),
+      facetColumn(t("nav.byNeed"), "lens_type", fromLabels(lensNeedLabel, "lens_type", "/lentes"), lenses),
       brandColumn("/lentes", lenses),
       {
-        title: "Tu receta",
+        title: t("nav.yourPrescription"),
         links: [
-          { label: "Subir mi receta", href: "/cuenta/recetas" },
-          { label: "Mis pedidos", href: "/cuenta/pedidos" },
+          { label: t("nav.uploadPrescription"), href: "/cuenta/recetas" },
+          { label: t("account.orders"), href: "/cuenta/pedidos" },
         ],
       },
+    ]),
+    cards: cards(lenses, "replacement", [
+      { value: "daily", label: t("nav.daily"), href: "/lentes?replacement=daily", image: "/menu/lentes.svg" },
+      { value: "monthly", label: t("nav.monthly"), href: "/lentes?replacement=monthly", image: "/menu/lentes.svg" },
     ]),
   });
 
   items.push({
-    label: "Marcas",
+    label: t("brands.title"),
     href: "/marcas",
-    allLabel: "Ver todas las marcas",
+    allLabel: t("nav.allBrands"),
     columns: brands.length
-      ? [{ title: "Todas las marcas", links: brands.map((b) => ({ label: b.name, href: `/marcas/${b.slug}` })) }]
+      ? [{ title: t("nav.allBrandsTitle"), links: brands.map((b) => ({ label: b.name, href: `/marcas/${b.slug}` })) }]
       : [],
   });
 

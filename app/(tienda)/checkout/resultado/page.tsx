@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { OrderStatus } from "@/components/tienda/order-status";
+import { t } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Resultado del pago", robots: { index: false } };
+export const metadata: Metadata = { title: t("checkout.result.metaTitle"), robots: { index: false } };
 
 export default async function ResultPage({
   searchParams,
@@ -13,7 +14,7 @@ export default async function ResultPage({
       {external_reference ? (
         <OrderStatus orderId={external_reference} />
       ) : (
-        <p>No encontramos información del pago.</p>
+        <p>{t("checkout.result.noInfo")}</p>
       )}
     </div>
   );

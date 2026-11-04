@@ -1,30 +1,29 @@
 import type { Metadata } from "next";
+import { t } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "Cambios y devoluciones",
-  description: "Cómo funcionan los cambios y devoluciones de armazones con micas.",
+  title: t("returns.title"),
+  description: t("returns.description"),
 };
 
 export default function ReturnsPage() {
   return (
     <div className="container-page max-w-3xl space-y-6 py-10">
-      <h1 className="text-3xl">Cambios y devoluciones</h1>
+      <h1 className="text-3xl">{t("returns.title")}</h1>
       <section className="space-y-2">
-        <h2 className="text-xl">Armazón sin graduación</h2>
-        <p>Puedes cambiarlo dentro de los 30 días posteriores a recibirlo, siempre que no se haya usado.</p>
+        <h2 className="text-xl">{t("returns.frame.title")}</h2>
+        <p>{t("returns.frame.body")}</p>
       </section>
       <section className="space-y-2">
-        <h2 className="text-xl">Micas a medida</h2>
+        <h2 className="text-xl">{t("returns.lenses.title")}</h2>
         <p>
-          Las micas graduadas se fabrican especialmente con tu receta, por lo que no tienen devolución,
-          salvo por defecto de fabricación o error de la tienda.
+          {t("returns.lenses.body")}
         </p>
       </section>
       <section className="space-y-2">
-        <h2 className="text-xl">Si tu receta no se aprueba</h2>
+        <h2 className="text-xl">{t("returns.rejected.title")}</h2>
         <p>
-          Revisamos tu receta antes de fabricar tus micas. Si no podemos aprobarla, no fabricamos el pedido
-          y te reembolsamos.
+          {t("returns.rejected.body")}
         </p>
       </section>
     </div>

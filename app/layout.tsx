@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { BRAND } from "@/lib/brand";
 import { SiteHeader } from "@/components/tienda/site-header";
 import { SiteFooter } from "@/components/tienda/site-footer";
+import { t } from "@/lib/i18n";
 
 // Tipografía del brand book: display, texto/interfaz y monoespaciada para valores ópticos.
 const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"], axes: ["opsz"] });
@@ -15,7 +16,7 @@ const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"
 const themeScript = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.dataset.theme=t}catch(e){}})()`;
 
 export const metadata: Metadata = {
-  title: { default: `${BRAND.name} · Armazones y lentes de contacto`, template: `%s | ${BRAND.name}` },
+  title: { default: t("meta.defaultTitle"), template: t("meta.titleTemplate") },
   description: BRAND.description,
 };
 

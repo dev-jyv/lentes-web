@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { mergeBrands } from "@/lib/navigation";
 import { loadFacets } from "@/lib/storefront";
+import { t } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "Marcas",
-  description: "Todas las marcas de armazones y lentes de contacto de la tienda.",
+  title: t("brands.title"),
+  description: t("brands.description"),
 };
 
 export default async function BrandsPage() {
@@ -13,9 +14,9 @@ export default async function BrandsPage() {
   const brands = mergeBrands(frames, lenses);
   return (
     <div className="container-page py-10">
-      <h1 className="mb-8 text-3xl">Marcas</h1>
+      <h1 className="mb-8 text-3xl">{t("brands.title")}</h1>
       {brands.length === 0 ? (
-        <p className="text-muted-foreground">Por ahora no podemos mostrar las marcas.</p>
+        <p className="text-muted-foreground">{t("brands.unavailable")}</p>
       ) : (
         <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {brands.map((b) => (

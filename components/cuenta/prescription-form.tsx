@@ -12,39 +12,40 @@ import {
   createPrescription, createPrescriptionUploadUrl, getListPrescriptionsQueryKey,
 } from "@/lib/api/generated/api";
 import { ALLOWED_TYPES, MAX_FILE_BYTES, type AllowedType } from "@/lib/prescription";
+import { t } from "@/lib/i18n";
 
 const power = z.string().trim().refine(
   (v) => v !== "" && !Number.isNaN(Number(v)) && Number(v) >= -20 && Number(v) <= 20 && (Number(v) * 4) % 1 === 0,
-  "Número en pasos de 0.25",
+  t("validation.powerStep"),
 );
 const optPower = z.string().trim().refine(
-  (v) => v === "" || (!Number.isNaN(Number(v)) && (Number(v) * 4) % 1 === 0), "Pasos de 0.25",
+  (v) => v === "" || (!Number.isNaN(Number(v)) && (Number(v) * 4) % 1 === 0), t("validation.quarterSteps"),
 );
 const optAxis = z.string().trim().refine(
-  (v) => v === "" || (/^\d+$/.test(v) && Number(v) <= 180), "0 a 180",
+  (v) => v === "" || (/^\d+$/.test(v) && Number(v) <= 180), t("validation.axisRange"),
 );
 
 const schema = z.object({
   od_sphere: power, od_cylinder: optPower, od_axis: optAxis, od_addition: z.string(),
   os_sphere: power, os_cylinder: optPower, os_axis: optAxis, os_addition: z.string(),
-  issued_at: z.string().min(1, "Requerido"),
-  expires_at: z.string().min(1, "Requerido"),
-  doctor_name: z.string().trim().min(2, "Requerido"),
+  issued_at: z.string().min(1, t("validation.required")),
+  expires_at: z.string().min(1, t("validation.required")),
+  doctor_name: z.string().trim().min(2, t("validation.required")),
   doctor_license: z.string(),
   kind: z.enum(["contact_lens", "glasses"]),
   pd_mm: z.string().trim().refine(
-    (v) => v === "" || (/^\d{2}(\.\d)?$/.test(v) && Number(v) >= 40 && Number(v) <= 80), "Entre 40.0 y 80.0 mm",
+    (v) => v === "" || (/^\d{2}(\.\d)?$/.test(v) && Number(v) >= 40 && Number(v) <= 80), t("validation.pdRange"),
   ),
 }).refine((v) => v.expires_at >= v.issued_at, {
-  path: ["expires_at"], message: "Debe ser posterior a la fecha de emisión",
-}).refine((v) => !v.od_cylinder || v.od_axis, { path: ["od_axis"], message: "Requerido con cilindro" })
-  .refine((v) => !v.os_cylinder || v.os_axis, { path: ["os_axis"], message: "Requerido con cilindro" });
+  path: ["expires_at"], message: t("validation.expiresAfterIssue"),
+}).refine((v) => !v.od_cylinder || v.od_axis, { path: ["od_axis"], message: t("validation.axisWithCylinder") })
+  .refine((v) => !v.os_cylinder || v.os_axis, { path: ["os_axis"], message: t("validation.axisWithCylinder") });
 type Values = z.infer<typeof schema>;
 
 // La API responde 400/409 con un `detail` en español apto para el cliente (valores inválidos, tope de recetas en revisión).
 function apiMessage(res: { status: number; data?: unknown }, fallback: string) {
   const detail = (res.data as { detail?: string } | undefined)?.detail;
-  if (res.status === 503) return "Las recetas no están disponibles por ahora. Intenta más tarde.";
+  if (res.status === 503) return t("rx.form.unavailable");
   return (res.status === 400 || res.status === 409) && detail ? detail : fallback;
 }
 
@@ -89,25 +90,25 @@ export function PrescriptionForm() {
     setFileError(null);
     setFile(null);
     if (!f) return;
-    if (!ALLOWED_TYPES.includes(f.type as AllowedType)) return setFileError("Usa JPG, PNG, WebP o PDF.");
-    if (f.size > MAX_FILE_BYTES) return setFileError("El archivo pesa más de 10 MB.");
+    if (!ALLOWED_TYPES.includes(f.type as AllowedType)) return setFileError(t("rx.form.badFileType"));
+    if (f.size > MAX_FILE_BYTES) return setFileError(t("rx.form.fileTooLarge"));
     setFile(f);
   }
 
   const onSubmit = handleSubmit(async (v) => {
     setError(null);
     setDone(false);
-    if (!file) return setFileError("Sube una foto o PDF de tu receta.");
+    if (!file) return setFileError(t("rx.form.fileRequired"));
 
     // 1) URL prefirmada de R2  2) PUT directo desde el navegador  3) registrar la receta
     const up = await createPrescriptionUploadUrl({
       content_type: file.type as AllowedType, size_bytes: file.size,
     });
-    if (up.status !== 200) return setError(apiMessage(up, "No pudimos preparar la subida. Intenta de nuevo."));
+    if (up.status !== 200) return setError(apiMessage(up, t("rx.form.prepareFailed")));
     const put = await fetch(up.data.upload_url, {
       method: "PUT", body: file, headers: { "Content-Type": file.type },
     }).catch(() => null);
-    if (!put?.ok) return setError("No pudimos subir el archivo. Intenta de nuevo.");
+    if (!put?.ok) return setError(t("rx.form.uploadFailed"));
 
     const res = await createPrescription({
       r2_key: up.data.r2_key,
@@ -119,7 +120,7 @@ export function PrescriptionForm() {
       doctor_name: v.doctor_name.trim(), doctor_license: str(v.doctor_license),
       kind: v.kind, pd_mm: v.kind === "glasses" ? num(v.pd_mm) : null,
     });
-    if (res.status !== 201) return setError(apiMessage(res, "No pudimos guardar tu receta."));
+    if (res.status !== 201) return setError(apiMessage(res, t("rx.form.saveFailed")));
     await queryClient.invalidateQueries({ queryKey: getListPrescriptionsQueryKey() });
     reset();
     setFile(null);
@@ -130,14 +131,14 @@ export function PrescriptionForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <div className="space-y-1">
-        <Label htmlFor="kind" className="text-xs">Tipo de receta</Label>
+        <Label htmlFor="kind" className="text-xs">{t("rx.form.kind")}</Label>
         <select id="kind" className="h-11 w-full max-w-xs rounded-lg border bg-card px-3 text-sm" {...register("kind")}>
-          <option value="contact_lens">Lentes de contacto</option>
-          <option value="glasses">Armazones</option>
+          <option value="contact_lens">{t("common.contactLenses")}</option>
+          <option value="glasses">{t("common.frames")}</option>
         </select>
       </div>
       <div className="space-y-1">
-        <Label htmlFor="file">Foto o PDF de tu receta (máx. 10 MB)</Label>
+        <Label htmlFor="file">{t("rx.form.file")}</Label>
         <Input id="file" type="file" accept={ALLOWED_TYPES.join(",")}
           onChange={(ev) => pick(ev.target.files?.[0] ?? null)} />
         {fileError && <p className="text-xs text-destructive">{fileError}</p>}
@@ -145,32 +146,32 @@ export function PrescriptionForm() {
       {(["od", "os"] as const).map((eye) => (
         <fieldset key={eye} className="space-y-3 rounded-lg border p-4">
           <legend className="px-1 text-sm font-medium">
-            {eye === "od" ? "Ojo derecho (OD)" : "Ojo izquierdo (OI)"}
+            {eye === "od" ? t("rx.form.rightEye") : t("rx.form.leftEye")}
           </legend>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Input2 label="Esfera" name={`${eye}_sphere`} errors={e} register={register} placeholder="-2.50" />
-            <Input2 label="Cilindro" name={`${eye}_cylinder`} errors={e} register={register} />
-            <Input2 label="Eje" name={`${eye}_axis`} errors={e} register={register} />
-            <Input2 label="Adición" name={`${eye}_addition`} errors={e} register={register} />
+            <Input2 label={t("rx.form.sphere")} name={`${eye}_sphere`} errors={e} register={register} placeholder="-2.50" />
+            <Input2 label={t("rx.form.cylinder")} name={`${eye}_cylinder`} errors={e} register={register} />
+            <Input2 label={t("rx.form.axis")} name={`${eye}_axis`} errors={e} register={register} />
+            <Input2 label={t("rx.form.addition")} name={`${eye}_addition`} errors={e} register={register} />
           </div>
         </fieldset>
       ))}
       {kind === "glasses" && (
         <div className="max-w-xs">
-          <Input2 label="Distancia pupilar en mm (opcional)" name="pd_mm" placeholder="63.5" errors={e} register={register} />
-          <p className="mt-1 text-xs text-muted-foreground">Si tu receta no la trae, te la pediremos antes de fabricar tus micas.</p>
+          <Input2 label={t("rx.form.pd")} name="pd_mm" placeholder="63.5" errors={e} register={register} />
+          <p className="mt-1 text-xs text-muted-foreground">{t("rx.form.pdHint")}</p>
         </div>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
-        <Input2 label="Fecha de emisión" name="issued_at" type="date" errors={e} register={register} />
-        <Input2 label="Vigente hasta" name="expires_at" type="date" errors={e} register={register} />
-        <Input2 label="Nombre del optometrista" name="doctor_name" errors={e} register={register} />
-        <Input2 label="Cédula profesional (opcional)" name="doctor_license" errors={e} register={register} />
+        <Input2 label={t("rx.form.issuedAt")} name="issued_at" type="date" errors={e} register={register} />
+        <Input2 label={t("rx.form.expiresAt")} name="expires_at" type="date" errors={e} register={register} />
+        <Input2 label={t("rx.form.doctor")} name="doctor_name" errors={e} register={register} />
+        <Input2 label={t("rx.form.license")} name="doctor_license" errors={e} register={register} />
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      {done && <p role="status" className="text-sm">Receta enviada. La revisaremos pronto.</p>}
+      {done && <p role="status" className="text-sm">{t("rx.form.sent")}</p>}
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Enviando…" : "Enviar receta"}
+        {isSubmitting ? t("rx.form.sending") : t("rx.form.submit")}
       </Button>
     </form>
   );

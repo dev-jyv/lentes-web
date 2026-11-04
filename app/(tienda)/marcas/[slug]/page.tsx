@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/tienda/product-card";
 import { listBrands, listProducts } from "@/lib/api/generated/api";
 import type { LensType, Replacement } from "@/lib/api/generated/model";
 import { lensTypeLabel, pickKey, replacementLabel } from "@/lib/format";
+import { t } from "@/lib/i18n";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -19,13 +20,13 @@ async function getBrand(slug: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const brand = await getBrand((await params).slug);
   return brand
-    ? { title: brand.name, description: `Armazones y lentes de contacto ${brand.name} en línea.` }
+    ? { title: brand.name, description: t("brands.metaDescription", { brand: brand.name }) }
     : {};
 }
 
 const groups: FilterGroup[] = [
-  { title: "Tipo", name: "lens_type", options: toOptions(lensTypeLabel) },
-  { title: "Reemplazo", name: "replacement", options: toOptions(replacementLabel) },
+  { title: t("catalog.filters.type"), name: "lens_type", options: toOptions(lensTypeLabel) },
+  { title: t("catalog.filters.replacement"), name: "replacement", options: toOptions(replacementLabel) },
 ];
 
 export default async function BrandPage({ params, searchParams }: Props) {
@@ -56,7 +57,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
       <h1 className="text-3xl">{brand.name}</h1>
       {frameItems.length > 0 && (
         <section aria-labelledby="marca-armazones" className="space-y-4">
-          <h2 id="marca-armazones" className="text-2xl">Armazones</h2>
+          <h2 id="marca-armazones" className="text-2xl">{t("common.frames")}</h2>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {frameItems.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
@@ -64,11 +65,11 @@ export default async function BrandPage({ params, searchParams }: Props) {
       )}
       {(lensItems.length > 0 || filtering) && (
         <section aria-labelledby="marca-lentes" className="space-y-4">
-          <h2 id="marca-lentes" className="text-2xl">Lentes de contacto</h2>
+          <h2 id="marca-lentes" className="text-2xl">{t("common.contactLenses")}</h2>
           <div className="grid gap-8 md:grid-cols-[250px_1fr]">
             <CatalogFilters base={`/marcas/${slug}`} params={filters} groups={groups} />
             {lensItems.length === 0 ? (
-              <p className="text-muted-foreground">No encontramos lentes con esos filtros.</p>
+              <p className="text-muted-foreground">{t("catalog.noLensesFiltered")}</p>
             ) : (
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                 {lensItems.map((p) => <ProductCard key={p.id} product={p} />)}
@@ -78,7 +79,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
         </section>
       )}
       {frameItems.length === 0 && lensItems.length === 0 && !filtering && (
-        <p className="text-muted-foreground">Esta marca no tiene productos disponibles por ahora.</p>
+        <p className="text-muted-foreground">{t("brands.noProducts")}</p>
       )}
     </div>
   );
