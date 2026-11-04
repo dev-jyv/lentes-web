@@ -17,10 +17,10 @@ import { track } from "@/lib/analytics";
 import { formatMxn } from "@/lib/format";
 import { t } from "@/lib/i18n";
 
-type EyeValues = { sphere: string; cylinder: string; axis: string; addition: string };
+type EyeValues = { sphere: string; cylinder: string; axis: string; addition: string; dominance: string };
 type FormValues = { od: EyeValues; os: EyeValues; base_curve: string; diameter: string };
 
-const emptyEye: EyeValues = { sphere: "", cylinder: "", axis: "", addition: "" };
+const emptyEye: EyeValues = { sphere: "", cylinder: "", axis: "", addition: "", dominance: "" };
 const required = z.string().min(1, t("validation.required"));
 const maybe = (needed: boolean) => (needed ? required : z.string());
 
@@ -30,6 +30,7 @@ function buildSchema(o: ProductOptions) {
     cylinder: maybe(!!o.cylinders?.length),
     axis: maybe(!!o.axes?.length),
     addition: maybe(!!o.additions?.length),
+    dominance: maybe(!!o.dominances?.length),
   });
   return z.object({ od: eye, os: eye, base_curve: required, diameter: required });
 }
@@ -71,6 +72,7 @@ function toParams(eye: EyeValues, base: string, dia: string): GetProductVariantP
   if (eye.cylinder) p.cylinder = Number(eye.cylinder);
   if (eye.axis) p.axis = Number(eye.axis);
   if (eye.addition) p.addition = eye.addition;
+  if (eye.dominance) p.dominance = eye.dominance;
   return p;
 }
 
@@ -90,9 +92,13 @@ function VariantPrice({ slug, params }: { slug: string; params: GetProductVarian
       <strong key={data.data.price_cents} className="inline-block animate-roll font-display text-lg">
         {formatMxn(data.data.price_cents)}
       </strong>{" "}
-      <span className={data.data.available > 0 ? "text-good" : "text-destructive"}>
-        {data.data.available > 0 ? t("rx.selector.inStock") : t("product.soldOut")}
-      </span>
+      {data.data.on_demand ? (
+        <span className="text-muted-foreground">{t("rx.selector.onDemand")}</span>
+      ) : (
+        <span className={data.data.available > 0 ? "text-good" : "text-destructive"}>
+          {data.data.available > 0 ? t("rx.selector.inStock") : t("product.soldOut")}
+        </span>
+      )}
     </p>
   );
 }
@@ -108,7 +114,8 @@ function EyeBlock({
   const [eye, base, dia] = useWatch({ control, name: [name, "base_curve", "diameter"] });
   const params = toParams(eye, base, dia);
   const complete = !!params && (!o.cylinders?.length || !!eye.cylinder) &&
-    (!o.axes?.length || !!eye.axis) && (!o.additions?.length || !!eye.addition);
+    (!o.axes?.length || !!eye.axis) && (!o.additions?.length || !!eye.addition) &&
+    (!o.dominances?.length || !!eye.dominance);
 
   return (
     <fieldset className="space-y-3 rounded-xl border bg-card p-4">
@@ -140,6 +147,13 @@ function EyeBlock({
               options={o.additions!.map((s) => ({ value: s, label: s }))} />
           )} />
         )}
+        {!!o.dominances?.length && (
+          <Controller control={control} name={`${name}.dominance`} render={({ field }) => (
+            <Field label={t("rx.selector.dominance")} abbr={t("rx.selector.abbr.dominance")} value={field.value} onChange={field.onChange}
+              error={errors?.dominance?.message}
+              options={o.dominances!.map((s) => ({ value: s, label: s }))} />
+          )} />
+        )}
       </div>
       <VariantInfo slug={product.slug} params={complete ? params : undefined} />
     </fieldset>
@@ -162,10 +176,12 @@ export function RxSelector({ product }: { product: ProductDetail }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [boxes, setBoxes] = useState("1");
+  const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = handleSubmit(async (v) => {
     setError(null);
+    if (!confirmed) return setError(t("rx.selector.confirmRequired"));
     const [od, os] = await Promise.all([
       getProductVariant(product.slug, toParams(v.od, v.base_curve, v.diameter)!),
       getProductVariant(product.slug, toParams(v.os, v.base_curve, v.diameter)!),
@@ -199,7 +215,7 @@ export function RxSelector({ product }: { product: ProductDetail }) {
   });
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="ph-no-capture space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <EyeBlock title={t("rx.form.rightEye")} name="od" control={control} product={product}
           errors={errors.od} />
@@ -232,6 +248,11 @@ export function RxSelector({ product }: { product: ProductDetail }) {
         <Field label={t("rx.selector.boxesPerEye")} optical={false} value={boxes} onChange={setBoxes}
           options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))} />
       </div>
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" className="mt-0.5 size-4 accent-primary" checked={confirmed}
+          onChange={(e) => setConfirmed(e.target.checked)} />
+        <span>{t("rx.selector.confirm")}</span>
+      </label>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {t("frames.addToCart")}

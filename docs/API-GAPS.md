@@ -49,3 +49,5 @@ backend desplegado en Cloudflare Workers/Railway.
 
 - **Historial de pedidos** (`lentes-api` 22decae): `GET /v1/me/orders?cursor&limit` (más reciente primero, sin pedidos vencidos) y `tracking_carrier`/`tracking_number`
   en el pedido. La web los muestra en `/cuenta/pedidos` con "Volver a pedir" (pedidos cobrados). **Sin verificar en navegador:** requiere sesión de Supabase; compila, lint y tipos pasan.
+
+- **Variantes bajo pedido y dominancia** (`lentes-api`, migración 0013): `Variant.on_demand` y `CartItem.on_demand` indican que no hay existencia física que mostrar; en ese caso `available` es un tope técnico (9999) y la web muestra "Bajo pedido", nunca la cantidad. `dominance` (`D` o `N`) es un campo aparte de `addition` en opciones, búsqueda de variante, carrito y pedidos.

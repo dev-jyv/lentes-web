@@ -81,6 +81,7 @@
       "cylinder": "Cil {{value}}",
       "axis": "Eje {{value}}°",
       "addition": "Add {{value}}",
+      "dominance": "Dom {{value}}",
       "baseCurve": "CB {{value}}",
       "diameter": "Diám {{value}}"
     },
@@ -89,6 +90,7 @@
     "empty": "Tu carrito está vacío.",
     "frameUnavailable": "Este armazón o sus micas ya no están disponibles: quítalo y elige de nuevo.",
     "onlyLeft": "Solo quedan {{count}} en existencia.",
+    "onDemand": "Bajo pedido: la entrega puede tardar más.",
     "soldOut": "Agotado: quítalo para continuar.",
     "decrease": "Menos",
     "increase": "Más",
@@ -363,11 +365,16 @@
       "checking": "Consultando…",
       "comboUnavailable": "Esta combinación no está disponible.",
       "inStock": "En existencia",
+      "onDemand": "Bajo pedido: la entrega puede tardar más.",
+      "confirm": "Revisé que mi graduación coincida con mi receta.",
+      "confirmRequired": "Confirma que tu graduación coincide con tu receta.",
+      "dominance": "Lente D o N",
       "abbr": {
         "sphere": "PWR",
         "cylinder": "CYL",
         "axis": "EJE",
         "addition": "ADD",
+        "dominance": "DOM",
         "baseCurve": "BC",
         "diameter": "DIA"
       },

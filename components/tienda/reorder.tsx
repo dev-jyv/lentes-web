@@ -68,7 +68,8 @@ export function Reorder({ orderId }: { orderId: string }) {
                 {[i.sphere != null && t("cart.rx.sphere", { value: sign(i.sphere) }),
                   i.cylinder != null && t("cart.rx.cylinder", { value: sign(i.cylinder) }),
                   i.axis != null && t("cart.rx.axis", { value: i.axis }),
-                  i.addition && t("cart.rx.addition", { value: i.addition })].filter(Boolean).join(" · ")}
+                  i.addition && t("cart.rx.addition", { value: i.addition }),
+                  i.dominance && t("cart.rx.dominance", { value: i.dominance })].filter(Boolean).join(" · ")}
               </p>
             </div>
             <span className="text-muted-foreground">{t("reorder.previousPrice", { price: formatMxn(i.unit_price_cents) })}</span>

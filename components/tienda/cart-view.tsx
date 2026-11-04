@@ -20,6 +20,7 @@ function describe(i: CartItem) {
     i.cylinder != null && t("cart.rx.cylinder", { value: sign(i.cylinder) }),
     i.axis != null && t("cart.rx.axis", { value: i.axis }),
     i.addition && t("cart.rx.addition", { value: i.addition }),
+    i.dominance && t("cart.rx.dominance", { value: i.dominance }),
     t("cart.rx.baseCurve", { value: i.base_curve }),
     t("cart.rx.diameter", { value: i.diameter }),
   ].filter(Boolean).join(" · ");
@@ -81,13 +82,14 @@ export function CartView() {
                 <>
                   <p className="text-sm">{eyeLabel[i.eye]}</p>
                   <p className="optic text-xs text-muted-foreground">{describe(i)}</p>
+                  {i.on_demand && <p className="text-xs text-muted-foreground">{t("cart.onDemand")}</p>}
                 </>
               )}
               {!i.purchasable && (
                 <p role="alert" className="text-xs text-destructive">
                   {i.category === "frame"
                     ? t("cart.frameUnavailable")
-                    : i.available > 0
+                    : i.available > 0 && !i.on_demand
                       ? t("cart.onlyLeft", { count: i.available })
                       : t("cart.soldOut")}
                 </p>

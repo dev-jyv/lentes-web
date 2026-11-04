@@ -107,7 +107,7 @@ Un paso de `0.25` o `0.50` aplica dentro del tramo indicado.
 
 Resolver con el proveedor antes de cargar:
 
-1. **MyDay toric, rangos.** `MBECP-PA1123` da +8.00 a -10.00 con ejes completos. `MDECP-PA0323` da una matriz más limitada, y su tramo de -2.25 solo admite 6 ejes.
+1. **MyDay toric, rangos.** `MBECP-PA1123` da +8.00 a -10.00 con ejes completos. `MDECP-PA0323` da una matriz más limitada, y su tramo de -2.25 solo admite 6 ejes. Se usa `MBECP-PA1123`: es el documento más reciente y su rango reproduce exactamente las 4,392 opciones que publica.
 2. **MyDay toric, presentación.** `MDECP-PA0323` indica `90-pack` y prueba de 5; la foto de la caja muestra 30 lentes.
 3. **Biofinity XR Toric, esfera.** El resumen de la familia Biofinity (2019) da dos tramos, +8.50 a +10.00 y +10.00 a -10.00. `MBECP-PA1123` da +20.00 a -20.00.
 4. **Dailies AquaComfort Plus, material.** El manual imprime "Delefilcon A", el mismo material de Total 1. Parece un error de copia; el dato real debe confirmarse con Alcon.
@@ -116,10 +116,16 @@ Resolver con el proveedor antes de cargar:
 
 ## Diferencias con `lentes-api/db/seed/seed.sql`
 
-- **Biofinity Multifocal usa adiciones equivocadas.** El seed siembra `LOW/MID/HIGH`; esos valores son de Air Optix Multifocal. Biofinity usa +1.00 a +2.50 con lentes D y N, que hoy no caben como dos atributos: habría que codificarlos en `addition` (por ejemplo, `+1.50 D`) o ampliar el modelo.
+- **Biofinity Multifocal usa adiciones equivocadas.** El seed siembra `LOW/MID/HIGH`; esos valores son de Air Optix Multifocal. Biofinity usa +1.00 a +2.50 con lentes D y N. Se corrigió con un campo `dominance` propio.
 - **Biofinity Multifocal usa pasos de 0.50 en toda la esfera.** El documento indica 0.50 solo a partir de ±6.00.
 - **El seed cubre una parte del rango**, por ejemplo sin cilindro -2.25 en Air Optix for Astigmatism. Es válido como dato de prueba, no como catálogo.
 - Curva base, diámetro, material y agua de los productos Air Optix y Biofinity del seed coinciden con estos documentos. Estos PDF no cubren Acuvue.
+
+## Carga al catálogo
+
+Las reglas y el generador viven en `lentes-api`: `db/catalog/contact_lenses.json` y `cmd/catalog-gen`. El procedimiento está en `lentes-api/docs/ADMIN_INVENTORY.md`.
+
+Por ahora quedan bloqueados Air Optix Colors, Total 1, Dailies AquaComfort Plus, Biofinity XR Toric, Liberti y Liberti toric. Precision 1 para astigmatismo solo incluye los tramos confirmados.
 
 ## Datos faltantes para vender
 
