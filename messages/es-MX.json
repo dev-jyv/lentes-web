@@ -302,6 +302,13 @@
       "samplePower": "PWR −2.75",
       "sampleBaseCurve": "BC 8.6",
       "sampleDiameter": "DIA 14.2"
+    },
+    "photos": {
+      "frames": "Mujer sonriente con armazón negro",
+      "lenses": "Acercamiento de un ojo café de perfil",
+      "spherical": "Acercamiento de unos ojos azules mirando a un lado",
+      "toric": "Acercamiento de un ojo azul mirando al frente",
+      "multifocal": "Mujer con lentes leyendo un libro"
     }
   },
   "validation": {
