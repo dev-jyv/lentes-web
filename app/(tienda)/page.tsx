@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FrameShapeIcon } from "@/components/tienda/frame-shape-icon";
 import { HeroCarousel } from "@/components/tienda/hero-carousel";
 import { HeroLens } from "@/components/tienda/hero-lens";
+import { HomeMosaic } from "@/components/tienda/home-mosaic";
 import { ProductCard } from "@/components/tienda/product-card";
 import { listProducts } from "@/lib/api/generated/api";
 import type { FrameShape, HomeBanner, Product } from "@/lib/api/generated/model";
@@ -22,9 +23,6 @@ const promises = [
 ];
 
 const slideCta = "inline-flex h-12 items-center justify-center rounded-full bg-white px-8 font-semibold text-band transition-colors hover:bg-white/85";
-
-const tileClass =
-  "flex h-full min-h-16 items-center justify-between gap-2 rounded-xl border bg-card p-4 font-display font-semibold transition-colors hover:border-primary hover:bg-accent";
 
 // Destacados elegidos en el admin; si aún no hay, los más recientes para no dejar el home vacío.
 async function featuredOrNewest(featured: Product[] | undefined, category: Product["category"]) {
@@ -133,10 +131,10 @@ function Hero({ banners, hasFrames }: { banners: HomeBanner[]; hasFrames: boolea
   );
 }
 
-function ProductRow({ title, href, products }: { title: string; href: string; products: Product[] }) {
+function ProductRow({ title, href, products, className = "" }: { title: string; href: string; products: Product[]; className?: string }) {
   if (products.length === 0) return null;
   return (
-    <section className="container-page space-y-4 py-8">
+    <section className={`container-page space-y-4 py-8 ${className}`}>
       <div className="flex items-end justify-between">
         <h2 className="text-2xl">{title}</h2>
         <Link href={href} className="text-sm font-medium text-primary hover:underline">{t("home.viewAll")}</Link>
@@ -172,31 +170,13 @@ export default async function HomePage() {
     <>
       <Hero banners={heroes} hasFrames={hasFrames} />
 
-      <section aria-label={t("home.categoriesLabel")} className="container-page pt-10 pb-4">
-        <ul className={`grid gap-4 ${hasFrames ? "md:grid-cols-2" : ""}`}>
-          {hasFrames && (
-            <li>
-              <Link href="/armazones" className="group block rounded-2xl border bg-card p-6 transition-colors hover:border-primary hover:bg-accent">
-                <FrameShapeIcon shape="round" className="mb-4 h-14 text-primary" />
-                <h2 className="text-2xl">{t("common.frames")}</h2>
-                <p className="text-sm text-muted-foreground">{t("home.framesBlurb")}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary">{t("common.viewFrames")} <ArrowRight className="size-4" aria-hidden="true" /></span>
-              </Link>
-            </li>
-          )}
-          <li>
-            <Link href="/lentes" className="group block rounded-2xl border bg-card p-6 transition-colors hover:border-primary hover:bg-accent">
-              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true" className="mb-4 h-14 text-primary">
-                <circle cx="24" cy="24" r="19" />
-                <path d="M9 30c6 5 24 5 30 0" />
-              </svg>
-              <h2 className="text-2xl">{t("common.contactLenses")}</h2>
-              <p className="text-sm text-muted-foreground">{t("home.lensesBlurb")}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary">{t("common.viewContactLenses")} <ArrowRight className="size-4" aria-hidden="true" /></span>
-            </Link>
-          </li>
-        </ul>
-      </section>
+      <HomeMosaic hasFrames={hasFrames} uses={uses} needs={needs} />
+
+      {frameProducts.length > 0 && (
+        <div className="mt-8 bg-secondary">
+          <ProductRow title={t("home.featuredFrames")} href="/armazones" products={frameProducts} className="py-10" />
+        </div>
+      )}
 
       {shapes.length > 0 && (
         <section className="container-page space-y-4 pt-12 pb-4">
@@ -204,7 +184,7 @@ export default async function HomePage() {
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {shapes.map((shape) => (
               <li key={shape}>
-                <Link href={`/armazones?shape=${shape}`} className="flex h-full flex-col items-center gap-2 rounded-xl border bg-card p-4 text-center font-medium transition-colors hover:border-primary hover:bg-accent">
+                <Link href={`/armazones?shape=${shape}`} className="flex h-full flex-col items-center gap-2 rounded-2xl bg-secondary p-5 text-center font-medium transition-colors hover:bg-accent hover:text-primary">
                   <FrameShapeIcon shape={shape} className="h-10 text-primary" />
                   {shapeLabel[shape]}
                 </Link>
@@ -217,39 +197,17 @@ export default async function HomePage() {
       {priceBands.length > 0 && (
         <section className="container-page space-y-4 py-8">
           <h2 className="text-2xl">{t("home.byPrice")}</h2>
-          <ul className="grid gap-3 sm:grid-cols-3">
+          <ul className="flex flex-wrap gap-2">
             {priceBands.map((band) => (
               <li key={band}>
-                <Link href={`/armazones?max_price_cents=${band}`} className={tileClass}>
-                  {priceBandLabel(band)} <ArrowRight className="size-5 text-primary" aria-hidden="true" />
+                <Link href={`/armazones?max_price_cents=${band}`} className="inline-flex min-h-11 items-center rounded-full border bg-card px-4 text-sm font-medium transition-colors hover:border-primary hover:bg-accent">
+                  {priceBandLabel(band)}
                 </Link>
               </li>
             ))}
           </ul>
         </section>
       )}
-
-      <ProductRow title={t("home.featuredFrames")} href="/armazones" products={frameProducts} />
-
-      <section className="container-page space-y-4 py-8">
-        <h2 className="text-2xl">{t("home.buyLenses")}</h2>
-        <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {uses.map(([value, label]) => (
-            <li key={value}>
-              <Link href={`/lentes?replacement=${value}`} className={tileClass}>
-                {label} <ArrowRight className="size-5 shrink-0 text-primary" aria-hidden="true" />
-              </Link>
-            </li>
-          ))}
-          {needs.map(([value, label]) => (
-            <li key={value}>
-              <Link href={`/lentes?lens_type=${value}`} className={tileClass}>
-                {label} <ArrowRight className="size-5 shrink-0 text-primary" aria-hidden="true" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
 
       <ProductRow title={t("home.featuredLenses")} href="/lentes" products={lensProducts} />
 
