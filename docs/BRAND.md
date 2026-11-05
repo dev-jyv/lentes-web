@@ -7,7 +7,7 @@ Fuente: brand book compartido como artifact (`claude.ai/artifact/7tXv281yj6tx4mV
 
 | Brand book | Dónde |
 |---|---|
-| Paleta "Película lagrimal" (claro) y "Consulta nocturna" (oscuro) | tokens en `app/globals.css` (`--teal`, `--amber`, `--ink`…) mapeados a los de shadcn |
+| Paleta marino + azul + menta (reemplaza a "Película lagrimal" y "Consulta nocturna"; ver `docs/superpowers/specs/2026-11-05-paleta-y-home-design.md`) | tokens en `app/globals.css` (`--navy`, `--blue`, `--blue-vivid`, `--blue-soft`, `--mint`, `--sun`, `--ink`…) mapeados a los de shadcn. El logo conserva sus colores originales con `--logo-ring`, `--logo-iris`, `--logo-iris-soft` y `--logo-pupil` |
 | Tema claro/oscuro | `data-theme` en `<html>`; el script de `app/layout.tsx` lo fija antes del primer pintado (preferencia guardada o del sistema); `components/theme-toggle.tsx` |
 | Tipografía: Bricolage Grotesque (títulos), Figtree (texto), IBM Plex Mono (valores ópticos) | `next/font` en `app/layout.tsx`; `font-display`, `font-sans`, utilidad `optic` |
 | Valores ópticos en monoespaciada con cifras tabulares | `.optic` en esfera, cilindro, eje, curva base, diámetro, carrito, pedidos y recetas |
@@ -30,5 +30,5 @@ Fuente: brand book compartido como artifact (`claude.ai/artifact/7tXv281yj6tx4mV
 ## Notas
 
 - Los precios y cifras del brand book son de ejemplo; el sitio solo muestra precios reales de la API.
-- El ámbar claro del brand book (`#C9851F`) es el de los tokens; el `#E3A33B` de la muestra de paleta queda como acento decorativo no usado.
+- Texto blanco solo sobre `--blue` (`#0066e0`) o más oscuro; `--blue-vivid` (`#0a7cff`) es para fondos grandes y decoración. Sobre menta y amarillo el texto va en marino.
 - `lentes-admin` (Angular) aún no usa estos tokens.

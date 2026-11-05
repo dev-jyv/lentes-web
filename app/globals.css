@@ -12,8 +12,14 @@
   --font-heading: var(--font-display);
   --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
   --color-band: var(--band);
-  --color-amber: var(--amber);
-  --color-amber-soft: var(--amber-soft);
+  --color-navy: var(--navy);
+  --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --color-blue-vivid: var(--blue-vivid);
+  --color-mint: var(--mint);
+  --color-mint-soft: var(--mint-soft);
+  --color-sun: var(--sun);
+  --color-sun-soft: var(--sun-soft);
   --color-good: var(--good);
   --color-warn: var(--warn);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -69,22 +75,32 @@
   --animate-shimmer: shimmer 1.4s linear infinite;
 }
 
-/* Tokens "Película lagrimal" (brand book). El tema lo fija data-theme en <html> (ver layout.tsx). */
+/* Paleta marino + azul + menta (spec 2026-11-05). El tema lo fija data-theme en <html> (ver layout.tsx).
+   Texto blanco solo sobre --blue (#0066e0) o más oscuro; sobre menta y amarillo el texto va en marino. */
 :root {
   color-scheme: light;
-  --bg: #f2f6f7;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --ink: #0e2230;
-  --muted-ink: #566a75;
-  --line: #d5dfe3;
-  --teal: #0f7c8c;
-  --teal-soft: #d6eef1;
-  --amber: #c9851f;
-  --amber-soft: #f7e8cf;
-  --good: #1f8a5b;
-  --warn: #b7791f;
-  /* Franja oscura de la barra promocional y del banner principal; es oscura en ambos temas. */
-  --band: #0e2230;
+  --ink: #101828;
+  --muted-ink: #475467;
+  --line: #e4e9f2;
+  --navy: #0a2540;
+  --blue: #0066e0;
+  --blue-vivid: #0a7cff;
+  --blue-soft: #f0f5ff;
+  --mint: #2ee6b6;
+  --mint-soft: #dff9f1;
+  --sun: #ffd166;
+  --sun-soft: #fff4d6;
+  --good: #177a4f;
+  --warn: #8a5a00;
+  /* Franja oscura de la barra promocional, el banner principal y el pie; es oscura en ambos temas. */
+  --band: var(--navy);
+  /* El logo conserva sus colores originales aunque cambie la paleta. */
+  --logo-ring: #0f7c8c;
+  --logo-iris: #c9851f;
+  --logo-iris-soft: #f7e8cf;
+  --logo-pupil: #0e2230;
 
   --background: var(--bg);
   --foreground: var(--ink);
@@ -92,53 +108,58 @@
   --card-foreground: var(--ink);
   --popover: var(--surface);
   --popover-foreground: var(--ink);
-  --primary: var(--teal);
+  --primary: var(--blue);
   --primary-foreground: #ffffff;
-  --secondary: var(--teal-soft);
+  --secondary: var(--blue-soft);
   --secondary-foreground: var(--ink);
-  --muted: #e6edef;
+  --muted: #f0f5ff;
   --muted-foreground: var(--muted-ink);
-  --accent: var(--teal-soft);
+  --accent: var(--blue-soft);
   --accent-foreground: var(--ink);
   --destructive: #b42318;
   --border: var(--line);
   --input: var(--line);
-  --ring: var(--teal);
-  --chart-1: var(--teal);
-  --chart-2: var(--amber);
-  --chart-3: var(--good);
-  --chart-4: var(--muted-ink);
-  --chart-5: var(--ink);
+  --ring: var(--blue);
+  --chart-1: var(--blue);
+  --chart-2: var(--mint);
+  --chart-3: var(--sun);
+  --chart-4: var(--navy);
+  --chart-5: var(--muted-ink);
   --radius: 0.75rem;
   --sidebar: var(--surface);
   --sidebar-foreground: var(--ink);
-  --sidebar-primary: var(--teal);
+  --sidebar-primary: var(--blue);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: var(--teal-soft);
+  --sidebar-accent: var(--blue-soft);
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: var(--line);
-  --sidebar-ring: var(--teal);
+  --sidebar-ring: var(--blue);
 }
 
+/* --navy, --mint, --sun y --blue-vivid no cambian: el marino queda más claro que el fondo y los bloques se distinguen. */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0a151b;
-  --surface: #11212a;
-  --ink: #e4edf0;
-  --muted-ink: #8fa4ae;
-  --line: #223841;
-  --teal: #43c3d2;
-  --teal-soft: #12343b;
-  --amber: #f0b85a;
-  --amber-soft: #3a2c15;
+  --bg: #07111f;
+  --surface: #0e1c2f;
+  --ink: #e6edf7;
+  --muted-ink: #93a3ba;
+  --line: #1d2d45;
+  --blue: #4d9dff;
+  --blue-soft: #10233d;
+  --mint-soft: #0f3a33;
+  --sun-soft: #3a3015;
   --good: #4cc38a;
   --warn: #e8b04b;
-  --band: #06121a;
+  --band: #050d18;
+  --logo-ring: #43c3d2;
+  --logo-iris: #f0b85a;
+  --logo-iris-soft: #3a2c15;
+  --logo-pupil: #e4edf0;
 
-  --primary-foreground: #0a151b;
-  --muted: #162a33;
+  --primary-foreground: #07111f;
+  --muted: #10233d;
   --destructive: #f2877e;
-  --sidebar-primary-foreground: #0a151b;
+  --sidebar-primary-foreground: #07111f;
 }
 
 @keyframes iris-open {

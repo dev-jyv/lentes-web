@@ -64,7 +64,7 @@ function BannerSlide({ banner, first }: { banner: HomeBanner; first: boolean }) 
 // Diapositiva de marca: se usa mientras el admin no publique banners principales con imagen.
 function DefaultSlide({ first, title, subtitle, art, children }: { first: boolean; title: React.ReactNode; subtitle: string; art: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="flex h-full items-center bg-band bg-[radial-gradient(circle_at_78%_50%,color-mix(in_srgb,var(--teal)_55%,transparent),transparent_60%)]">
+    <div className="flex h-full items-center bg-band bg-[radial-gradient(circle_at_78%_50%,color-mix(in_srgb,var(--blue-vivid)_55%,transparent),transparent_60%)]">
       <div className="container-page flex items-center">
         <SlideText first={first} title={title} subtitle={subtitle}>{children}</SlideText>
         <div className="hidden w-1/2 justify-center text-white lg:flex">{art}</div>
@@ -78,7 +78,7 @@ function defaultSlides(hasFrames: boolean) {
     <DefaultSlide
       key="lentes"
       first={first}
-      title={rich(t("home.hero.lenses.title"), { em: (c) => <em className="text-amber not-italic">{c}</em> })}
+      title={rich(t("home.hero.lenses.title"), { em: (c) => <em className="text-sun not-italic">{c}</em> })}
       subtitle={t("home.hero.lenses.subtitle")}
       art={<div className="w-80"><HeroLens /></div>}
     >
@@ -101,7 +101,7 @@ function defaultSlides(hasFrames: boolean) {
     <DefaultSlide
       key="armazones"
       first
-      title={rich(t("home.hero.frames.title"), { em: (c) => <em className="text-amber not-italic">{c}</em> })}
+      title={rich(t("home.hero.frames.title"), { em: (c) => <em className="text-sun not-italic">{c}</em> })}
       subtitle={t("home.hero.frames.subtitle")}
       art={<FrameShapeIcon shape="round" className="w-96" />}
     >
