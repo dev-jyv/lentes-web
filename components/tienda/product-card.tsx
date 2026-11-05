@@ -37,7 +37,7 @@ export function ProductCard({ product }: { product: Product }) {
                 {rich(t("product.fromPrice", { price: formatMxn(product.from_price_cents) }), { price: (c) => <strong className="font-display text-base">{c}</strong> })}
               </span>
             ) : (
-              <span className="rounded-full bg-amber-soft px-2 py-0.5 text-xs font-medium text-warn">{t("product.soldOut")}</span>
+              <span className="rounded-full bg-sun-soft px-2 py-0.5 text-xs font-medium text-foreground">{t("product.soldOut")}</span>
             )}
           </div>
         </CardContent>

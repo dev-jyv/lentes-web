@@ -287,12 +287,9 @@
     "promisesLabel": "Promesas",
     "viewAll": "Ver todo",
     "categoriesLabel": "Categorías",
-    "framesBlurb": "Busca por forma, material, color y precio.",
-    "lensesBlurb": "Diarios, mensuales, para astigmatismo y más.",
     "byShape": "Comprar armazones por forma",
     "byPrice": "Comprar armazones por precio",
     "featuredFrames": "Armazones destacados",
-    "buyLenses": "Comprar lentes de contacto",
     "featuredLenses": "Lentes de contacto destacados",
     "promotionsLabel": "Promociones",
     "viewAllBrands": "Ver todas",
@@ -302,7 +299,16 @@
       "samplePower": "PWR −2.75",
       "sampleBaseCurve": "BC 8.6",
       "sampleDiameter": "DIA 14.2"
-    }
+    },
+    "photos": {
+      "frames": "Mujer sonriente con armazón negro",
+      "lenses": "Acercamiento de un ojo café de perfil",
+      "spherical": "Acercamiento de unos ojos azules mirando a un lado",
+      "toric": "Acercamiento de un ojo azul mirando al frente",
+      "multifocal": "Mujer con lentes leyendo un libro"
+    },
+    "reorderBlock": "Repón en un clic",
+    "reorderBlockSub": "Repite un pedido sin volver a capturar tu graduación."
   },
   "validation": {
     "invalidEmail": "Correo no válido",

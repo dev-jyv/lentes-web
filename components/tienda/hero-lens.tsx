@@ -7,9 +7,9 @@ export function HeroLens() {
     <div className="relative mx-auto w-full max-w-md">
       <div className="animate-iris">
         <svg viewBox="0 0 240 240" role="img" aria-label={t("home.lens.imageLabel")} className="animate-breathe w-full">
-          <circle cx="120" cy="120" r="112" fill="var(--teal-soft)" />
-          <circle cx="120" cy="120" r="112" fill="none" stroke="var(--teal)" strokeWidth="1.6" />
-          <circle cx="120" cy="120" r="78" fill="var(--amber-soft)" stroke="var(--amber)" strokeWidth="1.6" />
+          <circle cx="120" cy="120" r="112" fill="var(--blue-soft)" />
+          <circle cx="120" cy="120" r="112" fill="none" stroke="var(--blue-vivid)" strokeWidth="1.6" />
+          <circle cx="120" cy="120" r="78" fill="var(--sun-soft)" stroke="var(--sun)" strokeWidth="1.6" />
           {Array.from({ length: 24 }, (_, i) => {
             const a = (i / 24) * Math.PI * 2;
             return (
@@ -17,7 +17,7 @@ export function HeroLens() {
                 key={i}
                 x1={120 + Math.cos(a) * 36} y1={120 + Math.sin(a) * 36}
                 x2={120 + Math.cos(a) * 76} y2={120 + Math.sin(a) * 76}
-                stroke="var(--amber)" strokeWidth="1.2" opacity="0.55"
+                stroke="var(--sun)" strokeWidth="1.2" opacity="0.55"
               />
             );
           })}
