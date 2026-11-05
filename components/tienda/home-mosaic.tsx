@@ -20,9 +20,10 @@ const BLOCK_COLORS = [
   "bg-sun text-navy",
 ];
 
-// Columnas según cuántos elementos haya, para que una fila incompleta no deje hueco a la derecha.
-const ROW_COLS = ["", "", "sm:grid-cols-2", "sm:grid-cols-3"];
-const REST_COLS = ["", "", "md:grid-cols-2", "md:grid-cols-3", "md:grid-cols-4"];
+// Columnas de la segunda fila según cuántos elementos haya, para que no quede hueco a la derecha.
+const ROW_COLS = ["", "sm:grid-cols-1", "sm:grid-cols-2", "sm:grid-cols-3"];
+// En celular (2 columnas) un último elemento impar ocupa toda la fila.
+const ORPHAN_FULL = "max-sm:[&>*:last-child:nth-child(odd)]:col-span-2";
 
 function PhotoTile({ item, src, alt, sizes, className = "" }: { item: Item; src: string; alt: string; sizes: string; className?: string }) {
   return (
@@ -90,10 +91,11 @@ export function HomeMosaic({ hasFrames, uses, needs }: { hasFrames: boolean; use
       </div>
 
       {(row.length > 0 || photo) && (
-        <div className={`grid grid-cols-2 gap-4 ${ROW_COLS[row.length + (photo ? 1 : 0)]}`}>
+        <div className={`grid grid-cols-2 gap-4 ${photo ? "" : ORPHAN_FULL} ${ROW_COLS[row.length + (photo ? 1 : 0)]}`}>
           {photo && photoNeed ? (
             <>
-              {row[0] && <ColorBlock item={row[0]} index={0} />}
+              {/* La foto va primero en celular; si solo la acompaña un bloque, ese bloque ocupa toda la fila. */}
+              {row[0] && <ColorBlock item={row[0]} index={0} className={row.length === 1 ? "max-sm:col-span-2" : ""} />}
               <PhotoTile
                 item={{ href: `/lentes?lens_type=${photo.need}`, label: photoNeed[1] }}
                 src={photo.src}
@@ -110,9 +112,10 @@ export function HomeMosaic({ hasFrames, uses, needs }: { hasFrames: boolean; use
       )}
 
       {rest.length > 0 && (
-        <ul className={`grid grid-cols-2 gap-4 ${REST_COLS[Math.min(rest.length, 4)]}`}>
+        // Flex en lugar de grid: la última fila crece hasta llenar el ancho, sea cual sea el número de bloques.
+        <ul className="flex flex-wrap gap-4">
           {rest.map((item, i) => (
-            <li key={item.href}>
+            <li key={item.href} className="min-w-[calc(50%-0.5rem)] flex-1 md:min-w-[calc(25%-0.75rem)]">
               <ColorBlock item={item} index={i + 1} className="h-full min-h-20 text-base" />
             </li>
           ))}
