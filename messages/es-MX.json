@@ -261,7 +261,17 @@
     "failed": "No pudimos completar la búsqueda. Intenta de nuevo en unos minutos.",
     "empty": "No encontramos productos. Prueba en <frames>Armazones</frames> o en <lenses>Lentes de contacto</lenses>.",
     "label": "Buscar productos",
-    "placeholder": "Buscar marca o modelo"
+    "placeholder": "Buscar marca o modelo",
+    "clear": "Borrar búsqueda",
+    "suggestions": "Sugerencias de búsqueda",
+    "suggested": "Búsquedas sugeridas",
+    "featured": "Sugeridos para ti",
+    "liveResults": "Resultados",
+    "noResults": "Sin resultados para «{{q}}»",
+    "unavailable": "No pudimos buscar ahora",
+    "recommended": "Recomendado",
+    "resultCount_one": "{{count}} resultado",
+    "resultCount_other": "{{count}} resultados"
   },
   "home": {
     "promises": {
