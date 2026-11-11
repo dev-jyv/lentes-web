@@ -717,5 +717,19 @@
         }
       ]
     }
+  },
+  "favorites": {
+    "title": "Mis favoritos",
+    "titleWithCount": "Mis favoritos ({{count}})",
+    "link": "Favoritos",
+    "linkWithCount_one": "Favoritos, {{count}} producto",
+    "linkWithCount_other": "Favoritos, {{count}} productos",
+    "toggle": "Guardar {{name}} en favoritos",
+    "remove": "Quitar {{name}} de favoritos",
+    "empty": "Aún no tienes favoritos",
+    "browseFrames": "Ver armazones",
+    "viewAll": "Ver mis favoritos",
+    "saveFailed": "No pudimos actualizar tus favoritos. Intenta de nuevo.",
+    "loadFailed": "No pudimos cargar tus favoritos. Intenta de nuevo."
   }
 }

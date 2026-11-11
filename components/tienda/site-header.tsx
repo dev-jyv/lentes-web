@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Wordmark } from "@/components/brand-mark";
 import { AccountLink } from "@/components/tienda/account-link";
 import { CartLink } from "@/components/tienda/cart-link";
+import { FavoritesLink } from "@/components/tienda/favorites-link";
 import { MegaMenu } from "@/components/tienda/mega-menu";
 import { MobileMenu } from "@/components/tienda/mobile-menu";
 import { PromoBar } from "@/components/tienda/promo-bar";
@@ -35,6 +36,7 @@ export async function SiteHeader() {
           <SearchSuggest id="buscar-escritorio" className="hidden flex-1 lg:block" {...suggest} />
           <div className="ml-auto flex items-center gap-1 lg:ml-0">
             <AccountLink />
+            <FavoritesLink />
             <CartLink icon={<ShoppingBag className="size-6" aria-hidden="true" />} />
           </div>
         </div>

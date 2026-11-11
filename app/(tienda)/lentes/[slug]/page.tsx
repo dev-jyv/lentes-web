@@ -10,6 +10,7 @@ import { imageSrc } from "@/lib/images";
 import { formatMxn, lensTypeLabel, productHref, replacementLabel } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { rich } from "@/lib/rich";
+import { FavoriteButton } from "@/components/tienda/favorite-button";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -75,6 +76,7 @@ export default async function ProductPage({ params }: Props) {
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">{p.brand.name}</p>
           <h1 className="text-3xl sm:text-4xl">{p.name}</h1>
+          <FavoriteButton productId={p.id} name={p.name} className="-ml-2" />
           <div className="flex flex-wrap gap-2">
             {p.lens_type && <Badge variant="secondary">{lensTypeLabel[p.lens_type]}</Badge>}
             {p.replacement && <Badge variant="secondary">{replacementLabel[p.replacement]}</Badge>}

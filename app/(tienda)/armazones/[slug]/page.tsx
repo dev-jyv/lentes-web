@@ -9,6 +9,7 @@ import { env } from "@/lib/env";
 import { frameMaterialLabel, genderLabel, productHref, rimLabel, shapeLabel } from "@/lib/format";
 import { imageSrc } from "@/lib/images";
 import { t } from "@/lib/i18n";
+import { FavoriteButton } from "@/components/tienda/favorite-button";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -89,6 +90,7 @@ export default async function FramePage({ params }: Props) {
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">{p.brand.name}</p>
           <h1 className="text-3xl sm:text-4xl">{p.name}</h1>
+          <FavoriteButton productId={p.id} name={p.name} className="-ml-2" />
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary">{shapeLabel[frame.shape]}</Badge>
             <Badge variant="secondary">{frameMaterialLabel[frame.material]}</Badge>
