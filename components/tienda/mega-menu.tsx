@@ -3,21 +3,42 @@
 import { NavigationMenu } from "@base-ui/react/navigation-menu";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
 import type { NavItem } from "@/lib/navigation";
 import { t } from "@/lib/i18n";
 
 // Megamenú de escritorio. Hover con intención de 150 ms, clic o teclado; el cierre también espera 150 ms
-// para no cerrarse al mover el cursor en diagonal hacia el panel. El panel ocupa todo el ancho bajo la cabecera.
-const headerElement = () => document.getElementById("site-header");
+// para no cerrarse al mover el cursor en diagonal hacia el panel. El panel ocupa todo el ancho bajo la barra.
+const barElement = () => document.getElementById("barra-categorias");
 
+// Barra de categorías pegada bajo la fila de marca. Al bajar se desliza detrás de ella con transform,
+// sin cambiar la altura de la página (eso movería el scroll y volvería a mostrarla).
 export function MegaMenu({ items }: { items: NavItem[] }) {
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - last) < 8) return;
+      setCollapsed(y > last && y > 80);
+      last = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   return (
-    <NavigationMenu.Root delay={150} closeDelay={150} className="hidden lg:block">
-      <NavigationMenu.List aria-label={t("nav.categoriesLabel")} className="flex items-center text-base font-medium">
+    <NavigationMenu.Root
+      delay={150}
+      closeDelay={150}
+      id="barra-categorias"
+      data-collapsed={collapsed || undefined}
+      className="sticky top-18 z-35 hidden border-b bg-muted transition-transform duration-200 motion-reduce:transition-none data-collapsed:not-focus-within:-translate-y-full lg:block"
+    >
+      <NavigationMenu.List aria-label={t("nav.categoriesLabel")} className="container-page flex items-center justify-center text-base font-medium">
         {items.map((item) => (
           <NavigationMenu.Item key={item.href} value={item.href}>
-            <NavigationMenu.Trigger className="relative flex h-16 items-center px-3 whitespace-nowrap outline-none after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-foreground after:transition-transform text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 data-popup-open:text-foreground data-popup-open:after:scale-x-100">
+            <NavigationMenu.Trigger className="relative flex h-12 items-center px-2 whitespace-nowrap outline-none after:absolute after:inset-x-2 xl:px-4 xl:after:inset-x-4 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-foreground after:transition-transform text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 data-popup-open:text-foreground data-popup-open:after:scale-x-100">
               {item.label}
             </NavigationMenu.Trigger>
             <NavigationMenu.Content>
@@ -27,9 +48,9 @@ export function MegaMenu({ items }: { items: NavItem[] }) {
         ))}
       </NavigationMenu.List>
       <NavigationMenu.Portal>
-        {/* Bajo la cabecera (z-40): oscurece y desenfoca solo el contenido de la página. */}
+        {/* Bajo la cabecera (z-40) y la barra (z-35): oscurece y desenfoca solo el contenido de la página. */}
         <NavigationMenu.Backdrop className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0" />
-        <NavigationMenu.Positioner anchor={headerElement} sideOffset={0} collisionPadding={0} className="z-50">
+        <NavigationMenu.Positioner anchor={barElement} sideOffset={0} collisionPadding={0} className="z-50">
           <NavigationMenu.Popup className="overflow-hidden bg-popover text-popover-foreground shadow-lg transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0">
             <NavigationMenu.Viewport />
           </NavigationMenu.Popup>

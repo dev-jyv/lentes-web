@@ -60,7 +60,7 @@ function cards(facets: CatalogFacets | null, facet: string, options: (NavCard & 
 
 const compact = (columns: (NavColumn | null)[]) => columns.filter((c): c is NavColumn => c !== null);
 
-export type NavData = {
+type NavData = {
   frames: CatalogFacets | null;
   lenses: CatalogFacets | null;
   brands: { slug: string; name: string }[];
@@ -129,4 +129,25 @@ export function mergeBrands(...facets: (CatalogFacets | null)[]) {
   const bySlug = new Map<string, string>();
   for (const f of facets) for (const b of f?.brands ?? []) bySlug.set(b.slug, b.name);
   return [...bySlug].map(([slug, name]) => ({ slug, name })).sort((a, b) => a.name.localeCompare(b.name, "es"));
+}
+
+const MAX_SEARCH_CHIPS = 6;
+
+// Búsquedas sugeridas (SPEC 07): formas y marcas con más productos, enlazadas al catálogo filtrado.
+export function searchChips(frames: CatalogFacets | null, lenses: CatalogFacets | null): NavLink[] {
+  const shapes = (frames?.values.shape ?? []).filter((v) => v.count > 0 && v.value in shapeLabel).map((v) => ({
+    label: shapeLabel[v.value as keyof typeof shapeLabel],
+    href: `/armazones?shape=${v.value}`,
+    count: v.count,
+  }));
+  const brands = [
+    ...(frames?.brands ?? []).map((b) => ({ label: b.name, href: `/armazones?brand=${b.slug}`, count: b.count })),
+    ...(lenses?.brands ?? []).map((b) => ({ label: b.name, href: `/lentes?brand=${b.slug}`, count: b.count })),
+  ].filter((b) => b.count > 0);
+  // Una marca con armazones y lentes de contacto aparece una vez, en la categoría con más productos.
+  const chips = new Map<string, NavLink>();
+  for (const { label, href } of [...shapes, ...brands].sort((a, b) => b.count - a.count)) {
+    if (!chips.has(label)) chips.set(label, { label, href });
+  }
+  return [...chips.values()].slice(0, MAX_SEARCH_CHIPS);
 }

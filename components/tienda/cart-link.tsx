@@ -16,7 +16,7 @@ export function CartLink({ icon }: { icon: ReactNode }) {
     >
       {icon}
       {count > 0 && (
-        <span className="optic absolute -top-0.5 -right-0.5 grid min-w-5 place-items-center rounded-full bg-amber px-1 text-[11px] font-medium text-background">
+        <span className="optic absolute -top-0.5 -right-0.5 grid min-w-5 place-items-center rounded-full bg-sun px-1 text-[11px] font-medium text-navy">
           {count}
         </span>
       )}

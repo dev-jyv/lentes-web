@@ -76,14 +76,15 @@ Static UI text lives in `messages/es-MX.json` and is read through i18next, the s
 - Components in `components/ui` are shadcn (`base-nova` style, on `@base-ui/react`). Tailwind v4 is configured in `app/globals.css`, with no JS config. Brand tokens live there too.
 - The brand name "Pupila" is a working name, set in `messages/es-MX.json`. Use `BRAND` from `lib/brand.ts` or the `{{brand}}` message variable rather than hardcoding it.
 - Optical values (sphere, cylinder, axis, base curve, diameter) use the `.optic` class.
-- The storefront's visual reference is https://www.glassesusa.com. Apply its language to new storefront screens:
+- The storefront has two visual references. Keep our own brand (name, logo, fonts and tokens) in both, and never copy their logos, images or colors (such as EyeBuyDirect's gold).
+- https://www.eyebuydirect.com is the reference for the header, search, login, favorites and sign-up:
+  - Two-row header: logo, wide search and actions (account, favorites, cart) on top; a gray category bar with centered links below, which hides on scroll down.
+  - Full-width mega menu under the category bar: link columns on the left, visual cards on the right.
+- https://www.glassesusa.com is the reference for the home page:
   - Dark promo bar with centered white text.
-  - White single-row header: logo, plain text links, gray pill search on the right, icons and a labeled account link.
-  - Full-width mega menu: link columns on the left, visual cards on the right.
   - Full-width hero carousel: background image, large white text, white pill buttons, circular side arrows.
   - White pill trust strip overlapping the hero's bottom edge, followed by a row of brand pills.
-- Keep our own brand (name, logo, fonts and tokens). Never copy GlassesUSA logos or images.
-- Copy may only promise what the store actually does. `docs/BRAND.md` lists brand-book features deliberately left out, such as subscriptions and express delivery. Do not borrow GlassesUSA claims such as free shipping, home try-on, physical stores or discounts while the business does not offer them.
+- Copy may only promise what the store actually does. `docs/BRAND.md` lists brand-book features deliberately left out, such as subscriptions and express delivery. Do not borrow either reference's claims, such as free shipping, home try-on, insurance, 2-day delivery, physical stores or discounts, while the business does not offer them.
 
 ## Project docs
 
