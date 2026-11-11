@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { t } from "@/lib/i18n";
 
-export type FilterParams = Record<string, string | undefined>;
+type FilterParams = Record<string, string | undefined>;
 
 export type FilterGroup = {
   title: string;

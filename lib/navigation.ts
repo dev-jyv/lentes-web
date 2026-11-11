@@ -2,7 +2,7 @@ import type { CatalogFacets } from "@/lib/api/generated/model";
 import { formatMxn, genderLabel, frameMaterialLabel, lensNeedLabel, replacementLabel, shapeLabel } from "@/lib/format";
 import { t } from "@/lib/i18n";
 
-export type NavLink = { label: string; href: string; value?: string };
+type NavLink = { label: string; href: string; value?: string };
 export type NavColumn = {
   title: string;
   facet?: string; // llave de CatalogFacets.values; filtra valores sin productos
@@ -60,7 +60,7 @@ function cards(facets: CatalogFacets | null, facet: string, options: (NavCard & 
 
 const compact = (columns: (NavColumn | null)[]) => columns.filter((c): c is NavColumn => c !== null);
 
-export type NavData = {
+type NavData = {
   frames: CatalogFacets | null;
   lenses: CatalogFacets | null;
   brands: { slug: string; name: string }[];

@@ -44,7 +44,7 @@ function Notice({ error, info }: { error?: string | null; info?: string | null }
 
 const origin = () => (typeof window === "undefined" ? env.siteUrl : window.location.origin);
 
-export function GoogleButton({ next }: { next: string }) {
+function GoogleButton({ next }: { next: string }) {
   const [error, setError] = useState<string | null>(null);
   return (
     <div className="space-y-2">
