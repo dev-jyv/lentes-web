@@ -39,9 +39,12 @@
     "wrongCredentials": "Correo o contraseña incorrectos.",
     "email": "Correo",
     "password": "Contraseña",
-    "forgotPassword": "Olvidé mi contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
     "continueWithGoogle": "Continuar con Google",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "showPassword": "Mostrar contraseña",
+    "orContinueWith": "O entra con",
+    "noAccount": "¿No tienes cuenta? <link>Regístrate</link>"
   },
   "account": {
     "title": "Mi cuenta",

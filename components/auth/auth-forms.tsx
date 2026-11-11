@@ -1,9 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { cn } from "cn";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -21,16 +23,30 @@ import { rich } from "@/lib/rich";
 const email = z.string().email(t("validation.invalidEmail"));
 const password = z.string().min(8, t("validation.minPassword"));
 
-function Row({
+// Etiqueta flotante sobre el borde; `--field-bg` la iguala al fondo del contenedor.
+export function FloatingField({
   id, label, type = "text", error, autoComplete, reg,
 }: {
   id: string; label: string; type?: string; error?: string; autoComplete?: string;
   reg: React.ComponentProps<"input">;
 }) {
+  const [shown, setShown] = useState(false);
+  const password = type === "password";
   return (
     <div className="space-y-1">
-      <Label htmlFor={id}>{label}</Label>
-      <Input id={id} type={type} autoComplete={autoComplete} aria-invalid={!!error} {...reg} />
+      <div className="relative">
+        <Input id={id} type={password && shown ? "text" : type} autoComplete={autoComplete} aria-invalid={!!error}
+          placeholder=" " className={cn("peer h-11 px-3", password && "pr-11")} {...reg} />
+        <Label htmlFor={id} className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 bg-(--field-bg,var(--background)) px-1 font-normal text-muted-foreground transition-all peer-focus:top-0 peer-focus:text-xs peer-focus:text-foreground peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-xs">
+          {label}
+        </Label>
+        {password && (
+          <button type="button" aria-label={t("auth.showPassword")} aria-pressed={shown} onClick={() => setShown(!shown)}
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-lg text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
+            {shown ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+          </button>
+        )}
+      </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
@@ -44,14 +60,17 @@ function Notice({ error, info }: { error?: string | null; info?: string | null }
 
 const origin = () => (typeof window === "undefined" ? env.siteUrl : window.location.origin);
 
-function GoogleButton({ next }: { next: string }) {
+// Sin `next`, vuelve a la URL actual (popover del header).
+function GoogleButton({ next }: { next?: string }) {
   const [error, setError] = useState<string | null>(null);
   return (
     <div className="space-y-2">
       <Button type="button" variant="outline" className="w-full" onClick={async () => {
         const { error } = await createClient().auth.signInWithOAuth({
           provider: "google",
-          options: { redirectTo: `${origin()}/auth/callback?next=${encodeURIComponent(next)}` },
+          options: { redirectTo: `${origin()}/auth/callback?next=${encodeURIComponent(
+            next ?? safeNext(window.location.pathname + window.location.search),
+          )}` },
         });
         if (error) setError(t("auth.googleFailed"));
       }}>
@@ -62,8 +81,9 @@ function GoogleButton({ next }: { next: string }) {
   );
 }
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({ next, onSuccess }: { next?: string; onSuccess?: () => void }) {
   const router = useRouter();
+  const id = useId();
   const target = safeNext(next);
   const [error, setError] = useState<string | null>(null);
   const turnstile = useTurnstile();
@@ -82,21 +102,25 @@ export function LoginForm({ next }: { next?: string }) {
       if (error) return setError(t("auth.wrongCredentials"));
       // Une el carrito anónimo al del cliente; si falla, el carrito anónimo se conserva.
       if (getCartToken() && (await mergeCart()).status === 200) clearCartToken();
-      router.replace(target);
+      if (onSuccess) onSuccess();
+      else router.replace(target);
       router.refresh();
     })}>
-      <Row id="email" label={t("auth.email")} type="email" autoComplete="email"
+      <FloatingField id={`${id}email`} label={t("auth.email")} type="email" autoComplete="email"
         error={errors.email?.message} reg={register("email")} />
-      <Row id="password" label={t("auth.password")} type="password" autoComplete="current-password"
+      <FloatingField id={`${id}password`} label={t("auth.password")} type="password" autoComplete="current-password"
         error={errors.password?.message} reg={register("password")} />
+      <Link href="/recuperar" className="block text-right text-sm underline">{t("auth.forgotPassword")}</Link>
       {turnstile.widget}
       <Notice error={error} />
       <Button type="submit" className="w-full" disabled={isSubmitting}>{t("auth.login.title")}</Button>
-      <GoogleButton next={target} />
-      <div className="flex justify-between text-sm">
-        <Link href="/recuperar" className="underline">{t("auth.forgotPassword")}</Link>
-        <Link href="/registro" className="underline">{t("auth.register.title")}</Link>
-      </div>
+      <p className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+        {t("auth.orContinueWith")}
+      </p>
+      <GoogleButton next={onSuccess ? undefined : target} />
+      <p className="text-center text-sm">
+        {rich(t("auth.noAccount"), { link: (c) => <Link href="/registro" className="font-medium underline">{c}</Link> })}
+      </p>
     </form>
   );
 }
@@ -125,11 +149,11 @@ export function RegisterForm() {
       if (error) return setError(t("auth.register.failed"));
       setInfo(t("auth.register.checkEmail"));
     })}>
-      <Row id="full_name" label={t("auth.register.fullName")} autoComplete="name"
+      <FloatingField id="full_name" label={t("auth.register.fullName")} autoComplete="name"
         error={errors.full_name?.message} reg={register("full_name")} />
-      <Row id="email" label={t("auth.email")} type="email" autoComplete="email"
+      <FloatingField id="email" label={t("auth.email")} type="email" autoComplete="email"
         error={errors.email?.message} reg={register("email")} />
-      <Row id="password" label={t("auth.password")} type="password" autoComplete="new-password"
+      <FloatingField id="password" label={t("auth.password")} type="password" autoComplete="new-password"
         error={errors.password?.message} reg={register("password")} />
       {turnstile.widget}
       <Notice error={error} info={info} />
@@ -156,7 +180,7 @@ export function RecoverForm() {
       // Respuesta neutra: no revela si el correo existe.
       setInfo(t("auth.recover.sent"));
     })}>
-      <Row id="email" label={t("auth.email")} type="email" autoComplete="email"
+      <FloatingField id="email" label={t("auth.email")} type="email" autoComplete="email"
         error={errors.email?.message} reg={register("email")} />
       <Notice info={info} />
       <Button type="submit" className="w-full" disabled={isSubmitting}>{t("auth.recover.send")}</Button>
@@ -177,7 +201,7 @@ export function NewPasswordForm() {
       if (error) return setError(t("auth.newPassword.failed"));
       router.replace("/cuenta");
     })}>
-      <Row id="password" label={t("auth.newPassword.title")} type="password" autoComplete="new-password"
+      <FloatingField id="password" label={t("auth.newPassword.title")} type="password" autoComplete="new-password"
         error={errors.password?.message} reg={register("password")} />
       <Notice error={error} />
       <Button type="submit" className="w-full" disabled={isSubmitting}>{t("common.save")}</Button>
