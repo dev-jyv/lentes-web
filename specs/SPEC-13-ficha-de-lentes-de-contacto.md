@@ -1,6 +1,6 @@
 # SPEC 13 — Ficha de lentes de contacto
 
-> **Status:** Draft
+> **Status:** Approved
 > **Depends on:** SPEC 12
 > **Date:** 2026-11-11
 > **Objective:** Rediseñar la ficha `/lentes/[slug]` con galería, precio por caja, cajas por ojo y una sección de detalles del lente, siguiendo la ficha de GlassesUSA.

@@ -1,6 +1,6 @@
 # SPEC 09 — Favoritos
 
-> **Status:** Draft
+> **Status:** Approved
 > **Depends on:** SPEC 06, SPEC 08
 > **Date:** 2026-11-11
 > **Objective:** Permitir que el cliente guarde productos en una lista de favoritos y la consulte desde un popover del header.
