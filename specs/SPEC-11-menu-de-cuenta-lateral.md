@@ -1,6 +1,6 @@
 # SPEC 11 — Menú de cuenta en panel lateral
 
-> **Status:** Implemented — feature/cuenta-panel-lateral
+> **Status:** Implemented — lentes-web#3
 > **Depends on:** SPEC 08
 > **Date:** 2026-11-11
 > **Objective:** Reemplazar el menú desplegable de cuenta del header por un panel lateral derecho que saluda al cliente y lista sus secciones con iconos.

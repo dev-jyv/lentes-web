@@ -1,6 +1,6 @@
 # SPEC 14 — Ficha de armazón
 
-> **Status:** Implemented — feature/ficha-armazon
+> **Status:** Implemented — lentes-web#3
 > **Depends on:** SPEC 12
 > **Date:** 2026-11-11
 > **Objective:** Rediseñar la ficha `/armazones/[slug]` con galería navegable, precio con oferta, qué incluye, medidas completas y una sección de características, siguiendo la ficha de GlassesUSA.
