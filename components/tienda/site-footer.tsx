@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { t } from "@/lib/i18n";
+import { LEGAL_REVIEWED } from "@/lib/legal";
 
 export function SiteFooter() {
   return (
@@ -18,6 +19,12 @@ export function SiteFooter() {
           <Link href="/cuenta/recetas" className="hover:text-white">{t("nav.myPrescription")}</Link>
           <Link href="/cuenta" className="hover:text-white">{t("account.title")}</Link>
           <Link href="/cambios-y-devoluciones" className="hover:text-white">{t("returns.title")}</Link>
+          {LEGAL_REVIEWED && (
+            <>
+              <Link href="/terminos" className="hover:text-white">{t("footer.terms")}</Link>
+              <Link href="/privacidad" className="hover:text-white">{t("footer.privacy")}</Link>
+            </>
+          )}
         </nav>
         <ThemeToggle />
       </div>
