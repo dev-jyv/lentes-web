@@ -1,6 +1,6 @@
 # SPEC 12 — Atributos ampliados de producto
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-api feature/producto-atributos, lentes-admin feature/producto-atributos, lentes-web 81a6fdd
 > **Depends on:** SPEC 01, SPEC 04
 > **Date:** 2026-11-11
 > **Objective:** Ampliar el modelo de producto de lentes-api y su edición en lentes-admin con los datos que necesitan las fichas nuevas de lentes de contacto y armazones.
