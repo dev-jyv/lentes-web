@@ -126,9 +126,15 @@
     "soldOut": "Agotado: quítalo para continuar.",
     "decrease": "Menos",
     "increase": "Más",
-    "remove": "Quitar",
+    "removeItem": "Quitar {{name}} del carrito",
+    "quantity": "Cantidad:",
+    "updating": "Actualizando carrito",
+    "updated": "Carrito actualizado",
+    "removed": "Producto quitado del carrito",
+    "updateFailed": "No pudimos actualizar tu carrito. Intenta de nuevo.",
     "subtotal": "Subtotal",
     "shippingNote": "Envío e impuestos se confirman en el pago.",
+    "legalNote": "Al realizar tu pago aceptas los <terms>Términos y condiciones</terms> y el <privacy>Aviso de privacidad</privacy> de {{brand}}.",
     "continue": "Continuar al pago"
   },
   "checkout": {

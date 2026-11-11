@@ -1,16 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { useCartDrawer } from "@/components/tienda/cart-drawer";
 import { useGetCart } from "@/lib/api/generated/api";
 import { t } from "@/lib/i18n";
 
 export function CartLink({ icon }: { icon: ReactNode }) {
   const { data } = useGetCart();
+  const { open } = useCartDrawer();
   const count = data?.status === 200 ? data.data.item_count : 0;
   return (
-    <Link
-      href="/carrito"
+    <button
+      type="button"
+      onClick={open}
+      aria-haspopup="dialog"
       aria-label={count > 0 ? t("cart.linkWithCount", { count }) : t("cart.metaTitle")}
       className="relative grid size-11 place-items-center rounded-full hover:bg-accent"
     >
@@ -20,6 +23,6 @@ export function CartLink({ icon }: { icon: ReactNode }) {
           {count}
         </span>
       )}
-    </Link>
+    </button>
   );
 }
