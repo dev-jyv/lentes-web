@@ -112,7 +112,7 @@ export function CartView() {
           </li>
         ))}
       </ul>
-      <aside className="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-28">
+      <aside className="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-36">
         <div className="flex justify-between">
           <span>{t("cart.subtotal")}</span>
           <strong>{formatMxn(cart.subtotal_cents)}</strong>

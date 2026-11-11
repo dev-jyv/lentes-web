@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { t } from "@/lib/i18n";
 
 export function SiteFooter() {
@@ -18,6 +19,7 @@ export function SiteFooter() {
           <Link href="/cuenta" className="hover:text-white">{t("account.title")}</Link>
           <Link href="/cambios-y-devoluciones" className="hover:text-white">{t("returns.title")}</Link>
         </nav>
+        <ThemeToggle />
       </div>
     </footer>
   );
