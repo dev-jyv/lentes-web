@@ -1,6 +1,6 @@
 # SPEC 06 — Header de dos niveles
 
-> **Status:** Approved
+> **Status:** Implemented — feature/header-dos-niveles
 > **Depends on:** SPEC 03
 > **Date:** 2026-11-11
 > **Objective:** Reorganizar el header de `lentes-web` en dos filas, con buscador ancho e iconos de cuenta, favoritos y carrito arriba y la barra de categorías centrada abajo.
