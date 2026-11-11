@@ -1,0 +1,35 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/79688-1793912721/content/paleta.html"
+        ],
+        "createdAt": "2026-11-05T21:06:26.194Z",
+        "reason": "Claude: maqueta en miniatura desechable del brainstorming, no es UI que se publique"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/79688-1793912721/content/home-layout.html"
+        ],
+        "createdAt": "2026-11-05T21:09:42.729Z",
+        "reason": "Claude: maqueta desechable del brainstorming; los grises sustituyen fotos y el contraste real se resuelve con #0066e0 en la implementación"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/79688-1793912721/content/home-layout.html"
+        ],
+        "createdAt": "2026-11-05T21:09:42.785Z",
+        "reason": "Claude: maqueta desechable del brainstorming; los grises sustituyen fotos y el contraste real se resuelve con #0066e0 en la implementación"
+      }
+    ]
+  }
+}
