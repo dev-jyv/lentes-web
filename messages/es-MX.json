@@ -50,7 +50,10 @@
     "title": "Mi cuenta",
     "orders": "Mis pedidos",
     "prescriptions": "Mis recetas",
-    "uploadPrescription": "Subir una receta"
+    "uploadPrescription": "Subir una receta",
+    "greeting": "Hola de nuevo",
+    "greetingName": "Hola de nuevo, {{name}}",
+    "signOutError": "No pudimos cerrar tu sesión. Inténtalo de nuevo."
   },
   "reorder": {
     "metaTitle": "Recompra",

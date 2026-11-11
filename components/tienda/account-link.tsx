@@ -1,14 +1,14 @@
 "use client";
 
-import { Menu } from "@base-ui/react/menu";
 import { Popover } from "@base-ui/react/popover";
 import type { User } from "@supabase/supabase-js";
 import { cn } from "cn";
-import { ChevronDown, UserRound, X } from "lucide-react";
+import { ChevronDown, FileText, LogOut, Package, UserRound, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
@@ -20,7 +20,12 @@ const control = "flex min-h-11 min-w-11 items-center justify-center gap-1.5 roun
 // Marca de color bajo el control mientras su panel está abierto.
 const openMark = "relative after:absolute after:inset-x-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-primary after:opacity-0 data-popup-open:after:opacity-100";
 const panel = "z-50 rounded-xl bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 outline-none";
-const item = "flex min-h-10 w-full items-center rounded-lg px-3 text-sm outline-none data-highlighted:bg-accent";
+const entry = "flex min-h-14 w-full items-center gap-3 border-b px-5 text-left text-base outline-none hover:bg-accent focus-visible:bg-accent";
+const entries = [
+  { href: "/cuenta", icon: UserRound, label: "account.title" },
+  { href: "/cuenta/pedidos", icon: Package, label: "account.orders" },
+  { href: "/cuenta/recetas", icon: FileText, label: "account.prescriptions" },
+] as const;
 
 // La sesión se lee en el navegador para no volver dinámicas las páginas del catálogo.
 export function AccountLink() {
@@ -28,13 +33,15 @@ export function AccountLink() {
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [signOutFailed, setSignOutFailed] = useState(false);
   useEffect(() => {
     if (!env.supabaseUrl) return;
     const { data } = createClient().auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
     return () => data.subscription.unsubscribe();
   }, []);
 
-  const first = String(user?.user_metadata?.full_name ?? "").trim().split(/\s+/)[0].slice(0, 16);
+  const name = String(user?.user_metadata?.full_name ?? "").trim();
+  const first = name.split(/\s+/)[0].slice(0, 16);
   const label = (
     <>
       <UserRound className="size-6" aria-hidden="true" />
@@ -42,9 +49,9 @@ export function AccountLink() {
       <ChevronDown className="hidden size-4 lg:block" aria-hidden="true" />
     </>
   );
-  // En móvil (y sin Supabase) el control es un enlace, sin popover.
+  // Sin sesión, en móvil (y sin Supabase) el control es un enlace, sin popover.
   const link = (
-    <Link href={user ? "/cuenta" : "/login"} className={cn(control, env.supabaseUrl && "lg:hidden")}>
+    <Link href="/login" className={cn(control, env.supabaseUrl && "lg:hidden")}>
       {label}
     </Link>
   );
@@ -52,27 +59,48 @@ export function AccountLink() {
 
   return (
     <>
-      {link}
+      {!user && link}
       {user ? (
-        <Menu.Root>
-          <Menu.Trigger className={cn(control, openMark, "hidden lg:flex")}>{label}</Menu.Trigger>
-          <Menu.Portal>
-            <Menu.Positioner align="end" sideOffset={8} className="z-50">
-              <Menu.Popup className={cn(panel, "min-w-48 p-1")}>
-                <Menu.LinkItem closeOnClick className={item} render={<Link href="/cuenta" />}>{t("account.title")}</Menu.LinkItem>
-                <Menu.LinkItem closeOnClick className={item} render={<Link href="/cuenta/pedidos" />}>{t("account.orders")}</Menu.LinkItem>
-                <Menu.LinkItem closeOnClick className={item} render={<Link href="/cuenta/recetas" />}>{t("account.prescriptions")}</Menu.LinkItem>
-                <Menu.Separator className="my-1 h-px bg-border" />
-                <Menu.Item className={item} onClick={async () => {
-                  await createClient().auth.signOut();
-                  router.refresh();
-                }}>
-                  {t("auth.signOut")}
-                </Menu.Item>
-              </Menu.Popup>
-            </Menu.Positioner>
-          </Menu.Portal>
-        </Menu.Root>
+        <Sheet open={open} onOpenChange={(o) => {
+          setOpen(o);
+          setSignOutFailed(false);
+        }}>
+          <SheetTrigger className={cn(control, openMark, "flex")}>{label}</SheetTrigger>
+          <SheetContent
+            side="right"
+            showCloseButton={false}
+            className="gap-0 data-[side=right]:w-full data-[side=right]:min-[600px]:w-100 data-[side=right]:sm:max-w-none"
+          >
+            <div className="flex items-center gap-3 border-b px-5 py-4">
+              <SheetTitle className="min-w-0 flex-1 truncate text-lg font-bold">
+                {name ? t("account.greetingName", { name }) : t("account.greeting")}
+              </SheetTitle>
+              <SheetClose aria-label={t("common.close")} className="grid size-11 shrink-0 place-items-center rounded-full hover:bg-accent">
+                <X className="size-5" aria-hidden="true" />
+              </SheetClose>
+            </div>
+            <nav aria-label={t("account.title")}>
+              {entries.map(({ href, icon: Icon, label: key }) => (
+                <Link key={href} href={href} className={entry} onClick={() => setOpen(false)}>
+                  <Icon className="size-5" aria-hidden="true" />
+                  {t(key)}
+                </Link>
+              ))}
+              <button type="button" className={entry} onClick={async () => {
+                setSignOutFailed(false);
+                // signOut() devuelve el error en vez de lanzarlo, salvo fallas de red.
+                const failed = await createClient().auth.signOut().then((r) => !!r.error, () => true);
+                if (failed) return setSignOutFailed(true);
+                setOpen(false);
+                router.refresh();
+              }}>
+                <LogOut className="size-5" aria-hidden="true" />
+                {t("auth.signOut")}
+              </button>
+            </nav>
+            {signOutFailed && <p role="alert" className="px-5 py-3 text-sm text-destructive">{t("account.signOutError")}</p>}
+          </SheetContent>
+        </Sheet>
       ) : (
         <Popover.Root modal="trap-focus" open={open} onOpenChange={(o) => {
           setOpen(o);
