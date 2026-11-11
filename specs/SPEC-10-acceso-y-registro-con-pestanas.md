@@ -44,7 +44,7 @@ Hoy `/login` y `/registro` son páginas separadas con `AuthShell`, y el registro
 9. Casilla de marketing, desmarcada por defecto, con enlace a Términos y Privacidad; texto en `messages/es-MX.json`. Solo se muestra activa si hay teléfono o email.
 10. Al enviar, `supabase.auth.signUp` guarda en `options.data`: `full_name`, `title`, `phone`, `birth_date`, `marketing_opt_in`.
 11. lentes-api copia esos datos de `raw_user_meta_data` al crear el `Customer` (mismo mecanismo que `full_name` hoy).
-12. Botón "Crear cuenta" a todo el ancho; tras éxito, el mensaje actual `auth.register.checkEmail`.
+12. Botón "Crear cuenta" a todo el ancho. Tras éxito se abre un modal centrado (`Dialog` de `@base-ui/react`) con un icono de check en círculo, el título "¡Listo!", el texto "Te damos la bienvenida a {{brand}}. Te enviamos un correo para confirmar tu cuenta." y un botón "Continuar" que cierra el modal y lleva a `safeNext(next)` o al home. El texto no promete datos de cuenta en el correo: Supabase envía el enlace de confirmación.
 13. Los campos de teléfono y fecha llevan la clase `ph-no-capture`.
 
 ## Interfaces & contracts
@@ -73,6 +73,7 @@ lentes-web:
 - `next` inválido al cambiar de pestaña: se descarta con `safeNext`.
 - Metadatos manipulados desde el cliente: lentes-api valida y descarta valores fuera de rango.
 - Turnstile sin completar: `auth.completeCaptcha`.
+- Cierre del modal de éxito con Escape o clic fuera: mismo efecto que "Continuar"; el formulario no se puede reenviar.
 
 ## Acceptance criteria
 
@@ -82,6 +83,7 @@ lentes-web:
 - [ ] Dada una fecha de nacimiento de alguien de 15 años, veo el error de mayoría de edad.
 - [ ] Dado un registro completo con teléfono y fecha, tras confirmar el correo `GET /v1/me` devuelve `title`, `phone`, `birth_date` y `marketing_opt_in`.
 - [ ] Dado un registro sin campos opcionales, se crea la cuenta y esos campos son `null`.
+- [ ] Dado un registro exitoso, veo el modal "¡Listo!" con el aviso de correo de confirmación; "Continuar" me lleva a `next` o al home, y Escape lo cierra con el mismo destino.
 - [ ] Teléfono y fecha llevan `ph-no-capture`.
 - [ ] Ningún texto nuevo está fuera de `messages/es-MX.json`.
 
