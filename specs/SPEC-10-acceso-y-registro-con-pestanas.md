@@ -1,6 +1,6 @@
 # SPEC 10 — Acceso y registro con pestañas
 
-> **Status:** Draft
+> **Status:** Approved
 > **Depends on:** SPEC 08
 > **Date:** 2026-11-11
 > **Objective:** Unir `/login` y `/registro` en una página con pestañas "Iniciar sesión" y "Soy nuevo", con un registro que mide la fuerza de la contraseña y pide teléfono y consentimiento de marketing opcionales enlazados a páginas nuevas de Términos y Privacidad.
@@ -15,7 +15,7 @@ Hoy `/login` y `/registro` son páginas separadas con `AuthShell`, y el registro
 - "Soy nuevo" muestra el botón de Google arriba y el formulario de email debajo.
 - El formulario pide nombre completo*, email*, contraseña* con medidor de fuerza, teléfono (opcional) y consentimiento de marketing (opcional).
 - Al confirmar el correo, el perfil del cliente en lentes-api tiene `phone` y `marketing_opt_in` guardados.
-- Existen `/terminos` y `/privacidad` con el texto que entrega el negocio, enlazadas desde el registro y el pie del sitio.
+- Existen `/terminos` y `/privacidad` con un borrador marcado como no vigente, listo para revisión legal; los enlaces públicos y la casilla de marketing solo se activan cuando el texto está revisado.
 - Tras registrarse, el cliente ve un modal de bienvenida que le pide confirmar su correo.
 
 ## Non-goals
@@ -25,14 +25,14 @@ Hoy `/login` y `/registro` son páginas separadas con `AuthShell`, y el registro
 - "Recordarme": Supabase mantiene la sesión por defecto.
 - Selector de país del teléfono: el teléfono es mexicano (+52, 10 dígitos).
 - Verificación del teléfono por SMS.
-- Redactar el texto legal: lo entrega el negocio.
+- Texto legal definitivo: el borrador requiere el visto bueno de un abogado antes de activarse.
 - Cambiar `/recuperar` o `/cuenta/contrasena`.
 
 ## Dependencies
 
 - SPEC 08: `FloatingField` y el refactor de `LoginForm`.
 - lentes-api: la creación del `Customer` debe leer `phone` y `marketing_opt_in` de los metadatos de Supabase (hoy solo lee `full_name`). Sin cambios de esquema.
-- Texto de Términos y Aviso de privacidad entregado por el negocio.
+- Revisión legal del borrador de Términos y Aviso de privacidad.
 
 ## Functional requirements
 
@@ -42,14 +42,15 @@ Hoy `/login` y `/registro` son páginas separadas con `AuthShell`, y el registro
 4. Pestaña "Soy nuevo": título "Regístrate con…", botón de Google, separador "O regístrate con tu correo", nota "*Información obligatoria".
 5. Medidor de contraseña con tres segmentos y etiqueta "Seguridad: débil / media / fuerte", calculado en el cliente (longitud ≥ 8, mezcla de mayúsculas, números y símbolos). Solo informa; la regla mínima sigue siendo 8 caracteres.
 6. Teléfono: opcional, 10 dígitos, prefijo fijo "+52" visible.
-7. Casilla de marketing, desmarcada por defecto, con el texto de consentimiento y enlaces a `/terminos` y `/privacidad`; texto en `messages/es-MX.json`.
-8. Bajo el botón, una nota: "Al crear tu cuenta aceptas los Términos y el Aviso de privacidad", con ambos enlaces.
+7. Casilla de marketing, desmarcada por defecto, con el texto de consentimiento y enlaces a `/terminos` y `/privacidad`; texto en `messages/es-MX.json`. Solo se muestra con `LEGAL_REVIEWED = true` (requisito 15); mientras tanto `marketing_opt_in` se envía en `false`.
+8. Bajo el botón, una nota: "Al crear tu cuenta aceptas los Términos y el Aviso de privacidad", con ambos enlaces. Solo se muestra con `LEGAL_REVIEWED = true`.
 9. Al enviar, `supabase.auth.signUp` guarda en `options.data`: `full_name`, `phone`, `marketing_opt_in`.
 10. lentes-api copia `phone` y `marketing_opt_in` de `raw_user_meta_data` al crear el `Customer`, validándolos igual que `PUT /v1/me` (valores inválidos se guardan como `null` y `false`).
 11. Botón "Crear cuenta" a todo el ancho. Tras éxito se abre un modal centrado (`Dialog` de `@base-ui/react`) con un icono de check en círculo, el título "¡Listo!", el texto "Te damos la bienvenida a {{brand}}. Te enviamos un correo para confirmar tu cuenta." y un botón "Continuar" que cierra el modal y lleva a `safeNext(next)` o al home. El texto no promete datos de cuenta en el correo: Supabase envía el enlace de confirmación.
 12. El campo de teléfono lleva la clase `ph-no-capture`.
-13. Páginas estáticas `app/(tienda)/terminos/page.tsx` y `app/(tienda)/privacidad/page.tsx` con el texto legal, `metadata` propia y enlaces en `SiteFooter`.
-14. El texto legal vive en `messages/es-MX.json` (claves `legal.terms.*` y `legal.privacy.*`) y se renderiza con `rich` para enlaces y énfasis.
+13. Páginas estáticas `app/(tienda)/terminos/page.tsx` y `app/(tienda)/privacidad/page.tsx` con `metadata` propia. Los enlaces en `SiteFooter` solo aparecen con `LEGAL_REVIEWED = true`.
+14. El texto legal vive en `messages/es-MX.json` (claves `legal.terms.*` y `legal.privacy.*`) y se renderiza con `rich`. Es un borrador redactado en la implementación para un comercio en línea de lentes en México conforme a la LFPDPPP: identidad del responsable con marcadores `[RAZÓN SOCIAL]`, `[DOMICILIO]` y `[CORREO DE CONTACTO]`, datos que se recaban (incluidos datos de salud: recetas), finalidades primarias y secundarias, derechos ARCO, transferencias (Supabase, Mercado Pago, PostHog, Sentry, Cloudflare) y cambios al aviso.
+15. `lib/legal.ts` exporta `LEGAL_REVIEWED = false`. Mientras sea `false`, ambas páginas muestran arriba un aviso "Borrador pendiente de revisión legal; no vigente", llevan `robots: { index: false }` y no se enlazan desde ningún lugar. Cambiarlo a `true` es una decisión del negocio tras la revisión.
 
 ## Interfaces & contracts
 
@@ -89,15 +90,13 @@ lentes-web:
 - [ ] Dado un registro sin campos opcionales, `phone` es `null` y `marketing_opt_in` es `false`.
 - [ ] Dado un registro exitoso, veo el modal "¡Listo!" con el aviso de correo de confirmación; "Continuar" me lleva a `next` o al home, y Escape lo cierra con el mismo destino.
 - [ ] El formulario no pide título ni fecha de nacimiento.
-- [ ] `/terminos` y `/privacidad` cargan con el texto del negocio y están enlazadas desde el registro y el pie.
+- [ ] Con `LEGAL_REVIEWED = false`, `/terminos` y `/privacidad` cargan con el aviso de borrador y `noindex`, y no hay enlaces a ellas ni casilla de marketing en el registro.
+- [ ] Con `LEGAL_REVIEWED = true`, desaparece el aviso, se quitan el `noindex`, aparecen los enlaces en el pie y el registro, y se muestra la casilla de marketing.
+- [ ] El borrador contiene los marcadores `[RAZÓN SOCIAL]`, `[DOMICILIO]` y `[CORREO DE CONTACTO]` en lugar de datos inventados.
 - [ ] El teléfono lleva `ph-no-capture`.
 - [ ] Ningún texto nuevo está fuera de `messages/es-MX.json`.
 
 ## Risks
 
 - Guardar datos en `raw_user_meta_data` los deja editables por el cliente vía Supabase; la fuente de verdad debe ser `customers` en lentes-api.
-- Publicar textos legales incompletos o desactualizados tiene consecuencias legales; solo se publica el texto que entregue el negocio.
-
-## Open questions
-
-- Falta el texto de Términos y del Aviso de privacidad. ¿Quién lo entrega y cuándo? El spec no puede aprobarse sin él.
+- Un borrador legal puede tener errores con consecuencias legales; `LEGAL_REVIEWED` debe quedar en `false` hasta el visto bueno de un abogado, y nadie debe cambiarlo como parte de otra tarea.
