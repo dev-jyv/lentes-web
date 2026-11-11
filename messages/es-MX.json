@@ -239,7 +239,9 @@
     "loading": "Cargando…",
     "viewMore": "Ver más",
     "choose": "Elegir",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "home": "Inicio",
+    "breadcrumbs": "Ruta de navegación"
   },
   "lenses": {
     "metaTitle": "Catálogo de lentes de contacto",
@@ -255,7 +257,8 @@
     "fromPrice": "Desde <price>{{price}}</price>",
     "soldOut": "Agotado",
     "colorCount_one": "{{count}} color",
-    "colorCount_other": "{{count}} colores"
+    "colorCount_other": "{{count}} colores",
+    "imageView": "{{name}}, vista {{view}}"
   },
   "frames": {
     "description": "Armazones de las mejores marcas: busca por forma, material, color y precio.",
@@ -263,13 +266,17 @@
     "noResults": "No encontramos armazones con esos filtros.",
     "metaDescription": "Armazón {{name}} de {{brand}}.",
     "measures": {
-      "lensWidth": "Ancho de lente",
+      "lensWidth": "Ancho de mica",
       "bridge": "Puente",
       "temple": "Varilla",
       "title": "Medidas",
-      "value": "{{value}} mm"
+      "value": "{{value}} mm",
+      "lensHeight": "Alto de mica",
+      "frameWidth": "Ancho total",
+      "weight": "Peso",
+      "weightValue": "{{value}} g",
+      "diagram": "Diagrama de dónde se mide el ancho de mica, el puente, la varilla y el alto de mica"
     },
-    "imageView": "{{name}}, vista {{view}}",
     "unavailable": "Este armazón no está disponible por ahora.",
     "addFailed": "No pudimos agregar al carrito. Intenta de nuevo.",
     "colorSoldOutTitle": "{{color}} (agotado)",
@@ -284,7 +291,30 @@
     "adding": "Agregando…",
     "addToCart": "Agregar al carrito",
     "deliveryNote": "Entrega estimada: {{time}}. Las micas se fabrican a medida; consulta la <link>política de cambios y devoluciones</link>.",
-    "comingSoon": "Muy pronto podrás comprarlo en línea."
+    "comingSoon": "Muy pronto podrás comprarlo en línea.",
+    "sizeHeading": "Talla {{size}}",
+    "offer": "Oferta",
+    "previousPrice": "Precio anterior:",
+    "includes": {
+      "title": "Qué incluye",
+      "warrantyMonths_one": "Garantía de {{count}} mes",
+      "warrantyMonths_other": "Garantía de {{count}} meses"
+    },
+    "features": {
+      "title": "Características",
+      "size": "Talla",
+      "gender": "Género",
+      "material": "Material",
+      "rim": "Aro",
+      "shape": "Forma",
+      "color": "Color",
+      "springHinges": "Bisagras de resorte",
+      "adjustableNosePads": "Plaquetas ajustables",
+      "progressiveEligible": "Apto para progresivos",
+      "yes": "Sí",
+      "no": "No"
+    },
+    "about": "Acerca de {{name}}"
   },
   "search": {
     "title": "Buscar",
@@ -570,6 +600,20 @@
       "pending": "En revisión",
       "approved": "Aprobada",
       "rejected": "Rechazada"
+    },
+    "frameSize": {
+      "small": "Chica",
+      "medium": "Mediana",
+      "large": "Grande"
+    },
+    "frameInclude": {
+      "case": "Estuche",
+      "cleaning_cloth": "Paño de limpieza",
+      "scratch_resistant": "Capa antirrayas",
+      "warranty": "Garantía",
+      "blue_light_filter": "Filtro de luz azul",
+      "anti_reflective": "Antirreflejante",
+      "optician_fitting": "Ajuste en óptica"
     }
   },
   "format": {

@@ -34,3 +34,7 @@ export const productHref = (p: { category: string; slug: string }) =>
 export function formatLeadTime(days: number): string {
   return days === 1 ? t("format.leadTime24h") : t("format.leadTimeDays", { days });
 }
+
+export const frameSizeLabel = t("labels.frameSize", { returnObjects: true });
+
+export const frameIncludeLabel = t("labels.frameInclude", { returnObjects: true });

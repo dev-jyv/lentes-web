@@ -1,17 +1,28 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { FrameSelector } from "@/components/tienda/frame-selector";
+import { BadgeCheck, MonitorSmartphone, Package, ShieldCheck, Sparkles, SunDim, Wrench } from "lucide-react";
+import { Breadcrumbs } from "@/components/tienda/breadcrumbs";
+import { FrameMeasuresDiagram } from "@/components/tienda/frame-measures-diagram";
+import { FrameSelection, FrameSelector, SelectedColor } from "@/components/tienda/frame-selector";
+import { ProductGallery } from "@/components/tienda/product-gallery";
 import { ProductViewTracker } from "@/components/tienda/product-view-tracker";
-import { Badge } from "@/components/ui/badge";
 import { getProduct } from "@/lib/api/generated/api";
+import type { FrameInclude } from "@/lib/api/generated/model";
 import { env } from "@/lib/env";
-import { frameMaterialLabel, genderLabel, productHref, rimLabel, shapeLabel } from "@/lib/format";
+import {
+  frameIncludeLabel, frameMaterialLabel, frameSizeLabel, genderLabel, pickKey, productHref, rimLabel, shapeLabel,
+} from "@/lib/format";
 import { imageSrc } from "@/lib/images";
 import { t } from "@/lib/i18n";
 import { FavoriteButton } from "@/components/tienda/favorite-button";
 
 type Props = { params: Promise<{ slug: string }> };
+
+const includeIcon: Record<FrameInclude, typeof Package> = {
+  case: Package, cleaning_cloth: Sparkles, scratch_resistant: ShieldCheck, warranty: BadgeCheck,
+  blue_light_filter: MonitorSmartphone, anti_reflective: SunDim, optician_fitting: Wrench,
+};
 
 async function load(slug: string) {
   const res = await getProduct(slug);
@@ -55,63 +66,113 @@ export default async function FramePage({ params }: Props) {
     }),
   };
   const { frame } = p;
+  const size = frame.size ? frameSizeLabel[frame.size] : undefined;
+  const mm = (value: number | null) => value != null && t("frames.measures.value", { value });
   const measures = [
-    { label: t("frames.measures.lensWidth"), value: frame.lens_width_mm },
-    { label: t("frames.measures.bridge"), value: frame.bridge_mm },
-    { label: t("frames.measures.temple"), value: frame.temple_mm },
-  ];
+    { label: t("frames.measures.lensWidth"), value: mm(frame.lens_width_mm) },
+    { label: t("frames.measures.bridge"), value: mm(frame.bridge_mm) },
+    { label: t("frames.measures.temple"), value: mm(frame.temple_mm) },
+    { label: t("frames.measures.lensHeight"), value: mm(frame.lens_height_mm) },
+    { label: t("frames.measures.frameWidth"), value: mm(frame.frame_width_mm) },
+    { label: t("frames.measures.weight"), value: frame.weight_g != null && t("frames.measures.weightValue", { value: frame.weight_g }) },
+  ].filter((m) => m.value);
+  // Valores que la API agregue antes que la web se omiten.
+  const includes = frame.includes.flatMap((i) => pickKey(frameIncludeLabel, i) ?? []);
+  const yesNo = (v: boolean | null) => v != null && t(v ? "frames.features.yes" : "frames.features.no");
+  const features = [
+    { label: t("frames.features.size"), value: size },
+    { label: t("frames.features.gender"), value: genderLabel[frame.gender] },
+    { label: t("frames.features.material"), value: frameMaterialLabel[frame.material] },
+    { label: t("frames.features.rim"), value: rimLabel[frame.rim] },
+    { label: t("frames.features.shape"), value: shapeLabel[frame.shape] },
+    { label: t("frames.features.color"), value: p.frame_variants.length > 0 && <SelectedColor variants={p.frame_variants} /> },
+    { label: t("frames.features.springHinges"), value: yesNo(frame.spring_hinges) },
+    { label: t("frames.features.adjustableNosePads"), value: yesNo(frame.adjustable_nose_pads) },
+    { label: t("frames.features.progressiveEligible"), value: yesNo(frame.progressive_eligible) },
+  ].filter((f) => f.value);
 
   return (
-    <div className="container-page grid gap-10 py-10 lg:grid-cols-2">
+    <div className="container-page space-y-6 py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <ProductViewTracker slug={p.slug} name={p.name} brand={p.brand.name} />
-      <div className="space-y-3">
-        <div className="relative aspect-square animate-iris overflow-hidden rounded-2xl bg-secondary">
-          {images[0] ? (
-            <Image src={images[0]} alt={p.name} fill unoptimized className="object-contain p-8" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{t("product.noImage")}</div>
-          )}
-        </div>
-        {images.length > 1 && (
-          <ul className="grid grid-cols-4 gap-3">
-            {images.slice(1).map((src, i) => (
-              <li key={src} className="relative aspect-square overflow-hidden rounded-xl bg-secondary">
-                <Image src={src} alt={t("frames.imageView", { name: p.name, view: i + 2 })} fill unoptimized className="object-contain p-2" />
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">{p.brand.name}</p>
-          <h1 className="text-3xl sm:text-4xl">{p.name}</h1>
-          <FavoriteButton productId={p.id} name={p.name} className="-ml-2" />
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{shapeLabel[frame.shape]}</Badge>
-            <Badge variant="secondary">{frameMaterialLabel[frame.material]}</Badge>
-            <Badge variant="secondary">{rimLabel[frame.rim]}</Badge>
-            <Badge variant="outline">{genderLabel[frame.gender]}</Badge>
+      <Breadcrumbs
+        items={[
+          { label: t("common.home"), href: "/" },
+          { label: t("common.frames"), href: "/armazones" },
+          { label: p.brand.name, href: `/marcas/${p.brand.slug}` },
+          { label: p.name },
+        ]}
+      />
+      <FrameSelection variants={p.frame_variants}>
+        <div className="grid gap-10 lg:grid-cols-2">
+          <ProductGallery images={images} alt={p.name} />
+          <div className="space-y-6">
+            <div className="space-y-1">
+              <Link href={`/marcas/${p.brand.slug}`} className="text-sm text-muted-foreground hover:text-foreground hover:underline">
+                {p.brand.name}
+              </Link>
+              <h1 className="text-3xl sm:text-4xl">{p.name}</h1>
+              <FavoriteButton productId={p.id} name={p.name} className="-ml-2" />
+              {size && <p className="text-muted-foreground">{t("frames.sizeHeading", { size: size.toLowerCase() })}</p>}
+            </div>
+            <FrameSelector product={p} />
+            {includes.length > 0 && (
+              <section aria-labelledby="incluye">
+                <h2 id="incluye" className="mb-3 text-base">{t("frames.includes.title")}</h2>
+                <ul className="grid gap-2 text-sm sm:grid-cols-2">
+                  {includes.map((i) => {
+                    const Icon = includeIcon[i];
+                    return (
+                      <li key={i} className="flex items-center gap-2">
+                        <Icon className="size-5 shrink-0 text-primary" aria-hidden="true" />
+                        {i === "warranty" && frame.warranty_months != null
+                          ? t("frames.includes.warrantyMonths", { count: frame.warranty_months })
+                          : frameIncludeLabel[i]}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            )}
           </div>
-          {p.description && <p className="text-muted-foreground">{p.description}</p>}
         </div>
-        <FrameSelector product={p} />
-        <section aria-labelledby="medidas">
-          <h2 id="medidas" className="mb-2 text-base">{t("frames.measures.title")}</h2>
-          <dl className="grid grid-cols-3 gap-3 text-sm">
-            {measures.map((m) => (
-              <div key={m.label} className="rounded-xl border p-3">
-                <dt className="text-muted-foreground">{m.label}</dt>
-                <dd className="optic font-medium">{t("frames.measures.value", { value: m.value })}</dd>
-              </div>
-            ))}
-          </dl>
+
+        <div className="grid gap-10 border-t pt-8 lg:grid-cols-2">
+          <section aria-labelledby="medidas" className="space-y-4">
+            <h2 id="medidas" className="text-base">{t("frames.measures.title")}</h2>
+            <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+              {measures.map((m) => (
+                <div key={m.label} className="rounded-xl border p-3">
+                  <dt className="text-muted-foreground">{m.label}</dt>
+                  <dd className="optic font-medium">{m.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <FrameMeasuresDiagram />
+          </section>
+          <section aria-labelledby="caracteristicas" className="space-y-4">
+            <h2 id="caracteristicas" className="text-base">{t("frames.features.title")}</h2>
+            <dl className="divide-y text-sm">
+              {features.map((f) => (
+                <div key={f.label} className="flex justify-between gap-4 py-2">
+                  <dt className="text-muted-foreground">{f.label}</dt>
+                  <dd className="font-medium">{f.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        </div>
+      </FrameSelection>
+
+      {p.description && (
+        <section aria-labelledby="acerca" className="space-y-2 border-t pt-8">
+          <h2 id="acerca" className="text-base">{t("frames.about", { name: p.name })}</h2>
+          <p className="max-w-prose text-muted-foreground">{p.description}</p>
         </section>
-      </div>
+      )}
     </div>
   );
 }
