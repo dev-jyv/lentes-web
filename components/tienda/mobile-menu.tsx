@@ -3,6 +3,7 @@
 import { ChevronDown, Menu } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { track } from "@/lib/analytics";
 import type { NavItem } from "@/lib/navigation";
@@ -68,6 +69,7 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
           <hr className="my-2" />
           <Link href="/cuenta/recetas" onClick={go("cuenta", "cuenta", t("nav.myPrescription"))} className={linkClass}>{t("nav.myPrescription")}</Link>
           <Link href="/cuenta" onClick={go("cuenta", "cuenta", t("account.title"))} className={linkClass}>{t("account.title")}</Link>
+          <ThemeToggle />
         </nav>
       </SheetContent>
     </Sheet>

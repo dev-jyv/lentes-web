@@ -28,7 +28,27 @@
       "failed": "No se pudo crear la cuenta. Intenta de nuevo.",
       "checkEmail": "Revisa tu correo para confirmar tu cuenta.",
       "fullName": "Nombre completo",
-      "haveAccount": "¿Ya tienes cuenta? <link>Inicia sesión</link>"
+      "haveAccount": "¿Ya tienes cuenta? <link>Inicia sesión</link>",
+      "socialTitle": "Regístrate con…",
+      "orEmail": "O regístrate con tu correo",
+      "requiredNote": "*Información obligatoria",
+      "fullNameRequired": "Nombre completo*",
+      "emailRequired": "Correo*",
+      "passwordRequired": "Contraseña*",
+      "phone": "Teléfono (opcional)",
+      "phonePrefix": "+52",
+      "phonePrefixLabel": "Lada de México",
+      "strength": "Seguridad: {{level}}",
+      "strengthLevels": [
+        "débil",
+        "media",
+        "fuerte"
+      ],
+      "marketing": "Quiero recibir promociones y novedades de {{brand}}. Consulta los <terms>Términos</terms> y el <privacy>Aviso de privacidad</privacy>.",
+      "legalNote": "Al crear tu cuenta aceptas los <terms>Términos</terms> y el <privacy>Aviso de privacidad</privacy>.",
+      "successTitle": "¡Listo!",
+      "successBody": "Te damos la bienvenida a {{brand}}. Te enviamos un correo para confirmar tu cuenta.",
+      "continue": "Continuar"
     },
     "newPassword": {
       "title": "Nueva contraseña",
@@ -39,15 +59,27 @@
     "wrongCredentials": "Correo o contraseña incorrectos.",
     "email": "Correo",
     "password": "Contraseña",
-    "forgotPassword": "Olvidé mi contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
     "continueWithGoogle": "Continuar con Google",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "showPassword": "Mostrar contraseña",
+    "orContinueWith": "O entra con",
+    "noAccount": "¿No tienes cuenta? <link>Regístrate</link>",
+    "tabs": {
+      "title": "Accede a tu cuenta",
+      "label": "Acceso o registro",
+      "login": "Iniciar sesión",
+      "register": "Soy nuevo"
+    }
   },
   "account": {
     "title": "Mi cuenta",
     "orders": "Mis pedidos",
     "prescriptions": "Mis recetas",
-    "uploadPrescription": "Subir una receta"
+    "uploadPrescription": "Subir una receta",
+    "greeting": "Hola de nuevo",
+    "greetingName": "Hola de nuevo, {{name}}",
+    "signOutError": "No pudimos cerrar tu sesión. Inténtalo de nuevo."
   },
   "reorder": {
     "metaTitle": "Recompra",
@@ -207,7 +239,9 @@
     "loading": "Cargando…",
     "viewMore": "Ver más",
     "choose": "Elegir",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "home": "Inicio",
+    "breadcrumbs": "Ruta de navegación"
   },
   "lenses": {
     "metaTitle": "Catálogo de lentes de contacto",
@@ -215,7 +249,31 @@
     "loadFailed": "No pudimos cargar los lentes. Intenta de nuevo en unos minutos.",
     "metaDescription": "Compra {{name}} de {{brand}}.",
     "piecesPerBox": "{{count}} piezas por caja",
-    "requiresPrescription": "Requiere receta vigente de tu optometrista."
+    "requiresPrescription": "Requiere receta vigente de tu optometrista.",
+    "breadcrumb": "Lentes de contacto",
+    "manufacturer": "Fabricante: {{name}}",
+    "pricePerBox": "<price>{{price}}</price> por caja",
+    "fromPricePerBox": "Desde <price>{{price}}</price> por caja",
+    "packaging_one": "{{replacement}}, {{count}} pieza por caja",
+    "packaging_other": "{{replacement}}, {{count}} piezas por caja",
+    "detailsTitle": "Detalles del lente",
+    "aboutTitle": "Acerca de {{name}}",
+    "allFromBrand": "Ver todos los lentes de {{brand}}",
+    "yes": "Sí",
+    "no": "No",
+    "waterContentValue": "{{value}} %",
+    "details": {
+      "lensType": "Tipo de lente",
+      "replacement": "Reemplazo",
+      "piecesPerBox": "Piezas por caja",
+      "material": "Material",
+      "waterContent": "Contenido de agua",
+      "uvBlocking": "Bloqueo UV",
+      "visibilityTint": "Tinte de visibilidad",
+      "packageNote": "Empaque",
+      "brand": "Marca",
+      "manufacturer": "Fabricante"
+    }
   },
   "product": {
     "metaTitle": "{{name}} | {{brand}}",
@@ -223,7 +281,8 @@
     "fromPrice": "Desde <price>{{price}}</price>",
     "soldOut": "Agotado",
     "colorCount_one": "{{count}} color",
-    "colorCount_other": "{{count}} colores"
+    "colorCount_other": "{{count}} colores",
+    "imageView": "{{name}}, vista {{view}}"
   },
   "frames": {
     "description": "Armazones de las mejores marcas: busca por forma, material, color y precio.",
@@ -231,13 +290,17 @@
     "noResults": "No encontramos armazones con esos filtros.",
     "metaDescription": "Armazón {{name}} de {{brand}}.",
     "measures": {
-      "lensWidth": "Ancho de lente",
+      "lensWidth": "Ancho de mica",
       "bridge": "Puente",
       "temple": "Varilla",
       "title": "Medidas",
-      "value": "{{value}} mm"
+      "value": "{{value}} mm",
+      "lensHeight": "Alto de mica",
+      "frameWidth": "Ancho total",
+      "weight": "Peso",
+      "weightValue": "{{value}} g",
+      "diagram": "Diagrama de dónde se mide el ancho de mica, el puente, la varilla y el alto de mica"
     },
-    "imageView": "{{name}}, vista {{view}}",
     "unavailable": "Este armazón no está disponible por ahora.",
     "addFailed": "No pudimos agregar al carrito. Intenta de nuevo.",
     "colorSoldOutTitle": "{{color}} (agotado)",
@@ -252,7 +315,30 @@
     "adding": "Agregando…",
     "addToCart": "Agregar al carrito",
     "deliveryNote": "Entrega estimada: {{time}}. Las micas se fabrican a medida; consulta la <link>política de cambios y devoluciones</link>.",
-    "comingSoon": "Muy pronto podrás comprarlo en línea."
+    "comingSoon": "Muy pronto podrás comprarlo en línea.",
+    "sizeHeading": "Talla {{size}}",
+    "offer": "Oferta",
+    "previousPrice": "Precio anterior:",
+    "includes": {
+      "title": "Qué incluye",
+      "warrantyMonths_one": "Garantía de {{count}} mes",
+      "warrantyMonths_other": "Garantía de {{count}} meses"
+    },
+    "features": {
+      "title": "Características",
+      "size": "Talla",
+      "gender": "Género",
+      "material": "Material",
+      "rim": "Aro",
+      "shape": "Forma",
+      "color": "Color",
+      "springHinges": "Bisagras de resorte",
+      "adjustableNosePads": "Plaquetas ajustables",
+      "progressiveEligible": "Apto para progresivos",
+      "yes": "Sí",
+      "no": "No"
+    },
+    "about": "Acerca de {{name}}"
   },
   "search": {
     "title": "Buscar",
@@ -261,7 +347,17 @@
     "failed": "No pudimos completar la búsqueda. Intenta de nuevo en unos minutos.",
     "empty": "No encontramos productos. Prueba en <frames>Armazones</frames> o en <lenses>Lentes de contacto</lenses>.",
     "label": "Buscar productos",
-    "placeholder": "Buscar marca o modelo"
+    "placeholder": "Buscar marca o modelo",
+    "clear": "Borrar búsqueda",
+    "suggestions": "Sugerencias de búsqueda",
+    "suggested": "Búsquedas sugeridas",
+    "featured": "Sugeridos para ti",
+    "liveResults": "Resultados",
+    "noResults": "Sin resultados para «{{q}}»",
+    "unavailable": "No pudimos buscar ahora",
+    "recommended": "Recomendado",
+    "resultCount_one": "{{count}} resultado",
+    "resultCount_other": "{{count}} resultados"
   },
   "home": {
     "promises": {
@@ -287,12 +383,9 @@
     "promisesLabel": "Promesas",
     "viewAll": "Ver todo",
     "categoriesLabel": "Categorías",
-    "framesBlurb": "Busca por forma, material, color y precio.",
-    "lensesBlurb": "Diarios, mensuales, para astigmatismo y más.",
     "byShape": "Comprar armazones por forma",
     "byPrice": "Comprar armazones por precio",
     "featuredFrames": "Armazones destacados",
-    "buyLenses": "Comprar lentes de contacto",
     "featuredLenses": "Lentes de contacto destacados",
     "promotionsLabel": "Promociones",
     "viewAllBrands": "Ver todas",
@@ -302,7 +395,16 @@
       "samplePower": "PWR −2.75",
       "sampleBaseCurve": "BC 8.6",
       "sampleDiameter": "DIA 14.2"
-    }
+    },
+    "photos": {
+      "frames": "Mujer sonriente con armazón negro",
+      "lenses": "Acercamiento de un ojo café de perfil",
+      "spherical": "Acercamiento de unos ojos azules mirando a un lado",
+      "toric": "Acercamiento de un ojo azul mirando al frente",
+      "multifocal": "Mujer con lentes leyendo un libro"
+    },
+    "reorderBlock": "Repón en un clic",
+    "reorderBlockSub": "Repite un pedido sin volver a capturar tu graduación."
   },
   "validation": {
     "invalidEmail": "Correo no válido",
@@ -384,8 +486,10 @@
       "sameBoth": "Misma graduación en ambos ojos",
       "baseCurve": "Curva base",
       "diameter": "Diámetro",
-      "boxesPerEye": "Cajas por ojo",
-      "specs": "Curva base {{baseCurves}} · Diámetro {{diameters}} mm"
+      "specs": "Curva base {{baseCurves}} · Diámetro {{diameters}} mm",
+      "boxes": "Cajas",
+      "subtotal": "Subtotal",
+      "partialAdded": "Agregamos el ojo derecho, pero no pudimos agregar el ojo izquierdo. Intenta de nuevo."
     }
   },
   "theme": {
@@ -409,6 +513,7 @@
     "menu": "Menú",
     "mobileLabel": "Menú móvil",
     "myPrescription": "Mi receta",
+    "signIn": "Iniciar sesión",
     "home": "{{brand}}, inicio",
     "allFrames": "Ver todos los armazones",
     "forWomen": "Para mujer",
@@ -440,7 +545,9 @@
   },
   "footer": {
     "copyright": "© {{year}} {{brand}}. Armazones y lentes de contacto en México.",
-    "label": "Pie"
+    "label": "Pie",
+    "terms": "Términos",
+    "privacy": "Aviso de privacidad"
   },
   "labels": {
     "lensType": {
@@ -519,10 +626,180 @@
       "pending": "En revisión",
       "approved": "Aprobada",
       "rejected": "Rechazada"
+    },
+    "frameSize": {
+      "small": "Chica",
+      "medium": "Mediana",
+      "large": "Grande"
+    },
+    "frameInclude": {
+      "case": "Estuche",
+      "cleaning_cloth": "Paño de limpieza",
+      "scratch_resistant": "Capa antirrayas",
+      "warranty": "Garantía",
+      "blue_light_filter": "Filtro de luz azul",
+      "anti_reflective": "Antirreflejante",
+      "optician_fitting": "Ajuste en óptica"
     }
   },
   "format": {
     "leadTime24h": "24 horas",
-    "leadTimeDays": "{{days}} días"
+    "leadTimeDays": "{{days}} días",
+    "quantity": "{{count}}× "
+  },
+  "legal": {
+    "draftNotice": "Borrador pendiente de revisión legal; no vigente.",
+    "terms": {
+      "title": "Términos y condiciones",
+      "description": "Condiciones de uso de la tienda en línea y de compra de armazones y lentes de contacto.",
+      "sections": [
+        {
+          "title": "1. Quiénes somos",
+          "body": [
+            "Esta tienda en línea, que opera bajo la marca {{brand}}, pertenece a <b>[RAZÓN SOCIAL]</b>, con domicilio en [DOMICILIO]. Puedes escribirnos a [CORREO DE CONTACTO].",
+            "Al usar el sitio o hacer una compra aceptas estos términos. Si no estás de acuerdo, no uses el sitio."
+          ]
+        },
+        {
+          "title": "2. Tu cuenta",
+          "body": [
+            "Para comprar necesitas una cuenta con un correo válido. Eres responsable de mantener tu contraseña en secreto y de la actividad que ocurra en tu cuenta.",
+            "Los datos que nos des deben ser verdaderos y estar actualizados. Podemos suspender una cuenta que se use de forma fraudulenta o contraria a estos términos."
+          ]
+        },
+        {
+          "title": "3. Receta y uso de los productos",
+          "body": [
+            "Los lentes de contacto y las micas graduadas requieren una receta vigente expedida por un profesional de la salud visual. Revisamos tu receta antes de surtir o fabricar tu pedido.",
+            "Si no podemos aprobar tu receta, no fabricamos ni enviamos el pedido y te reembolsamos.",
+            "La información del sitio no sustituye la consulta con tu optometrista u oftalmólogo. Usa tus lentes según sus indicaciones y las del fabricante."
+          ]
+        },
+        {
+          "title": "4. Precios y pagos",
+          "body": [
+            "Los precios se muestran en pesos mexicanos y pueden cambiar sin previo aviso; se respeta el precio que aparece al confirmar tu pedido.",
+            "Los pagos se procesan a través de Mercado Pago. Tu pedido se confirma cuando el pago queda aprobado."
+          ]
+        },
+        {
+          "title": "5. Envíos",
+          "body": [
+            "Enviamos a domicilios dentro de México. Los tiempos de entrega son estimados y pueden variar por causas ajenas a nosotros, como la paquetería."
+          ]
+        },
+        {
+          "title": "6. Cambios y devoluciones",
+          "body": [
+            "Los cambios y devoluciones se rigen por nuestra política de cambios y devoluciones publicada en el sitio. Las micas fabricadas con tu receta no tienen devolución, salvo por defecto de fabricación o error de la tienda."
+          ]
+        },
+        {
+          "title": "7. Propiedad intelectual",
+          "body": [
+            "Los textos, imágenes, logotipos y demás contenido del sitio pertenecen a [RAZÓN SOCIAL] o a sus respectivos titulares y no pueden usarse sin autorización."
+          ]
+        },
+        {
+          "title": "8. Responsabilidad",
+          "body": [
+            "Hacemos lo posible por que la información de los productos sea correcta. No somos responsables por daños derivados de un uso de los productos distinto del indicado por tu profesional de la salud visual o por el fabricante."
+          ]
+        },
+        {
+          "title": "9. Cambios a estos términos",
+          "body": [
+            "Podemos actualizar estos términos. La versión vigente es la publicada en esta página; los cambios no afectan pedidos ya confirmados."
+          ]
+        },
+        {
+          "title": "10. Ley aplicable",
+          "body": [
+            "Estos términos se rigen por las leyes de los Estados Unidos Mexicanos, incluida la Ley Federal de Protección al Consumidor. Como consumidor, puedes acudir a la Procuraduría Federal del Consumidor (Profeco)."
+          ]
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Aviso de privacidad",
+      "description": "Cómo tratamos tus datos personales conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.",
+      "sections": [
+        {
+          "title": "1. Responsable",
+          "body": [
+            "<b>[RAZÓN SOCIAL]</b>, con domicilio en [DOMICILIO], es responsable del tratamiento de tus datos personales conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares. Para cualquier asunto relacionado con este aviso, escríbenos a [CORREO DE CONTACTO]."
+          ]
+        },
+        {
+          "title": "2. Datos que recabamos",
+          "body": [
+            "<b>Identificación y contacto:</b> nombre, correo electrónico y, si nos lo das, teléfono.",
+            "<b>Envío:</b> domicilio de entrega, nombre de quien recibe y teléfono de contacto.",
+            "<b>Pago:</b> los datos de tu tarjeta los recibe y procesa Mercado Pago; nosotros solo conservamos el estado y la referencia del pago.",
+            "<b>Datos de salud:</b> tu receta (graduación, imagen o archivo de la receta y nombre de quien la expidió). Son datos personales sensibles.",
+            "<b>Navegación:</b> datos técnicos y de uso del sitio, como páginas visitadas, dispositivo y errores."
+          ]
+        },
+        {
+          "title": "3. Datos sensibles",
+          "body": [
+            "Tratamos tus datos de salud únicamente para revisar tu receta y surtir o fabricar tus lentes, y solo con tu consentimiento expreso. Aplicamos medidas de seguridad reforzadas y no los usamos para fines de mercadotecnia."
+          ]
+        },
+        {
+          "title": "4. Finalidades primarias",
+          "body": [
+            "Usamos tus datos para: crear y administrar tu cuenta; procesar tus pedidos y pagos; revisar tu receta; fabricar, surtir y enviar tus productos; atender cambios, devoluciones y aclaraciones; enviarte avisos sobre tu cuenta y tus pedidos, y cumplir obligaciones legales."
+          ]
+        },
+        {
+          "title": "5. Finalidades secundarias",
+          "body": [
+            "Si lo aceptas, usaremos tu nombre, correo y teléfono para enviarte promociones y novedades. También usamos datos de navegación para medir y mejorar el sitio.",
+            "Estas finalidades no son necesarias para comprar. Puedes negarte en cualquier momento escribiendo a [CORREO DE CONTACTO], sin que eso afecte tus pedidos."
+          ]
+        },
+        {
+          "title": "6. Con quién compartimos tus datos",
+          "body": [
+            "Para operar la tienda, proveedores que actúan por nuestra cuenta tratan tus datos solo para prestarnos su servicio: Supabase (autenticación y base de datos), Mercado Pago (pagos), PostHog (analítica del sitio; las secciones con tu receta y tus direcciones no se graban), Sentry (registro de errores), Cloudflare (alojamiento, seguridad y almacenamiento de archivos) y la empresa de paquetería que entrega tu pedido.",
+            "Algunos de estos proveedores pueden tratar los datos fuera de México. No vendemos tus datos. Solo los compartiremos con autoridades cuando una ley o una orden competente lo exija."
+          ]
+        },
+        {
+          "title": "7. Derechos ARCO y revocación del consentimiento",
+          "body": [
+            "Tienes derecho a acceder a tus datos, rectificarlos, cancelarlos u oponerte a su tratamiento (derechos ARCO), así como a revocar tu consentimiento y a limitar su uso o divulgación.",
+            "Envía tu solicitud a [CORREO DE CONTACTO] con tu nombre, un medio para responderte, un documento que acredite tu identidad (o la de tu representante) y la descripción clara de lo que pides. Te responderemos en los plazos que establece la ley."
+          ]
+        },
+        {
+          "title": "8. Cookies y tecnologías similares",
+          "body": [
+            "Usamos cookies para mantener tu sesión y tu carrito, y herramientas de analítica para entender cómo se usa el sitio. Puedes bloquear las cookies en tu navegador, aunque algunas funciones podrían dejar de funcionar."
+          ]
+        },
+        {
+          "title": "9. Cambios a este aviso",
+          "body": [
+            "Podemos actualizar este aviso por cambios legales o en nuestros servicios. La versión vigente es la publicada en esta página."
+          ]
+        }
+      ]
+    }
+  },
+  "favorites": {
+    "title": "Mis favoritos",
+    "titleWithCount": "Mis favoritos ({{count}})",
+    "link": "Favoritos",
+    "linkWithCount_one": "Favoritos, {{count}} producto",
+    "linkWithCount_other": "Favoritos, {{count}} productos",
+    "toggle": "Guardar {{name}} en favoritos",
+    "remove": "Quitar {{name}} de favoritos",
+    "empty": "Aún no tienes favoritos",
+    "browseFrames": "Ver armazones",
+    "viewAll": "Ver mis favoritos",
+    "saveFailed": "No pudimos actualizar tus favoritos. Intenta de nuevo.",
+    "loadFailed": "No pudimos cargar tus favoritos. Intenta de nuevo."
   }
 }

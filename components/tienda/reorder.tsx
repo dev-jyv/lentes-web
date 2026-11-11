@@ -10,6 +10,7 @@ import { getGetCartQueryKey, reorderOrder, useGetOrder } from "@/lib/api/generat
 import type { UnavailableItem } from "@/lib/api/generated/model";
 import { formatMxn } from "@/lib/format";
 import { t } from "@/lib/i18n";
+import { orderFolio } from "@/lib/order";
 import { rich } from "@/lib/rich";
 
 const eyeLabel = { right: t("cart.rightEye"), left: t("cart.leftEye"), both: t("cart.bothEyes") } as const;
@@ -51,7 +52,7 @@ export function Reorder({ orderId }: { orderId: string }) {
       <div>
         <h1 className="text-2xl">{t("reorder.title")}</h1>
         <p className="text-sm text-muted-foreground">
-          {t("reorder.note", { folio: `LC-${String(order.number).padStart(6, "0")}` })}
+          {t("reorder.note", { folio: orderFolio(order.number) })}
         </p>
       </div>
       <ul className="divide-y rounded-lg border">

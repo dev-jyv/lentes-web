@@ -60,6 +60,7 @@ import type {
   AdminSetHomeFeatured200,
   AdminSetHomeFeaturedBody,
   AdminVariant,
+  AuthSession,
   Brand,
   BrandInput,
   Cart,
@@ -70,6 +71,8 @@ import type {
   CheckoutResult,
   Customer,
   CustomerUpdate,
+  Favorite,
+  FavoriteMergeInput,
   GetCatalogFacetsParams,
   GetHealth200,
   GetProductVariantParams,
@@ -84,13 +87,16 @@ import type {
   ListAddresses200,
   ListBrands200,
   ListBrandsParams,
+  ListFavorites200,
   ListMyOrders200,
   ListMyOrdersParams,
   ListPrescriptions200,
   ListProducts200,
   ListProductsParams,
+  LoginInput,
   MercadoPagoWebhookBody,
   MercadoPagoWebhookParams,
+  MergeFavorites200,
   Order,
   OrderUpdate,
   Prescription,
@@ -250,6 +256,308 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
 
 
 
+
+export type loginResponse200 = {
+  data: AuthSession
+  status: 200
+}
+
+export type loginResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type loginResponse401 = {
+  data: ProblemResponse
+  status: 401
+}
+
+export type loginResponse503 = {
+  data: ProblemResponse
+  status: 503
+}
+
+export type loginResponseSuccess = (loginResponse200) & {
+  headers: Headers;
+};
+export type loginResponseError = (loginResponse400 | loginResponse401 | loginResponse503) & {
+  headers: Headers;
+};
+
+export type loginResponse = (loginResponseSuccess | loginResponseError)
+
+export const getLoginUrl = () => {
+
+
+
+
+  return `/v1/auth/login`
+}
+
+/**
+ * Devuelve el access token en el cuerpo (el cliente lo guarda en memoria y lo manda como Bearer) y deja el refresh token en una cookie httpOnly limitada a `/v1/auth`.
+ * @summary Inicia sesión con correo y contraseña (Supabase Auth vía backend)
+ */
+export const login = async (loginInput: LoginInput, options?: Parameters<typeof apiFetch>[1]): Promise<loginResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<loginResponse>(getLoginUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(loginInput)
+  }
+);}
+
+
+
+
+
+export const getLoginMutationKey = () => ['login'] as const;
+
+export const getLoginMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,LoginMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,LoginMutationVariables, TContext> => {
+
+const mutationKey = getLoginMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof login>>, LoginMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  login(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LoginMutationResult = NonNullable<Awaited<ReturnType<typeof login>>>
+    export type LoginMutationBody = LoginInput
+    export type LoginMutationError = ProblemResponse
+    export type LoginMutationVariables = {data: LoginInput}
+
+    /**
+ * @summary Inicia sesión con correo y contraseña (Supabase Auth vía backend)
+ */
+export const useLogin = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,LoginMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof login>>,
+        TError,
+        LoginMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLoginMutationOptions(options), queryClient);
+    }
+
+export type refreshSessionResponse200 = {
+  data: AuthSession
+  status: 200
+}
+
+export type refreshSessionResponse401 = {
+  data: ProblemResponse
+  status: 401
+}
+
+export type refreshSessionResponse503 = {
+  data: ProblemResponse
+  status: 503
+}
+
+export type refreshSessionResponseSuccess = (refreshSessionResponse200) & {
+  headers: Headers;
+};
+export type refreshSessionResponseError = (refreshSessionResponse401 | refreshSessionResponse503) & {
+  headers: Headers;
+};
+
+export type refreshSessionResponse = (refreshSessionResponseSuccess | refreshSessionResponseError)
+
+export const getRefreshSessionUrl = () => {
+
+
+
+
+  return `/v1/auth/refresh`
+}
+
+/**
+ * @summary Renueva el access token con la cookie de refresh (y la rota)
+ */
+export const refreshSession = async ( options?: Parameters<typeof apiFetch>[1]): Promise<refreshSessionResponse> => {
+
+  return apiFetch<refreshSessionResponse>(getRefreshSessionUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRefreshSessionMutationKey = () => ['refreshSession'] as const;
+
+export const getRefreshSessionMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshSession>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshSession>>, TError,void, TContext> => {
+
+const mutationKey = getRefreshSessionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshSession>>, void> = () => {
+
+
+          return  refreshSession(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RefreshSessionMutationResult = NonNullable<Awaited<ReturnType<typeof refreshSession>>>
+
+    export type RefreshSessionMutationError = ProblemResponse
+
+
+    /**
+ * @summary Renueva el access token con la cookie de refresh (y la rota)
+ */
+export const useRefreshSession = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshSession>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof refreshSession>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRefreshSessionMutationOptions(options), queryClient);
+    }
+
+export type logoutResponse204 = {
+  data: void
+  status: 204
+}
+
+export type logoutResponseSuccess = (logoutResponse204) & {
+  headers: Headers;
+};
+;
+
+export type logoutResponse = (logoutResponseSuccess)
+
+export const getLogoutUrl = () => {
+
+
+
+
+  return `/v1/auth/logout`
+}
+
+/**
+ * @summary Cierra la sesión, revoca el refresh token y borra la cookie
+ */
+export const logout = async ( options?: Parameters<typeof apiFetch>[1]): Promise<logoutResponse> => {
+
+  return apiFetch<logoutResponse>(getLogoutUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getLogoutMutationKey = () => ['logout'] as const;
+
+export const getLogoutMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext> => {
+
+const mutationKey = getLogoutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logout>>, void> = () => {
+
+
+          return  logout(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutMutationResult = NonNullable<Awaited<ReturnType<typeof logout>>>
+
+    export type LogoutMutationError = unknown
+
+
+    /**
+ * @summary Cierra la sesión, revoca el refresh token y borra la cookie
+ */
+export const useLogout = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof logout>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLogoutMutationOptions(options), queryClient);
+    }
 
 export type listProductsResponse200 = {
   data: ListProducts200
@@ -2180,6 +2488,428 @@ export const useDeleteAddress = <TError = ProblemResponse,
         TContext
       > => {
       return useMutation(getDeleteAddressMutationOptions(options), queryClient);
+    }
+
+export type listFavoritesResponse200 = {
+  data: ListFavorites200
+  status: 200
+}
+
+export type listFavoritesResponseSuccess = (listFavoritesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listFavoritesResponse = (listFavoritesResponseSuccess)
+
+export const getListFavoritesUrl = () => {
+
+
+
+
+  return `/v1/me/favorites`
+}
+
+/**
+ * Del más reciente al más antiguo. No incluye productos desactivados.
+ * @summary Favoritos del cliente
+ */
+export const listFavorites = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listFavoritesResponse> => {
+
+  return apiFetch<listFavoritesResponse>(getListFavoritesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListFavoritesQueryKey = () => {
+    return [
+    `/v1/me/favorites`
+    ] as const;
+    }
+
+
+export const getListFavoritesQueryOptions = <TData = Awaited<ReturnType<typeof listFavorites>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListFavoritesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listFavorites>>> = ({ signal }) => listFavorites({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListFavoritesQueryResult = NonNullable<Awaited<ReturnType<typeof listFavorites>>>
+export type ListFavoritesQueryError = unknown
+
+
+export function useListFavorites<TData = Awaited<ReturnType<typeof listFavorites>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFavorites>>,
+          TError,
+          Awaited<ReturnType<typeof listFavorites>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFavorites<TData = Awaited<ReturnType<typeof listFavorites>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFavorites>>,
+          TError,
+          Awaited<ReturnType<typeof listFavorites>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFavorites<TData = Awaited<ReturnType<typeof listFavorites>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Favoritos del cliente
+ */
+
+export function useListFavorites<TData = Awaited<ReturnType<typeof listFavorites>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListFavoritesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type mergeFavoritesResponse200 = {
+  data: MergeFavorites200
+  status: 200
+}
+
+export type mergeFavoritesResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type mergeFavoritesResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type mergeFavoritesResponseSuccess = (mergeFavoritesResponse200) & {
+  headers: Headers;
+};
+export type mergeFavoritesResponseError = (mergeFavoritesResponse400 | mergeFavoritesResponse409) & {
+  headers: Headers;
+};
+
+export type mergeFavoritesResponse = (mergeFavoritesResponseSuccess | mergeFavoritesResponseError)
+
+export const getMergeFavoritesUrl = () => {
+
+
+
+
+  return `/v1/me/favorites/merge`
+}
+
+/**
+ * Agrega hasta 50 productos y devuelve la lista completa. Ignora duplicados y productos inexistentes o
+ * desactivados; un favorito que ya existía conserva su `added_at` (el más antiguo).
+ * `409` si se rebasa el límite de 200 favoritos: entonces no se agrega ninguno.
+ * @summary Fusiona los favoritos guardados sin sesión
+ */
+export const mergeFavorites = async (favoriteMergeInput: FavoriteMergeInput, options?: Parameters<typeof apiFetch>[1]): Promise<mergeFavoritesResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<mergeFavoritesResponse>(getMergeFavoritesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(favoriteMergeInput)
+  }
+);}
+
+
+
+
+
+export const getMergeFavoritesMutationKey = () => ['mergeFavorites'] as const;
+
+export const getMergeFavoritesMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mergeFavorites>>, TError,MergeFavoritesMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mergeFavorites>>, TError,MergeFavoritesMutationVariables, TContext> => {
+
+const mutationKey = getMergeFavoritesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mergeFavorites>>, MergeFavoritesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  mergeFavorites(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MergeFavoritesMutationResult = NonNullable<Awaited<ReturnType<typeof mergeFavorites>>>
+    export type MergeFavoritesMutationBody = FavoriteMergeInput
+    export type MergeFavoritesMutationError = ProblemResponse
+    export type MergeFavoritesMutationVariables = {data: FavoriteMergeInput}
+
+    /**
+ * @summary Fusiona los favoritos guardados sin sesión
+ */
+export const useMergeFavorites = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mergeFavorites>>, TError,MergeFavoritesMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mergeFavorites>>,
+        TError,
+        MergeFavoritesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMergeFavoritesMutationOptions(options), queryClient);
+    }
+
+export type addFavoriteResponse200 = {
+  data: Favorite
+  status: 200
+}
+
+export type addFavoriteResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type addFavoriteResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type addFavoriteResponseSuccess = (addFavoriteResponse200) & {
+  headers: Headers;
+};
+export type addFavoriteResponseError = (addFavoriteResponse404 | addFavoriteResponse409) & {
+  headers: Headers;
+};
+
+export type addFavoriteResponse = (addFavoriteResponseSuccess | addFavoriteResponseError)
+
+export const getAddFavoriteUrl = (productId: string,) => {
+
+
+
+
+  return `/v1/me/favorites/${productId}`
+}
+
+/**
+ * Idempotente: si ya era favorito devuelve el mismo `added_at`. `404` si el producto no existe o está desactivado.
+ * `409` si el cliente ya tiene 200 favoritos (el `detail` en español se muestra al cliente).
+ * @summary Marca un producto como favorito
+ */
+export const addFavorite = async (productId: string, options?: Parameters<typeof apiFetch>[1]): Promise<addFavoriteResponse> => {
+
+  return apiFetch<addFavoriteResponse>(getAddFavoriteUrl(productId),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getAddFavoriteMutationKey = () => ['addFavorite'] as const;
+
+export const getAddFavoriteMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addFavorite>>, TError,AddFavoriteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addFavorite>>, TError,AddFavoriteMutationVariables, TContext> => {
+
+const mutationKey = getAddFavoriteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addFavorite>>, AddFavoriteMutationVariables> = (props) => {
+          const {productId} = props ?? {};
+
+          return  addFavorite(productId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddFavoriteMutationResult = NonNullable<Awaited<ReturnType<typeof addFavorite>>>
+
+    export type AddFavoriteMutationError = ProblemResponse
+    export type AddFavoriteMutationVariables = {productId: string}
+
+    /**
+ * @summary Marca un producto como favorito
+ */
+export const useAddFavorite = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addFavorite>>, TError,AddFavoriteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof addFavorite>>,
+        TError,
+        AddFavoriteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAddFavoriteMutationOptions(options), queryClient);
+    }
+
+export type removeFavoriteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type removeFavoriteResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type removeFavoriteResponseSuccess = (removeFavoriteResponse204) & {
+  headers: Headers;
+};
+export type removeFavoriteResponseError = (removeFavoriteResponse404) & {
+  headers: Headers;
+};
+
+export type removeFavoriteResponse = (removeFavoriteResponseSuccess | removeFavoriteResponseError)
+
+export const getRemoveFavoriteUrl = (productId: string,) => {
+
+
+
+
+  return `/v1/me/favorites/${productId}`
+}
+
+/**
+ * @summary Quita un favorito
+ */
+export const removeFavorite = async (productId: string, options?: Parameters<typeof apiFetch>[1]): Promise<removeFavoriteResponse> => {
+
+  return apiFetch<removeFavoriteResponse>(getRemoveFavoriteUrl(productId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveFavoriteMutationKey = () => ['removeFavorite'] as const;
+
+export const getRemoveFavoriteMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeFavorite>>, TError,RemoveFavoriteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeFavorite>>, TError,RemoveFavoriteMutationVariables, TContext> => {
+
+const mutationKey = getRemoveFavoriteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeFavorite>>, RemoveFavoriteMutationVariables> = (props) => {
+          const {productId} = props ?? {};
+
+          return  removeFavorite(productId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveFavoriteMutationResult = NonNullable<Awaited<ReturnType<typeof removeFavorite>>>
+
+    export type RemoveFavoriteMutationError = ProblemResponse
+    export type RemoveFavoriteMutationVariables = {productId: string}
+
+    /**
+ * @summary Quita un favorito
+ */
+export const useRemoveFavorite = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeFavorite>>, TError,RemoveFavoriteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removeFavorite>>,
+        TError,
+        RemoveFavoriteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveFavoriteMutationOptions(options), queryClient);
     }
 
 export type createCheckoutResponse201 = {

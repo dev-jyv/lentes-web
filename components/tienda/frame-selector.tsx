@@ -3,7 +3,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { createContext, use, useState, type ReactNode } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { addCartItem, getGetCartQueryKey } from "@/lib/api/generated/api";
 import type { FrameVariant, ProductDetail } from "@/lib/api/generated/model";
@@ -19,18 +20,36 @@ const swatch: Record<FrameVariant["color"], string> = {
   multicolor: "conic-gradient(#b3312f, #c9a24a, #3f7d58, #2f5fa8, #b3312f)",
 };
 
+// El color elegido se comparte con la sección de características de la ficha.
+const Selection = createContext<[string | undefined, (id: string) => void]>([undefined, () => {}]);
+
+export function FrameSelection({ variants, children }: { variants: FrameVariant[]; children: ReactNode }) {
+  // Se preselecciona el primer color disponible; los agotados quedan deshabilitados.
+  const state = useState(() => (variants.find((v) => v.in_stock) ?? variants[0])?.id);
+  return <Selection value={state}>{children}</Selection>;
+}
+
+export function SelectedColor({ variants }: { variants: FrameVariant[] }) {
+  const v = variants.find((x) => x.id === use(Selection)[0]);
+  return v ? colorLabel[v.color] : null;
+}
+
 export function FrameSelector({ product }: { product: ProductDetail }) {
   const variants = product.frame_variants;
-  const packages = product.lens_packages;
+  // Sin alto de mica suficiente la API marca el armazón como no apto para progresivos.
+  const packages = product.frame?.progressive_eligible === false
+    ? product.lens_packages.filter((p) => p.vision_type !== "progressive")
+    : product.lens_packages;
   const router = useRouter();
   const queryClient = useQueryClient();
-  // Se preselecciona el primer color disponible; los agotados quedan deshabilitados.
-  const [selectedId, setSelectedId] = useState(() => (variants.find((v) => v.in_stock) ?? variants[0])?.id);
+  const [selectedId, setSelectedId] = use(Selection);
   const [packageId, setPackageId] = useState<string | undefined>();
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const selected = variants.find((v) => v.id === selectedId);
   const pack = packages.find((p) => p.id === packageId);
+  // Solo hay oferta si el precio anterior es mayor al actual.
+  const onSale = !!selected && selected.compare_at_cents != null && selected.compare_at_cents > selected.price_cents;
   // Sin paquetes o sin tiempo de entrega, la venta de armazones sigue apagada.
   const canBuy = product.frame_lead_time_days != null && packages.length > 0;
 
@@ -81,13 +100,19 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
       </fieldset>
 
       {selected && (
-        <p className="text-lg">
-          <strong className="font-display text-2xl">{formatMxn(selected.price_cents)}</strong>
-          {selected.compare_at_cents != null && selected.compare_at_cents > selected.price_cents && (
-            <s className="ml-2 text-sm text-muted-foreground">{formatMxn(selected.compare_at_cents)}</s>
+        <p className="flex flex-wrap items-baseline gap-x-2 text-lg">
+          {onSale && (
+            <s className="text-base text-muted-foreground">
+              <span className="sr-only">{t("frames.previousPrice")} </span>
+              {formatMxn(selected.compare_at_cents!)}
+            </s>
           )}
-          <span className="ml-2 text-sm text-muted-foreground">{t("frames.frameLabel")}</span>
-          <span className={`ml-3 text-sm ${selected.in_stock ? "text-good" : "text-warn"}`}>
+          <strong className="font-display text-2xl">{formatMxn(selected.price_cents)}</strong>
+          {onSale && (
+            <Badge variant="destructive">{t("frames.offer")}</Badge>
+          )}
+          <span className="text-sm text-muted-foreground">{t("frames.frameLabel")}</span>
+          <span className={`ml-1 text-sm ${selected.in_stock ? "text-good" : "text-warn"}`}>
             {selected.in_stock ? t("frames.available") : t("product.soldOut")}
           </span>
         </p>

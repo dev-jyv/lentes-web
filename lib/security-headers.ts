@@ -19,7 +19,7 @@ const origin = (value: string | undefined): string | null => {
 
 const uniq = (items: (string | null)[]): string[] => [...new Set(items.filter((x): x is string => !!x))];
 
-export function contentSecurityPolicy(env: Env, dev = false): string {
+function contentSecurityPolicy(env: Env, dev = false): string {
   const api = origin(env.NEXT_PUBLIC_API_URL);
   const supabase = origin(env.NEXT_PUBLIC_SUPABASE_URL);
   const posthog = origin(env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com");

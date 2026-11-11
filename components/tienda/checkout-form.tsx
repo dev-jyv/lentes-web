@@ -219,12 +219,12 @@ export function CheckoutForm() {
           />
         )}
       </section>
-      <aside className="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-28">
+      <aside className="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-36">
         <h2 className="text-lg">{t("checkout.summary")}</h2>
         <ul className="space-y-1 text-sm">
           {cart.items.map((i) => (
             <li key={i.id} className="flex justify-between gap-2">
-              <span>{i.quantity}× {i.product.name}</span>
+              <span>{t("format.quantity", { count: i.quantity })}{i.product.name}</span>
               <span>{formatMxn(i.line_total_cents)}</span>
             </li>
           ))}
