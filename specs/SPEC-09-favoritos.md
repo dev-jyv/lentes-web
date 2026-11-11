@@ -22,8 +22,9 @@ No existe forma de guardar un producto para después; SPEC 03 dejó los favorito
 - Compartir la lista, varias listas o notas por favorito.
 - Avisos de baja de precio o de vuelta a stock.
 - Agregar al carrito desde el popover (el armazón requiere elegir micas; la lente, la receta).
-- Pantalla de favoritos en lentes-admin o reportes.
 - Indicador "!" de la imagen de referencia: el contador muestra el número.
+- Guardar el color o la variante: un favorito es el producto (decisión del usuario).
+- Ver favoritos en lentes-admin, como productos más guardados (spec futuro).
 
 ## Dependencies
 
@@ -34,11 +35,11 @@ No existe forma de guardar un producto para después; SPEC 03 dejó los favorito
 ## Functional requirements
 
 1. `ProductCard` y la ficha de producto (`/lentes/[slug]`, `/armazones/[slug]`) muestran un botón corazón con `aria-pressed`.
-2. Sin sesión, el favorito se guarda en `localStorage` (clave `favorites`, lista de `{ product_id, variant_id? , added_at }`), máximo 50.
+2. Sin sesión, el favorito se guarda en `localStorage` (clave `favorites`, lista de `{ product_id, added_at }`), máximo 50.
 3. Con sesión, el favorito se guarda con `PUT /v1/me/favorites/{productId}` y se quita con `DELETE`.
 4. Al iniciar sesión, si hay favoritos locales, se envían a `POST /v1/me/favorites/merge` y se borran del navegador si la respuesta es 200.
-5. Para armazones, el favorito guarda la variante (color) activa en la ficha; desde la tarjeta guarda el producto sin variante.
-6. El icono del header muestra el contador (oculto en 0) y abre un popover "Mis favoritos (N)" con los 3 más recientes: imagen, nombre, color si hay, precio desde y botón quitar.
+5. Un favorito es siempre el producto, sin color ni variante.
+6. El icono del header muestra el contador (oculto en 0) y abre un popover "Mis favoritos (N)" con los 3 más recientes: imagen, nombre, precio desde y botón quitar.
 7. El popover termina con "Ver mis favoritos" a `/cuenta/favoritos`; sin sesión, ese botón lleva a `/login?next=/cuenta/favoritos`.
 8. Lista vacía: el popover dice "Aún no tienes favoritos" y enlaza a Armazones.
 9. `/cuenta/favoritos` (protegida, se agrega a `PROTECTED` de `lib/supabase/proxy.ts`) lista todos en cuadrícula con `ProductCard`.
@@ -48,11 +49,11 @@ No existe forma de guardar un producto para después; SPEC 03 dejó los favorito
 
 lentes-api (nuevo, autenticado con `bearerAuth`):
 - `GET /v1/me/favorites` → `200 { items: Favorite[] }`, orden por `added_at` descendente.
-- `PUT /v1/me/favorites/{productId}` body `{ variant_id?: uuid | null }` → `200 Favorite` (idempotente).
+- `PUT /v1/me/favorites/{productId}` sin cuerpo → `200 Favorite` (idempotente).
 - `DELETE /v1/me/favorites/{productId}` → `204`; `404` si no existía.
-- `POST /v1/me/favorites/merge` body `{ items: { product_id: uuid, variant_id?: uuid | null }[] }` (máx. 50) → `200 { items: Favorite[] }`.
-- `Favorite`: `{ product: Product, variant_id: uuid | null, color: string | null, added_at: date-time }`.
-- Tabla `favorites (customer_id, product_id, variant_id null, added_at)`, PK `(customer_id, product_id)`, límite de 200 por cliente (`409` al exceder).
+- `POST /v1/me/favorites/merge` body `{ items: { product_id: uuid }[] }` (máx. 50) → `200 { items: Favorite[] }`.
+- `Favorite`: `{ product: Product, added_at: date-time }`.
+- Tabla `favorites (customer_id, product_id, added_at)`, PK `(customer_id, product_id)`, límite de 200 por cliente (`409` al exceder).
 
 lentes-web:
 - `lib/favorites.ts`: `readLocalFavorites()`, `writeLocalFavorites()`, `useFavorites()` (hook que elige local o API según sesión).
@@ -72,7 +73,7 @@ lentes-web:
 - Fusión con duplicados: la API conserva el `added_at` más antiguo.
 - Más de 50 favoritos locales: se descartan los más viejos.
 - Límite de 200 en la API: `409` con `detail` en español, mostrado al cliente.
-- Variante sin stock: se muestra en favoritos con "Agotado".
+- Producto agotado (`from_price_cents` nulo): se muestra en favoritos con "Agotado".
 
 ## Acceptance criteria
 
@@ -90,8 +91,3 @@ lentes-web:
 
 - Requiere cambio coordinado en lentes-api (migración y endpoints) antes de la parte con sesión; la parte local puede salir primero.
 - `docs/BRAND.md` y SPEC 03 listan favoritos como excluidos; hay que actualizar `docs/BRAND.md` al implementar.
-
-## Open questions
-
-- ¿Los favoritos guardan el color (variante) o solo el producto? Este borrador propone variante opcional para armazones.
-- ¿Hace falta mostrar favoritos en lentes-admin (por ejemplo, productos más guardados)? Este spec lo deja fuera.

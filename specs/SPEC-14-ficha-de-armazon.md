@@ -37,10 +37,10 @@ La ficha actual de armazón muestra la imagen principal con miniaturas fijas, in
 2. Galería: la imagen principal cambia al elegir una miniatura; las miniaturas son botones con `aria-pressed`.
 3. Encabezado: marca enlazada a `/marcas/{slug}`, nombre del producto y, si existe, la talla ("Talla grande").
 4. Precio en `FrameSelector`: con `compare_at_cents` mayor al precio, se muestra el original tachado, el precio actual y una insignia "Oferta". Sin él, solo el precio.
-5. Sección "Qué incluye" con un icono y texto por cada valor de `includes`: estuche, paño de limpieza, capa antirrayas y garantía ("Garantía de {n} meses" si hay `warranty_months`, si no "Garantía").
+5. Sección "Qué incluye" con un icono y texto por cada valor de `includes`: estuche, paño de limpieza, capa antirrayas, filtro de luz azul, antirreflejante, ajuste en óptica y garantía ("Garantía de {n} meses" si hay `warranty_months`, si no "Garantía").
 6. Sección "Medidas": ancho de mica, puente, varilla, alto de mica, ancho total y peso; las que son `null` no se muestran. Valores con `.optic` y unidad (mm, g).
 7. Un diagrama SVG en línea marca ancho de mica, puente, varilla y alto de mica; las etiquetas salen de `messages/es-MX.json`.
-8. Sección "Características" (`dl`): talla, género, material, aro, forma, color seleccionado, bisagras de resorte, plaquetas ajustables y apto para progresivos ("Sí"/"No"); las filas `null` no se muestran.
+8. Sección "Características" (`dl`): talla, género, material, aro, forma, color seleccionado, bisagras de resorte, plaquetas ajustables y apto para progresivos ("Sí"/"No", calculado por la API); las filas `null` no se muestran.
 9. Si `progressive_eligible` es `false`, `FrameSelector` no ofrece paquetes de micas con `vision_type = progressive`.
 10. Sección "Acerca de {producto}" con la descripción; sin descripción no se muestra.
 11. Textos en `messages/es-MX.json`.
