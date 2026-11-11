@@ -249,7 +249,31 @@
     "loadFailed": "No pudimos cargar los lentes. Intenta de nuevo en unos minutos.",
     "metaDescription": "Compra {{name}} de {{brand}}.",
     "piecesPerBox": "{{count}} piezas por caja",
-    "requiresPrescription": "Requiere receta vigente de tu optometrista."
+    "requiresPrescription": "Requiere receta vigente de tu optometrista.",
+    "breadcrumb": "Lentes de contacto",
+    "manufacturer": "Fabricante: {{name}}",
+    "pricePerBox": "<price>{{price}}</price> por caja",
+    "fromPricePerBox": "Desde <price>{{price}}</price> por caja",
+    "packaging_one": "{{replacement}}, {{count}} pieza por caja",
+    "packaging_other": "{{replacement}}, {{count}} piezas por caja",
+    "detailsTitle": "Detalles del lente",
+    "aboutTitle": "Acerca de {{name}}",
+    "allFromBrand": "Ver todos los lentes de {{brand}}",
+    "yes": "Sí",
+    "no": "No",
+    "waterContentValue": "{{value}} %",
+    "details": {
+      "lensType": "Tipo de lente",
+      "replacement": "Reemplazo",
+      "piecesPerBox": "Piezas por caja",
+      "material": "Material",
+      "waterContent": "Contenido de agua",
+      "uvBlocking": "Bloqueo UV",
+      "visibilityTint": "Tinte de visibilidad",
+      "packageNote": "Empaque",
+      "brand": "Marca",
+      "manufacturer": "Fabricante"
+    }
   },
   "product": {
     "metaTitle": "{{name}} | {{brand}}",
@@ -462,8 +486,10 @@
       "sameBoth": "Misma graduación en ambos ojos",
       "baseCurve": "Curva base",
       "diameter": "Diámetro",
-      "boxesPerEye": "Cajas por ojo",
-      "specs": "Curva base {{baseCurves}} · Diámetro {{diameters}} mm"
+      "specs": "Curva base {{baseCurves}} · Diámetro {{diameters}} mm",
+      "boxes": "Cajas",
+      "subtotal": "Subtotal",
+      "partialAdded": "Agregamos el ojo derecho, pero no pudimos agregar el ojo izquierdo. Intenta de nuevo."
     }
   },
   "theme": {
