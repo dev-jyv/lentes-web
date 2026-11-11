@@ -1,6 +1,6 @@
 # SPEC 09 — Favoritos
 
-> **Status:** Implemented — lentes-api feature/favoritos, lentes-web feature/favoritos
+> **Status:** Implemented — lentes-api#11, lentes-web#3
 > **Depends on:** SPEC 06, SPEC 08
 > **Date:** 2026-11-11
 > **Objective:** Permitir que el cliente guarde productos en una lista de favoritos y la consulte desde un popover del header.
