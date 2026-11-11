@@ -1,6 +1,6 @@
 # SPEC 10 — Acceso y registro con pestañas
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-web feature/auth-registro-pestanas, lentes-api feature/auth-registro-metadatos
 > **Depends on:** SPEC 08
 > **Date:** 2026-11-11
 > **Objective:** Unir `/login` y `/registro` en una página con pestañas "Iniciar sesión" y "Soy nuevo", con un registro que mide la fuerza de la contraseña y pide teléfono y consentimiento de marketing opcionales enlazados a páginas nuevas de Términos y Privacidad.
