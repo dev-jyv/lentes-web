@@ -2,10 +2,10 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createContext, use, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useCartDrawer } from "@/components/tienda/cart-drawer";
 import { addCartItem, getGetCartQueryKey } from "@/lib/api/generated/api";
 import type { FrameVariant, ProductDetail } from "@/lib/api/generated/model";
 import { track } from "@/lib/analytics";
@@ -40,7 +40,7 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
   const packages = product.frame?.progressive_eligible === false
     ? product.lens_packages.filter((p) => p.vision_type !== "progressive")
     : product.lens_packages;
-  const router = useRouter();
+  const cartDrawer = useCartDrawer();
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = use(Selection);
   const [packageId, setPackageId] = useState<string | undefined>();
@@ -67,7 +67,8 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
       return setError(res?.status === 409 && detail ? detail : t("frames.addFailed"));
     }
     track("add_to_cart", { slug: product.slug, name: product.name, category: "frame", lens_package: pack.slug });
-    router.push("/carrito");
+    setAdding(false);
+    cartDrawer.open();
   }
 
   return (
