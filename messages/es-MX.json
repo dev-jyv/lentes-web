@@ -529,6 +529,7 @@
   },
   "format": {
     "leadTime24h": "24 horas",
-    "leadTimeDays": "{{days}} días"
+    "leadTimeDays": "{{days}} días",
+    "quantity": "{{count}}× "
   }
 }

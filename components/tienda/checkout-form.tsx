@@ -224,7 +224,7 @@ export function CheckoutForm() {
         <ul className="space-y-1 text-sm">
           {cart.items.map((i) => (
             <li key={i.id} className="flex justify-between gap-2">
-              <span>{i.quantity}× {i.product.name}</span>
+              <span>{t("format.quantity", { count: i.quantity })}{i.product.name}</span>
               <span>{formatMxn(i.line_total_cents)}</span>
             </li>
           ))}

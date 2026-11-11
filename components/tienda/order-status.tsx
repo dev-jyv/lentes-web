@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useGetOrder } from "@/lib/api/generated/api";
 import { colorLabel, formatMxn } from "@/lib/format";
 import { t } from "@/lib/i18n";
+import { orderFolio } from "@/lib/order";
 
 const FINAL = ["paid", "preparing", "shipped", "delivered", "cancelled", "refunded", "expired"];
 
@@ -40,12 +41,12 @@ export function OrderStatus({ orderId }: { orderId: string }) {
       <h2 className="text-2xl font-semibold">
         {paid ? t("orderStatus.thanks") : failed ? t("orderStatus.failed") : t("orderStatus.confirming")}
       </h2>
-      <p>{t("orderStatus.order")} <strong className="optic">LC-{String(o.number).padStart(6, "0")}</strong> · {formatMxn(o.total_cents)}</p>
+      <p>{t("orderStatus.order")} <strong className="optic">{orderFolio(o.number)}</strong> · {formatMxn(o.total_cents)}</p>
       {o.items.some((i) => i.category === "frame") && (
         <ul className="space-y-1 text-sm">
           {o.items.filter((i) => i.category === "frame").map((i) => (
             <li key={i.sku + (i.lens_package_name ?? "")}>
-              {i.quantity}× {i.product_name}
+              {t("format.quantity", { count: i.quantity })}{i.product_name}
               {i.color && ` · ${colorLabel[i.color as keyof typeof colorLabel] ?? i.color}`}
               {i.lens_package_name && ` · ${i.lens_package_name}`}
             </li>
