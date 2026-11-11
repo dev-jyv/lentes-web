@@ -1,6 +1,6 @@
 # SPEC 08 — Inicio de sesión en popover
 
-> **Status:** Draft
+> **Status:** Approved
 > **Depends on:** SPEC 06
 > **Date:** 2026-11-11
 > **Objective:** Permitir iniciar sesión desde un popover que se abre en "Iniciar sesión ▾" del header, sin salir de la página actual.

@@ -1,6 +1,6 @@
 # SPEC 07 — Buscador con sugerencias
 
-> **Status:** Draft
+> **Status:** Approved
 > **Depends on:** SPEC 06
 > **Date:** 2026-11-11
 > **Objective:** Mostrar un panel de sugerencias bajo el buscador del header con búsquedas sugeridas, productos y una recomendación, y resultados en vivo mientras el cliente escribe.
