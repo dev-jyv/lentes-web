@@ -1,26 +1,37 @@
-import { ArrowRight, FileCheck2, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, FileCheck2, Headset, RefreshCw, ShieldCheck, Truck, type LucideIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { FrameShapeIcon } from "@/components/tienda/frame-shape-icon";
 import { HeroCarousel } from "@/components/tienda/hero-carousel";
 import { HeroLens } from "@/components/tienda/hero-lens";
-import { HomeMosaic } from "@/components/tienda/home-mosaic";
+import { HomeMosaic, mosaicContent } from "@/components/tienda/home-mosaic";
 import { ProductCard } from "@/components/tienda/product-card";
 import { listProducts } from "@/lib/api/generated/api";
-import type { FrameShape, HomeBanner, Product } from "@/lib/api/generated/model";
-import { lensNeedLabel, replacementLabel, shapeLabel } from "@/lib/format";
+import type { CatalogFacets, HeroArt, HomeBanner, HomeContent, Product, PromiseIcon } from "@/lib/api/generated/model";
 import { imageSrc } from "@/lib/images";
 import { FRAME_PRICE_BANDS, mergeBrands, priceBandLabel } from "@/lib/navigation";
 import { isInternalHref } from "@/lib/safe-next";
-import { loadFacets, loadHome } from "@/lib/storefront";
+import { loadCatalog, loadFacets, loadHome } from "@/lib/storefront";
 import { t } from "@/lib/i18n";
 import { rich } from "@/lib/rich";
 
-const promises = [
+// Conjunto cerrado de íconos de la franja de promesas (SPEC 15, punto 10).
+const PROMISE_ICONS: Record<PromiseIcon, LucideIcon> = {
+  prescription: FileCheck2, reorder: RefreshCw, payment: ShieldCheck, support: Headset, delivery: Truck, quality: BadgeCheck,
+};
+
+type PromiseItem = { icon: LucideIcon; title: string };
+
+// Promesas de código: solo se usan si GET /v1/home falla (SPEC 15, punto 22).
+const FALLBACK_PROMISES: PromiseItem[] = [
   { icon: FileCheck2, title: t("home.promises.prescription") },
   { icon: RefreshCw, title: t("home.promises.reorder") },
   { icon: ShieldCheck, title: t("home.promises.payment") },
 ];
+
+const MAX_PROMISES = 3;
+// La franja se ajusta a 1, 2 o 3 columnas sin dejar huecos.
+const PROMISE_COLS = ["", "md:grid-cols-1", "md:grid-cols-2", "md:grid-cols-3"];
 
 const slideCta = "inline-flex h-12 items-center justify-center rounded-full bg-white px-8 font-semibold text-band transition-colors hover:bg-white/85";
 
@@ -59,18 +70,49 @@ function BannerSlide({ banner, first }: { banner: HomeBanner; first: boolean }) 
   );
 }
 
-// Diapositiva de marca: se usa mientras el admin no publique banners principales con imagen.
-function DefaultSlide({ first, title, subtitle, art, children }: { first: boolean; title: React.ReactNode; subtitle: string; art: React.ReactNode; children: React.ReactNode }) {
+// Diapositiva de marca: fondo de marca con una ilustración, sin foto.
+function DefaultSlide({ first, title, subtitle, art, children }: { first: boolean; title: React.ReactNode; subtitle: string | null; art: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex h-full items-center bg-band bg-[radial-gradient(circle_at_78%_50%,color-mix(in_srgb,var(--blue-vivid)_55%,transparent),transparent_60%)]">
       <div className="container-page flex items-center">
         <SlideText first={first} title={title} subtitle={subtitle}>{children}</SlideText>
-        <div className="hidden w-1/2 justify-center text-white lg:flex">{art}</div>
+        {art && <div className="hidden w-1/2 justify-center text-white lg:flex">{art}</div>}
       </div>
     </div>
   );
 }
 
+// Ilustración de un hero sin imagen (SPEC 15, punto 11). `none` no lleva.
+function heroArt(art: HeroArt | null) {
+  switch (art) {
+    case "lens": return <div className="w-80"><HeroLens /></div>;
+    case "frame": return <FrameShapeIcon shape="round" className="w-96" />;
+    case "reorder": return <RefreshCw className="size-56" aria-hidden="true" />;
+    default: return null;
+  }
+}
+
+function BrandSlide({ banner, first }: { banner: HomeBanner; first: boolean }) {
+  return (
+    <DefaultSlide first={first} title={banner.title} subtitle={banner.subtitle} art={heroArt(banner.art)}>
+      {banner.cta_label && isInternalHref(banner.cta_href) && (
+        <Link href={banner.cta_href} className={slideCta}>{banner.cta_label}</Link>
+      )}
+    </DefaultSlide>
+  );
+}
+
+// El carrusel muestra lo que traiga `heroes` (SPEC 15, punto 21): con imagen, foto; sin imagen, fondo de marca.
+// Un hero cuya imagen ya no es válida se omite.
+function bannerSlides(heroes: HomeBanner[]) {
+  return heroes
+    .filter((b) => b.image_url == null || imageSrc(b.image_url))
+    .map((b, i) => b.image_url == null
+      ? <BrandSlide key={b.id} banner={b} first={i === 0} />
+      : <BannerSlide key={b.id} banner={b} first={i === 0} />);
+}
+
+// Diapositivas de código: solo si GET /v1/home falla (SPEC 15, punto 22).
 function defaultSlides(hasFrames: boolean) {
   const lensSlide = (first: boolean) => (
     <DefaultSlide
@@ -110,23 +152,33 @@ function defaultSlides(hasFrames: boolean) {
   ];
 }
 
-function Hero({ banners, hasFrames }: { banners: HomeBanner[]; hasFrames: boolean }) {
-  const slides = banners.length
-    ? banners.map((banner, i) => <BannerSlide key={banner.id} banner={banner} first={i === 0} />)
-    : defaultSlides(hasFrames);
+function promisesOf(home: HomeContent | null): PromiseItem[] {
+  if (!home) return FALLBACK_PROMISES;
+  return home.promises
+    .filter((p) => p.icon && Object.hasOwn(PROMISE_ICONS, p.icon))
+    .slice(0, MAX_PROMISES)
+    .map((p) => ({ icon: PROMISE_ICONS[p.icon!], title: p.title }));
+}
+
+function Hero({ home, hasFrames }: { home: HomeContent | null; hasFrames: boolean }) {
+  const slides = home ? bannerSlides(home.heroes) : defaultSlides(hasFrames);
+  const promises = promisesOf(home);
   return (
     <>
-      <HeroCarousel>{slides}</HeroCarousel>
-      <section aria-label={t("home.promisesLabel")} className="container-page relative z-10 -mt-7">
-        <ul className="grid gap-3 rounded-3xl border bg-card px-6 py-4 shadow-md md:grid-cols-3 md:divide-x md:rounded-full">
-          {promises.map(({ icon: Icon, title }) => (
-            <li key={title} className="flex items-center gap-3 font-medium md:justify-center md:px-4">
-              <Icon className="size-6 shrink-0 text-primary" aria-hidden="true" />
-              <span className="text-sm lg:text-base">{title}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* Sin heroes el home empieza en la franja de promesas; el h1 queda para lectores de pantalla. */}
+      {slides.length > 0 ? <HeroCarousel>{slides}</HeroCarousel> : <h1 className="sr-only">{t("meta.defaultTitle")}</h1>}
+      {promises.length > 0 && (
+        <section aria-label={t("home.promisesLabel")} className={`container-page relative z-10 ${slides.length > 0 ? "-mt-7" : "mt-6"}`}>
+          <ul className={`grid gap-3 rounded-3xl border bg-card px-6 py-4 shadow-md md:divide-x md:rounded-full ${PROMISE_COLS[promises.length]}`}>
+            {promises.map(({ icon: Icon, title }, i) => (
+              <li key={`${i}-${title}`} className="flex items-center gap-3 font-medium md:justify-center md:px-4">
+                <Icon className="size-6 shrink-0 text-primary" aria-hidden="true" />
+                <span className="text-sm lg:text-base">{title}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </>
   );
 }
@@ -147,30 +199,32 @@ function ProductRow({ title, href, products, className = "" }: { title: string; 
 }
 
 export default async function HomePage() {
-  const [home, frames, lenses] = await Promise.all([loadHome(), loadFacets("frame"), loadFacets("contact_lens")]);
+  const [home, frames, lenses, catalog] = await Promise.all([loadHome(), loadFacets("frame"), loadFacets("contact_lens"), loadCatalog()]);
   const hasFrames = (frames?.total ?? 0) > 0;
   const [frameProducts, lensProducts] = await Promise.all([
     hasFrames ? featuredOrNewest(home?.featured.frame, "frame") : Promise.resolve([]),
     featuredOrNewest(home?.featured.contact_lens, "contact_lens"),
   ]);
 
-  const has = (facet: typeof frames, key: string, value: string) => facet?.values[key]?.some((v) => v.value === value) ?? false;
-  const shapes = (Object.keys(shapeLabel) as FrameShape[]).filter((s) => has(frames, "shape", s));
+  // Valores con productos, con la etiqueta y el orden del catálogo (SPEC 16).
+  const present = (facet: CatalogFacets, key: string): [string, string][] =>
+    (facet.values[key] ?? []).filter((v) => v.count > 0).map((v) => [v.value, v.label]);
+  const shapes = frames ? present(frames, "shape") : [];
   const minFramePrice = frames?.min_price_cents;
   const priceBands = minFramePrice == null ? [] : FRAME_PRICE_BANDS.filter((band) => band >= minFramePrice);
   // Sin datos del catálogo (API caída) quedan solo los enlaces fijos que el home ya ofrecía.
-  const uses = Object.entries(replacementLabel).filter(([v]) => (lenses ? has(lenses, "replacement", v) : v === "daily" || v === "monthly"));
-  const needs = Object.entries(lensNeedLabel).filter(([v]) => (lenses ? has(lenses, "lens_type", v) : v !== "cosmetic"));
+  const fallback = (kind: "replacement" | "lens_type", keep: (code: string) => boolean): [string, string][] =>
+    catalog.entries(kind).filter((e) => keep(e.code)).map((e) => [e.code, e.label]);
+  const uses = lenses ? present(lenses, "replacement") : fallback("replacement", (v) => v === "daily" || v === "monthly");
+  const needs = lenses ? present(lenses, "lens_type") : fallback("lens_type", (v) => v !== "cosmetic");
   const brands = mergeBrands(frames, lenses);
-  // `hero` cubre a una API que aún no publique `heroes`. Un banner sin imagen no entra al carrusel.
-  const heroes = (home?.heroes ?? (home?.hero ? [home.hero] : [])).filter((b) => imageSrc(b.image_url));
   const secondary = (home?.secondary ?? []).filter((b) => imageSrc(b.image_url) && isInternalHref(b.cta_href));
 
   return (
     <>
-      <Hero banners={heroes} hasFrames={hasFrames} />
+      <Hero home={home} hasFrames={hasFrames} />
 
-      <HomeMosaic hasFrames={hasFrames} uses={uses} needs={needs} />
+      <HomeMosaic hasFrames={hasFrames} uses={uses} needs={needs} content={mosaicContent(home)} />
 
       {frameProducts.length > 0 && (
         <div className="mt-8 bg-secondary">
@@ -182,11 +236,11 @@ export default async function HomePage() {
         <section className="container-page space-y-4 pt-12 pb-4">
           <h2 className="text-2xl">{t("home.byShape")}</h2>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {shapes.map((shape) => (
+            {shapes.map(([shape, label]) => (
               <li key={shape}>
                 <Link href={`/armazones?shape=${shape}`} className="flex h-full flex-col items-center gap-2 rounded-2xl bg-secondary p-5 text-center font-medium transition-colors hover:bg-accent hover:text-primary">
                   <FrameShapeIcon shape={shape} className="h-10 text-primary" />
-                  {shapeLabel[shape]}
+                  {label}
                 </Link>
               </li>
             ))}

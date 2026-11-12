@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { FilterOption } from "@/lib/catalog";
 import { t } from "@/lib/i18n";
 
 type FilterParams = Record<string, string | undefined>;
@@ -6,7 +7,8 @@ type FilterParams = Record<string, string | undefined>;
 export type FilterGroup = {
   title: string;
   name: string;
-  options: { value: string; label: string }[];
+  // Una opción `chipOnly` (valor oculto del catálogo) solo da la etiqueta de su chip.
+  options: FilterOption[];
   // Solo aporta la etiqueta de su chip: no se muestra en la barra lateral.
   chipOnly?: boolean;
 };
@@ -30,7 +32,7 @@ function Group({ group, base, params }: { group: FilterGroup; base: string; para
             {t("catalog.all")}
           </Link>
         </li>
-        {options.map((o) => (
+        {options.filter((o) => !o.chipOnly).map((o) => (
           <li key={o.value}>
             <Link
               href={href(base, params, name, o.value)}
@@ -50,7 +52,7 @@ export function CatalogFilters({
 }: { base: string; params: FilterParams; groups: FilterGroup[] }) {
   return (
     <aside aria-label={t("catalog.filtersLabel")} className="space-y-6 md:sticky md:top-28 md:self-start">
-      {groups.filter((g) => !g.chipOnly).map((g) => <Group key={g.name} group={g} base={base} params={params} />)}
+      {groups.filter((g) => !g.chipOnly && g.options.some((o) => !o.chipOnly)).map((g) => <Group key={g.name} group={g} base={base} params={params} />)}
     </aside>
   );
 }
@@ -82,6 +84,3 @@ export function ActiveFilters({
     </ul>
   );
 }
-
-export const toOptions = (labels: Record<string, string>) =>
-  Object.entries(labels).map(([value, label]) => ({ value, label }));

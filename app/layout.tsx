@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { BRAND } from "@/lib/brand";
 import { SiteHeader } from "@/components/tienda/site-header";
 import { SiteFooter } from "@/components/tienda/site-footer";
+import { loadCatalogs } from "@/lib/storefront";
 import { t } from "@/lib/i18n";
 
 // Tipografía del brand book: display, texto/interfaz y monoespaciada para valores ópticos.
@@ -20,7 +21,9 @@ export const metadata: Metadata = {
   description: BRAND.description,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Etiquetas de atributos para los componentes de cliente (SPEC 16); cacheadas 300 s.
+  const catalogs = await loadCatalogs();
   return (
     <html
       lang="es-MX"
@@ -31,7 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-full flex flex-col">
-        <Providers>
+        <Providers catalogs={catalogs}>
           <SiteHeader />
           <main className="flex-1">{children}</main>
           <SiteFooter />

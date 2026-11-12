@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CatalogFilters, toOptions, type FilterGroup } from "@/components/tienda/catalog-filters";
+import { CatalogFilters, type FilterGroup } from "@/components/tienda/catalog-filters";
 import { ProductCard } from "@/components/tienda/product-card";
 import { listBrands, listProducts } from "@/lib/api/generated/api";
-import type { LensType, Replacement } from "@/lib/api/generated/model";
-import { lensTypeLabel, pickKey, replacementLabel } from "@/lib/format";
+import { LensType, Replacement } from "@/lib/api/generated/model";
+import { pickKey } from "@/lib/format";
+import { loadCatalog } from "@/lib/storefront";
 import { t } from "@/lib/i18n";
 
 type Props = {
@@ -24,11 +25,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : {};
 }
 
-const groups: FilterGroup[] = [
-  { title: t("catalog.filters.type"), name: "lens_type", options: toOptions(lensTypeLabel) },
-  { title: t("catalog.filters.replacement"), name: "replacement", options: toOptions(replacementLabel) },
-];
-
 export default async function BrandPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const raw = await searchParams;
@@ -36,16 +32,23 @@ export default async function BrandPage({ params, searchParams }: Props) {
   if (!brand) notFound();
 
   const filters = {
-    lens_type: pickKey(lensTypeLabel, raw.lens_type),
-    replacement: pickKey(replacementLabel, raw.replacement),
+    lens_type: pickKey(LensType, raw.lens_type),
+    replacement: pickKey(Replacement, raw.replacement),
   };
+  // Valores visibles del catálogo, con sus etiquetas y orden (SPEC 16).
+  const catalog = await loadCatalog();
+  const toOptions = (kind: "lens_type" | "replacement") => catalog.entries(kind).map((e) => ({ value: e.code, label: e.label }));
+  const groups: FilterGroup[] = [
+    { title: t("catalog.filters.type"), name: "lens_type", options: toOptions("lens_type") },
+    { title: t("catalog.filters.replacement"), name: "replacement", options: toOptions("replacement") },
+  ];
   const [frames, lenses] = await Promise.all([
     listProducts({ brand: slug, category: "frame" }),
     listProducts({
       brand: slug,
       category: "contact_lens",
-      lens_type: filters.lens_type as LensType | undefined,
-      replacement: filters.replacement as Replacement | undefined,
+      lens_type: filters.lens_type,
+      replacement: filters.replacement,
     }),
   ]);
   const frameItems = frames.status === 200 ? frames.data.items : [];

@@ -612,12 +612,6 @@
       "silver": "Plateado",
       "multicolor": "Multicolor"
     },
-    "lensNeed": {
-      "spherical": "Esféricos · miopía e hipermetropía",
-      "toric": "Tóricos · astigmatismo",
-      "multifocal": "Multifocales · presbicia",
-      "cosmetic": "Cosméticos"
-    },
     "orderStatus": {
       "pending_payment": "Pago pendiente",
       "paid": "Pagado",
