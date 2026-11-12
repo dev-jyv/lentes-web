@@ -16,7 +16,7 @@ import { t } from "@/lib/i18n";
 
 export async function SiteHeader() {
   const [frames, lenses, home] = await Promise.all([loadFacets("frame"), loadFacets("contact_lens"), loadHome()]);
-  const items = buildNavigation({ frames, lenses, brands: mergeBrands(frames, lenses) });
+  const items = buildNavigation({ frames, lenses, brands: mergeBrands(frames, lenses), home });
   // Sugerencias del buscador (SPEC 07): salen de los mismos datos cacheados del header.
   const suggest = {
     chips: searchChips(frames, lenses),
