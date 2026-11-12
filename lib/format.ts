@@ -5,22 +5,7 @@ const mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" 
 // El backend manda centavos; solo se formatea, nunca se calcula.
 export const formatMxn = (cents: number) => mxn.format(cents / 100);
 
-export const lensTypeLabel = t("labels.lensType", { returnObjects: true });
-
-export const replacementLabel = t("labels.replacement", { returnObjects: true });
-
-export const shapeLabel = t("labels.shape", { returnObjects: true });
-
-export const frameMaterialLabel = t("labels.frameMaterial", { returnObjects: true });
-
-export const rimLabel = t("labels.rim", { returnObjects: true });
-
-export const genderLabel = t("labels.gender", { returnObjects: true });
-
-export const colorLabel = t("labels.color", { returnObjects: true });
-
-// Etiquetas pensadas para el cliente: dicen para qué sirve cada tipo de lente.
-export const lensNeedLabel = t("labels.lensNeed", { returnObjects: true });
+// Las etiquetas de atributos (tipo de lente, reemplazo, forma, color...) salen del catálogo: ver lib/catalog.ts.
 
 // Devuelve el valor solo si existe en el mapa; un valor desconocido en la URL se ignora.
 export function pickKey<T extends object>(labels: T, value: string | undefined): (keyof T & string) | undefined {
@@ -34,7 +19,3 @@ export const productHref = (p: { category: string; slug: string }) =>
 export function formatLeadTime(days: number): string {
   return days === 1 ? t("format.leadTime24h") : t("format.leadTimeDays", { days });
 }
-
-export const frameSizeLabel = t("labels.frameSize", { returnObjects: true });
-
-export const frameIncludeLabel = t("labels.frameInclude", { returnObjects: true });

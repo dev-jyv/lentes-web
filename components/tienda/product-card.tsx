@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FavoriteButton } from "@/components/tienda/favorite-button";
 import type { Product } from "@/lib/api/generated/model";
 import { imageSrc } from "@/lib/images";
-import { formatMxn, productHref, replacementLabel, shapeLabel } from "@/lib/format";
+import { CatalogLabel } from "@/components/catalog-provider";
+import { formatMxn, productHref } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { rich } from "@/lib/rich";
 
@@ -30,11 +31,11 @@ export function ProductCard({ product }: { product: Product }) {
             <h3 className="text-base leading-tight">{product.name}</h3>
             {product.frame && (
               <p className="text-xs text-muted-foreground">
-                {shapeLabel[product.frame.shape]} · {t("product.colorCount", { count: product.color_count })}
+                <CatalogLabel kind="frame_shape" code={product.frame.shape} /> · {t("product.colorCount", { count: product.color_count })}
               </p>
             )}
             <div className="flex flex-wrap items-center justify-between gap-2">
-              {product.replacement && <Badge variant="secondary">{replacementLabel[product.replacement]}</Badge>}
+              {product.replacement && <Badge variant="secondary"><CatalogLabel kind="replacement" code={product.replacement} /></Badge>}
               {product.from_price_cents != null ? (
                 <span className="text-sm">
                   {rich(t("product.fromPrice", { price: formatMxn(product.from_price_cents) }), { price: (c) => <strong className="font-display text-base">{c}</strong> })}

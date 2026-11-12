@@ -60,6 +60,10 @@ export function MegaMenu({ items }: { items: NavItem[] }) {
   );
 }
 
+// Zona de tarjetas (SPEC 15): hasta 4. Entre lg y xl van 2 por fila para no bajar de un ancho legible;
+// desde xl, todas en una fila. Las tarjetas tienen ancho fijo: con menos de 4 no se estiran.
+const CARD_COLS = ["", "grid-cols-1", "grid-cols-2", "grid-cols-2 xl:grid-cols-3", "grid-cols-2 xl:grid-cols-4"];
+
 const linkClass =
   "block truncate rounded-md outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50";
 
@@ -100,15 +104,15 @@ function Panel({ item }: { item: NavItem }) {
           ))}
         </div>
         {!!item.cards?.length && (
-          <ul className="hidden shrink-0 grid-cols-2 gap-3 min-[1200px]:grid">
+          <ul className={`grid shrink-0 gap-3 ${CARD_COLS[item.cards.length]}`}>
             {item.cards.map((card) => (
-              <li key={card.href}>
+              <li key={`${card.href}-${card.label}`}>
                 <NavigationMenu.Link
-                  render={<Link href={card.href} onClick={onClick("tarjetas", card.label)} />}
-                  className="group relative flex h-56 w-40 items-end justify-center overflow-hidden rounded-2xl bg-muted p-3 shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  render={<Link href={card.href} onClick={onClick("tarjetas", card.label)} title={card.label} />}
+                  className="group relative flex h-44 w-32 items-end justify-center overflow-hidden rounded-2xl bg-muted p-3 shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 2xl:h-56 2xl:w-40"
                 >
-                  <Image src={card.image} alt="" fill sizes="160px" className="object-cover" />
-                  <span className="relative rounded-full bg-white px-4 py-1.5 text-sm font-semibold whitespace-nowrap text-band shadow-sm group-hover:underline">
+                  <Image src={card.image} alt={card.alt} fill unoptimized sizes="160px" className="object-cover" />
+                  <span className="relative max-w-full truncate rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-band shadow-sm group-hover:underline">
                     {card.label}
                   </span>
                 </NavigationMenu.Link>

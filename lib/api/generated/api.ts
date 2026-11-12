@@ -50,6 +50,7 @@ import type {
   AdminOrder,
   AdminPrescription,
   AdminProduct,
+  AdminReorderCatalog200,
   AdminReorderHomeBanners200,
   AdminReorderHomeBannersBody,
   AdminReorderLensPackages200,
@@ -67,6 +68,12 @@ import type {
   CartItemInput,
   CartItemUpdate,
   CatalogFacets,
+  CatalogKind,
+  CatalogOrderInput,
+  CatalogValue,
+  CatalogValueInput,
+  CatalogValuePatch,
+  Catalogs,
   CheckoutInput,
   CheckoutResult,
   Customer,
@@ -108,6 +115,7 @@ import type {
   ProductDetail,
   ProductImageAdmin,
   ProductInput,
+  PublicCatalogs,
   ReorderResult,
   RepurchaseReport,
   SalesReport,
@@ -928,6 +936,120 @@ export function useGetCatalogFacets<TData = Awaited<ReturnType<typeof getCatalog
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetCatalogFacetsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getCatalogsResponse200 = {
+  data: PublicCatalogs
+  status: 200
+}
+
+export type getCatalogsResponseSuccess = (getCatalogsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getCatalogsResponse = (getCatalogsResponseSuccess)
+
+export const getGetCatalogsUrl = () => {
+
+
+
+
+  return `/v1/catalogs`
+}
+
+/**
+ * Etiquetas, orden y muestras de color de los atributos de producto. Los valores ocultos no aparecen.
+ * @summary Catálogos de atributos con sus valores activos
+ */
+export const getCatalogs = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getCatalogsResponse> => {
+
+  return apiFetch<getCatalogsResponse>(getGetCatalogsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCatalogsQueryKey = () => {
+    return [
+    `/v1/catalogs`
+    ] as const;
+    }
+
+
+export const getGetCatalogsQueryOptions = <TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCatalogsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCatalogs>>> = ({ signal }) => getCatalogs({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCatalogsQueryResult = NonNullable<Awaited<ReturnType<typeof getCatalogs>>>
+export type GetCatalogsQueryError = unknown
+
+
+export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCatalogs>>,
+          TError,
+          Awaited<ReturnType<typeof getCatalogs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCatalogs>>,
+          TError,
+          Awaited<ReturnType<typeof getCatalogs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Catálogos de atributos con sus valores activos
+ */
+
+export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCatalogsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -5804,10 +5926,15 @@ export type adminCreateHomeBannerResponse400 = {
   status: 400
 }
 
+export type adminCreateHomeBannerResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
 export type adminCreateHomeBannerResponseSuccess = (adminCreateHomeBannerResponse201) & {
   headers: Headers;
 };
-export type adminCreateHomeBannerResponseError = (adminCreateHomeBannerResponse400) & {
+export type adminCreateHomeBannerResponseError = (adminCreateHomeBannerResponse400 | adminCreateHomeBannerResponse409) & {
   headers: Headers;
 };
 
@@ -6141,10 +6268,15 @@ export type adminUpdateHomeBannerResponse404 = {
   status: 404
 }
 
+export type adminUpdateHomeBannerResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
 export type adminUpdateHomeBannerResponseSuccess = (adminUpdateHomeBannerResponse200) & {
   headers: Headers;
 };
-export type adminUpdateHomeBannerResponseError = (adminUpdateHomeBannerResponse400 | adminUpdateHomeBannerResponse404) & {
+export type adminUpdateHomeBannerResponseError = (adminUpdateHomeBannerResponse400 | adminUpdateHomeBannerResponse404 | adminUpdateHomeBannerResponse409) & {
   headers: Headers;
 };
 
@@ -7019,6 +7151,562 @@ export const useAdminUpdateLensPackage = <TError = ProblemResponse,
         TContext
       > => {
       return useMutation(getAdminUpdateLensPackageMutationOptions(options), queryClient);
+    }
+
+export type adminListCatalogsResponse200 = {
+  data: Catalogs
+  status: 200
+}
+
+export type adminListCatalogsResponseSuccess = (adminListCatalogsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminListCatalogsResponse = (adminListCatalogsResponseSuccess)
+
+export const getAdminListCatalogsUrl = () => {
+
+
+
+
+  return `/v1/admin/catalogs`
+}
+
+/**
+ * @summary Todos los catálogos, con valores ocultos y cuántos productos usan cada valor
+ */
+export const adminListCatalogs = async ( options?: Parameters<typeof apiFetch>[1]): Promise<adminListCatalogsResponse> => {
+
+  return apiFetch<adminListCatalogsResponse>(getAdminListCatalogsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListCatalogsQueryKey = () => {
+    return [
+    `/v1/admin/catalogs`
+    ] as const;
+    }
+
+
+export const getAdminListCatalogsQueryOptions = <TData = Awaited<ReturnType<typeof adminListCatalogs>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListCatalogsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListCatalogs>>> = ({ signal }) => adminListCatalogs({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListCatalogs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminListCatalogsQueryResult = NonNullable<Awaited<ReturnType<typeof adminListCatalogs>>>
+export type AdminListCatalogsQueryError = unknown
+
+
+export function useAdminListCatalogs<TData = Awaited<ReturnType<typeof adminListCatalogs>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListCatalogs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListCatalogs>>,
+          TError,
+          Awaited<ReturnType<typeof adminListCatalogs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListCatalogs<TData = Awaited<ReturnType<typeof adminListCatalogs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListCatalogs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListCatalogs>>,
+          TError,
+          Awaited<ReturnType<typeof adminListCatalogs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListCatalogs<TData = Awaited<ReturnType<typeof adminListCatalogs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Todos los catálogos, con valores ocultos y cuántos productos usan cada valor
+ */
+
+export function useAdminListCatalogs<TData = Awaited<ReturnType<typeof adminListCatalogs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListCatalogsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminCreateCatalogValueResponse201 = {
+  data: CatalogValue
+  status: 201
+}
+
+export type adminCreateCatalogValueResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminCreateCatalogValueResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminCreateCatalogValueResponseSuccess = (adminCreateCatalogValueResponse201) & {
+  headers: Headers;
+};
+export type adminCreateCatalogValueResponseError = (adminCreateCatalogValueResponse400 | adminCreateCatalogValueResponse404) & {
+  headers: Headers;
+};
+
+export type adminCreateCatalogValueResponse = (adminCreateCatalogValueResponseSuccess | adminCreateCatalogValueResponseError)
+
+export const getAdminCreateCatalogValueUrl = (catalog: CatalogKind,) => {
+
+
+
+
+  return `/v1/admin/catalogs/${catalog}/values`
+}
+
+/**
+ * `400` en `lens_type` y `replacement`, con código inválido o repetido, o con `swatch` faltante o inválido. `404` si el catálogo no existe.
+ * @summary Agrega un valor al final de un catálogo descriptivo
+ */
+export const adminCreateCatalogValue = async (catalog: CatalogKind,
+    catalogValueInput: CatalogValueInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateCatalogValueResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminCreateCatalogValueResponse>(getAdminCreateCatalogValueUrl(catalog),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(catalogValueInput)
+  }
+);}
+
+
+
+
+
+export const getAdminCreateCatalogValueMutationKey = () => ['adminCreateCatalogValue'] as const;
+
+export const getAdminCreateCatalogValueMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateCatalogValue>>, TError,AdminCreateCatalogValueMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminCreateCatalogValue>>, TError,AdminCreateCatalogValueMutationVariables, TContext> => {
+
+const mutationKey = getAdminCreateCatalogValueMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCreateCatalogValue>>, AdminCreateCatalogValueMutationVariables> = (props) => {
+          const {catalog,data} = props ?? {};
+
+          return  adminCreateCatalogValue(catalog,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminCreateCatalogValueMutationResult = NonNullable<Awaited<ReturnType<typeof adminCreateCatalogValue>>>
+    export type AdminCreateCatalogValueMutationBody = CatalogValueInput
+    export type AdminCreateCatalogValueMutationError = ProblemResponse
+    export type AdminCreateCatalogValueMutationVariables = {catalog: CatalogKind;data: CatalogValueInput}
+
+    /**
+ * @summary Agrega un valor al final de un catálogo descriptivo
+ */
+export const useAdminCreateCatalogValue = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateCatalogValue>>, TError,AdminCreateCatalogValueMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminCreateCatalogValue>>,
+        TError,
+        AdminCreateCatalogValueMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminCreateCatalogValueMutationOptions(options), queryClient);
+    }
+
+export type adminUpdateCatalogValueResponse200 = {
+  data: CatalogValue
+  status: 200
+}
+
+export type adminUpdateCatalogValueResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminUpdateCatalogValueResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminUpdateCatalogValueResponseSuccess = (adminUpdateCatalogValueResponse200) & {
+  headers: Headers;
+};
+export type adminUpdateCatalogValueResponseError = (adminUpdateCatalogValueResponse400 | adminUpdateCatalogValueResponse404) & {
+  headers: Headers;
+};
+
+export type adminUpdateCatalogValueResponse = (adminUpdateCatalogValueResponseSuccess | adminUpdateCatalogValueResponseError)
+
+export const getAdminUpdateCatalogValueUrl = (catalog: CatalogKind,
+    code: string,) => {
+
+
+
+
+  return `/v1/admin/catalogs/${catalog}/values/${code}`
+}
+
+/**
+ * @summary Cambia etiqueta, visibilidad o muestra de color de un valor, incluidos los de sistema
+ */
+export const adminUpdateCatalogValue = async (catalog: CatalogKind,
+    code: string,
+    catalogValuePatch: CatalogValuePatch, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateCatalogValueResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminUpdateCatalogValueResponse>(getAdminUpdateCatalogValueUrl(catalog,code),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(catalogValuePatch)
+  }
+);}
+
+
+
+
+
+export const getAdminUpdateCatalogValueMutationKey = () => ['adminUpdateCatalogValue'] as const;
+
+export const getAdminUpdateCatalogValueMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateCatalogValue>>, TError,AdminUpdateCatalogValueMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUpdateCatalogValue>>, TError,AdminUpdateCatalogValueMutationVariables, TContext> => {
+
+const mutationKey = getAdminUpdateCatalogValueMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUpdateCatalogValue>>, AdminUpdateCatalogValueMutationVariables> = (props) => {
+          const {catalog,code,data} = props ?? {};
+
+          return  adminUpdateCatalogValue(catalog,code,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUpdateCatalogValueMutationResult = NonNullable<Awaited<ReturnType<typeof adminUpdateCatalogValue>>>
+    export type AdminUpdateCatalogValueMutationBody = CatalogValuePatch
+    export type AdminUpdateCatalogValueMutationError = ProblemResponse
+    export type AdminUpdateCatalogValueMutationVariables = {catalog: CatalogKind;code: string;data: CatalogValuePatch}
+
+    /**
+ * @summary Cambia etiqueta, visibilidad o muestra de color de un valor, incluidos los de sistema
+ */
+export const useAdminUpdateCatalogValue = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateCatalogValue>>, TError,AdminUpdateCatalogValueMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminUpdateCatalogValue>>,
+        TError,
+        AdminUpdateCatalogValueMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminUpdateCatalogValueMutationOptions(options), queryClient);
+    }
+
+export type adminDeleteCatalogValueResponse204 = {
+  data: void
+  status: 204
+}
+
+export type adminDeleteCatalogValueResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminDeleteCatalogValueResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type adminDeleteCatalogValueResponseSuccess = (adminDeleteCatalogValueResponse204) & {
+  headers: Headers;
+};
+export type adminDeleteCatalogValueResponseError = (adminDeleteCatalogValueResponse404 | adminDeleteCatalogValueResponse409) & {
+  headers: Headers;
+};
+
+export type adminDeleteCatalogValueResponse = (adminDeleteCatalogValueResponseSuccess | adminDeleteCatalogValueResponseError)
+
+export const getAdminDeleteCatalogValueUrl = (catalog: CatalogKind,
+    code: string,) => {
+
+
+
+
+  return `/v1/admin/catalogs/${catalog}/values/${code}`
+}
+
+/**
+ * `409` si es de sistema o si lo usa algún producto (el `detail` dice cuántos): en ese caso se oculta.
+ * @summary Borra un valor que no es de sistema y que ningún producto usa
+ */
+export const adminDeleteCatalogValue = async (catalog: CatalogKind,
+    code: string, options?: Parameters<typeof apiFetch>[1]): Promise<adminDeleteCatalogValueResponse> => {
+
+  return apiFetch<adminDeleteCatalogValueResponse>(getAdminDeleteCatalogValueUrl(catalog,code),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminDeleteCatalogValueMutationKey = () => ['adminDeleteCatalogValue'] as const;
+
+export const getAdminDeleteCatalogValueMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeleteCatalogValue>>, TError,AdminDeleteCatalogValueMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminDeleteCatalogValue>>, TError,AdminDeleteCatalogValueMutationVariables, TContext> => {
+
+const mutationKey = getAdminDeleteCatalogValueMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminDeleteCatalogValue>>, AdminDeleteCatalogValueMutationVariables> = (props) => {
+          const {catalog,code} = props ?? {};
+
+          return  adminDeleteCatalogValue(catalog,code,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminDeleteCatalogValueMutationResult = NonNullable<Awaited<ReturnType<typeof adminDeleteCatalogValue>>>
+
+    export type AdminDeleteCatalogValueMutationError = ProblemResponse
+    export type AdminDeleteCatalogValueMutationVariables = {catalog: CatalogKind;code: string}
+
+    /**
+ * @summary Borra un valor que no es de sistema y que ningún producto usa
+ */
+export const useAdminDeleteCatalogValue = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeleteCatalogValue>>, TError,AdminDeleteCatalogValueMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminDeleteCatalogValue>>,
+        TError,
+        AdminDeleteCatalogValueMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminDeleteCatalogValueMutationOptions(options), queryClient);
+    }
+
+export type adminReorderCatalogResponse200 = {
+  data: AdminReorderCatalog200
+  status: 200
+}
+
+export type adminReorderCatalogResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminReorderCatalogResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminReorderCatalogResponseSuccess = (adminReorderCatalogResponse200) & {
+  headers: Headers;
+};
+export type adminReorderCatalogResponseError = (adminReorderCatalogResponse400 | adminReorderCatalogResponse404) & {
+  headers: Headers;
+};
+
+export type adminReorderCatalogResponse = (adminReorderCatalogResponseSuccess | adminReorderCatalogResponseError)
+
+export const getAdminReorderCatalogUrl = (catalog: CatalogKind,) => {
+
+
+
+
+  return `/v1/admin/catalogs/${catalog}/order`
+}
+
+/**
+ * @summary Fija el orden completo de un catálogo
+ */
+export const adminReorderCatalog = async (catalog: CatalogKind,
+    catalogOrderInput: CatalogOrderInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminReorderCatalogResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminReorderCatalogResponse>(getAdminReorderCatalogUrl(catalog),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(catalogOrderInput)
+  }
+);}
+
+
+
+
+
+export const getAdminReorderCatalogMutationKey = () => ['adminReorderCatalog'] as const;
+
+export const getAdminReorderCatalogMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderCatalog>>, TError,AdminReorderCatalogMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminReorderCatalog>>, TError,AdminReorderCatalogMutationVariables, TContext> => {
+
+const mutationKey = getAdminReorderCatalogMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminReorderCatalog>>, AdminReorderCatalogMutationVariables> = (props) => {
+          const {catalog,data} = props ?? {};
+
+          return  adminReorderCatalog(catalog,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminReorderCatalogMutationResult = NonNullable<Awaited<ReturnType<typeof adminReorderCatalog>>>
+    export type AdminReorderCatalogMutationBody = CatalogOrderInput
+    export type AdminReorderCatalogMutationError = ProblemResponse
+    export type AdminReorderCatalogMutationVariables = {catalog: CatalogKind;data: CatalogOrderInput}
+
+    /**
+ * @summary Fija el orden completo de un catálogo
+ */
+export const useAdminReorderCatalog = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderCatalog>>, TError,AdminReorderCatalogMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminReorderCatalog>>,
+        TError,
+        AdminReorderCatalogMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminReorderCatalogMutationOptions(options), queryClient);
     }
 
 export type adminCreateBrandResponse201 = {

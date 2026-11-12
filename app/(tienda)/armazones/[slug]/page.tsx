@@ -1,25 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { BadgeCheck, MonitorSmartphone, Package, ShieldCheck, Sparkles, SunDim, Wrench } from "lucide-react";
+import { BadgeCheck, Check, MonitorSmartphone, Package, ShieldCheck, Sparkles, SunDim, Wrench } from "lucide-react";
 import { Breadcrumbs } from "@/components/tienda/breadcrumbs";
 import { FrameMeasuresDiagram } from "@/components/tienda/frame-measures-diagram";
 import { FrameSelection, FrameSelector, SelectedColor } from "@/components/tienda/frame-selector";
 import { ProductGallery } from "@/components/tienda/product-gallery";
 import { ProductViewTracker } from "@/components/tienda/product-view-tracker";
 import { getProduct } from "@/lib/api/generated/api";
-import type { FrameInclude } from "@/lib/api/generated/model";
 import { env } from "@/lib/env";
-import {
-  frameIncludeLabel, frameMaterialLabel, frameSizeLabel, genderLabel, pickKey, productHref, rimLabel, shapeLabel,
-} from "@/lib/format";
+import { productHref } from "@/lib/format";
 import { imageSrc } from "@/lib/images";
+import { loadCatalog } from "@/lib/storefront";
 import { t } from "@/lib/i18n";
 import { FavoriteButton } from "@/components/tienda/favorite-button";
 
 type Props = { params: Promise<{ slug: string }> };
 
-const includeIcon: Record<FrameInclude, typeof Package> = {
+// Íconos de los valores de "qué incluye" que ya existían; uno nuevo del admin (SPEC 16) lleva una palomita genérica.
+const includeIcon: Record<string, typeof Package> = {
   case: Package, cleaning_cloth: Sparkles, scratch_resistant: ShieldCheck, warranty: BadgeCheck,
   blue_light_filter: MonitorSmartphone, anti_reflective: SunDim, optician_fitting: Wrench,
 };
@@ -43,6 +42,7 @@ export default async function FramePage({ params }: Props) {
   const p = await load((await params).slug);
   if (!p) notFound();
   if (p.category !== "frame" || !p.frame) permanentRedirect(productHref(p));
+  const catalog = await loadCatalog();
 
   const images = p.images.map((i) => imageSrc(i.url)).filter((x): x is string => !!x);
   const url = `${env.siteUrl}${productHref(p)}`;
@@ -66,7 +66,7 @@ export default async function FramePage({ params }: Props) {
     }),
   };
   const { frame } = p;
-  const size = frame.size ? frameSizeLabel[frame.size] : undefined;
+  const size = frame.size ? catalog.label("frame_size", frame.size) : undefined;
   const mm = (value: number | null) => value != null && t("frames.measures.value", { value });
   const measures = [
     { label: t("frames.measures.lensWidth"), value: mm(frame.lens_width_mm) },
@@ -76,15 +76,17 @@ export default async function FramePage({ params }: Props) {
     { label: t("frames.measures.frameWidth"), value: mm(frame.frame_width_mm) },
     { label: t("frames.measures.weight"), value: frame.weight_g != null && t("frames.measures.weightValue", { value: frame.weight_g }) },
   ].filter((m) => m.value);
-  // Valores que la API agregue antes que la web se omiten.
-  const includes = frame.includes.flatMap((i) => pickKey(frameIncludeLabel, i) ?? []);
+  // En el orden del catálogo; un valor oculto conserva su etiqueta y va al final (SPEC 16, puntos 10 y 11).
+  const includeOrder = catalog.entries("frame_include").map((e) => e.code);
+  const rank = (code: string) => (includeOrder.includes(code) ? includeOrder.indexOf(code) : includeOrder.length);
+  const includes = [...frame.includes].sort((a, b) => rank(a) - rank(b));
   const yesNo = (v: boolean | null) => v != null && t(v ? "frames.features.yes" : "frames.features.no");
   const features = [
     { label: t("frames.features.size"), value: size },
-    { label: t("frames.features.gender"), value: genderLabel[frame.gender] },
-    { label: t("frames.features.material"), value: frameMaterialLabel[frame.material] },
-    { label: t("frames.features.rim"), value: rimLabel[frame.rim] },
-    { label: t("frames.features.shape"), value: shapeLabel[frame.shape] },
+    { label: t("frames.features.gender"), value: catalog.label("frame_gender", frame.gender) },
+    { label: t("frames.features.material"), value: catalog.label("frame_material", frame.material) },
+    { label: t("frames.features.rim"), value: catalog.label("frame_rim", frame.rim) },
+    { label: t("frames.features.shape"), value: catalog.label("frame_shape", frame.shape) },
     { label: t("frames.features.color"), value: p.frame_variants.length > 0 && <SelectedColor variants={p.frame_variants} /> },
     { label: t("frames.features.springHinges"), value: yesNo(frame.spring_hinges) },
     { label: t("frames.features.adjustableNosePads"), value: yesNo(frame.adjustable_nose_pads) },
@@ -124,13 +126,13 @@ export default async function FramePage({ params }: Props) {
                 <h2 id="incluye" className="mb-3 text-base">{t("frames.includes.title")}</h2>
                 <ul className="grid gap-2 text-sm sm:grid-cols-2">
                   {includes.map((i) => {
-                    const Icon = includeIcon[i];
+                    const Icon = Object.hasOwn(includeIcon, i) ? includeIcon[i] : Check;
                     return (
                       <li key={i} className="flex items-center gap-2">
                         <Icon className="size-5 shrink-0 text-primary" aria-hidden="true" />
                         {i === "warranty" && frame.warranty_months != null
                           ? t("frames.includes.warrantyMonths", { count: frame.warranty_months })
-                          : frameIncludeLabel[i]}
+                          : catalog.label("frame_include", i)}
                       </li>
                     );
                   })}
