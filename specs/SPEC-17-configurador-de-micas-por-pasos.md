@@ -1,6 +1,6 @@
 # SPEC 17 — Configurador de micas por pasos
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-api#17, lentes-web#11, lentes-admin#8
 > **Depends on:** SPEC 04, SPEC 14
 > **Date:** 2026-11-12
 > **Objective:** Reemplazar la elección de paquete de micas de la ficha de armazón por un panel de pasos (necesidad visual, tratamiento y receta) con tratamientos administrables.
