@@ -1,6 +1,6 @@
 # SPEC 15 — Banners administrables de toda la tienda
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-api#14, lentes-web#9, lentes-admin#7
 > **Depends on:** SPEC 02, SPEC 03
 > **Date:** 2026-11-11
 > **Objective:** Permitir que el admin edite desde `lentes-admin` todo el contenido visual de la tienda que hoy está fijo en código: tarjetas del megamenú, mosaico del home, franja de promesas y diapositivas de respaldo del hero.

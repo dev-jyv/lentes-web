@@ -1,6 +1,6 @@
 # SPEC 16 — Catálogos de atributos administrables
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-api#15, lentes-web#9, lentes-admin#7
 > **Depends on:** SPEC 01, SPEC 12
 > **Date:** 2026-11-11
 > **Objective:** Permitir que el admin gestione desde `lentes-admin` los valores, etiquetas, orden y visibilidad de los catálogos de atributos de producto que hoy son listas fijas en código.
