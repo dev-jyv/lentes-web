@@ -47,10 +47,19 @@ export function OrderStatus({ orderId }: { orderId: string }) {
       {o.items.some((i) => i.category === "frame") && (
         <ul className="space-y-1 text-sm">
           {o.items.filter((i) => i.category === "frame").map((i) => (
-            <li key={i.sku + (i.lens_package_name ?? "")}>
+            <li key={i.sku + (i.lens_package_name ?? "") + (i.lens_treatment?.slug ?? "")}>
               {t("format.quantity", { count: i.quantity })}{i.product_name}
               {i.color && ` · ${catalog.label("frame_color", i.color)}`}
-              {i.lens_package_name && ` · ${i.lens_package_name}`}
+              {/* Necesidad, tratamiento con su precio congelado y precio unitario pagado. */}
+              <span className="block text-xs text-muted-foreground">
+                {[
+                  i.lens_package_name,
+                  i.lens_treatment && t("orderStatus.treatmentPrice", {
+                    name: i.lens_treatment.name, price: formatMxn(i.treatment_price_cents ?? 0),
+                  }),
+                  t("orderStatus.unitPrice", { quantity: i.quantity, price: formatMxn(i.unit_price_cents) }),
+                ].filter(Boolean).join(" · ")}
+              </span>
             </li>
           ))}
         </ul>

@@ -1,14 +1,10 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { createContext, use, useState, type ReactNode } from "react";
+import { createContext, use, useMemo, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useCartDrawer } from "@/components/tienda/cart-drawer";
-import { addCartItem, getGetCartQueryKey } from "@/lib/api/generated/api";
+import { LensConfigurator } from "@/components/tienda/lens-configurator";
 import type { FrameVariant, ProductDetail } from "@/lib/api/generated/model";
-import { track } from "@/lib/analytics";
 import { useCatalog } from "@/components/catalog-provider";
 import { formatLeadTime, formatMxn } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -32,41 +28,19 @@ export function SelectedColor({ variants }: { variants: FrameVariant[] }) {
 export function FrameSelector({ product }: { product: ProductDetail }) {
   const variants = product.frame_variants;
   // Sin alto de mica suficiente la API marca el armazón como no apto para progresivos.
-  const packages = product.frame?.progressive_eligible === false
+  const packages = useMemo(() => product.frame?.progressive_eligible === false
     ? product.lens_packages.filter((p) => p.vision_type !== "progressive")
-    : product.lens_packages;
-  const cartDrawer = useCartDrawer();
+    : product.lens_packages, [product]);
   const catalog = useCatalog();
   const colorLabel = (code: string) => catalog.label("frame_color", code);
-  const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = use(Selection);
-  const [packageId, setPackageId] = useState<string | undefined>();
-  const [adding, setAdding] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const selected = variants.find((v) => v.id === selectedId);
-  const pack = packages.find((p) => p.id === packageId);
   // Solo hay oferta si el precio anterior es mayor al actual.
   const onSale = !!selected && selected.compare_at_cents != null && selected.compare_at_cents > selected.price_cents;
   // Sin paquetes o sin tiempo de entrega, la venta de armazones sigue apagada.
   const canBuy = product.frame_lead_time_days != null && packages.length > 0;
 
   if (variants.length === 0) return <p className="text-muted-foreground">{t("frames.unavailable")}</p>;
-
-  async function add() {
-    if (!selected || !pack) return;
-    setAdding(true);
-    setError(null);
-    const res = await addCartItem({ variant_id: selected.id, eye: "both", quantity: 1, lens_package_id: pack.id }).catch(() => null);
-    await queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
-    if (res?.status !== 201) {
-      setAdding(false);
-      const detail = (res?.data as { detail?: string } | undefined)?.detail;
-      return setError(res?.status === 409 && detail ? detail : t("frames.addFailed"));
-    }
-    track("add_to_cart", { slug: product.slug, name: product.name, category: "frame", lens_package: pack.slug });
-    setAdding(false);
-    cartDrawer.open();
-  }
 
   return (
     <div className="space-y-5">
@@ -118,46 +92,15 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
       )}
 
       {canBuy ? (
-        <>
-          <fieldset>
-            <legend className="mb-2 text-sm font-medium">{t("frames.chooseLenses")}</legend>
-            <div className="space-y-2">
-              {packages.map((p) => (
-                <label
-                  key={p.id}
-                  className="flex cursor-pointer items-start justify-between gap-3 rounded-xl border bg-card p-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-secondary has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
-                >
-                  <span className="flex items-start gap-3">
-                    <input type="radio" name="micas" className="mt-1" value={p.id} checked={packageId === p.id} onChange={() => setPackageId(p.id)} />
-                    <span>
-                      <strong>{p.name}</strong>
-                      {p.description && <span className="block text-muted-foreground">{p.description}</span>}
-                      {p.requires_prescription && <span className="block text-xs text-muted-foreground">{t("frames.requiresPrescription")}</span>}
-                    </span>
-                  </span>
-                  <strong className="shrink-0">{p.price_cents === 0 ? t("frames.included") : t("frames.packagePrice", { price: formatMxn(p.price_cents) })}</strong>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-          <div className="space-y-3 rounded-xl border bg-card p-4">
-            <p className="flex justify-between">
-              <span>{t("frames.total")}</span>
-              <strong className="font-display text-xl">
-                {selected && pack ? formatMxn(selected.price_cents + pack.price_cents) : t("frames.chooseLenses")}
-              </strong>
-            </p>
-            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-            <Button size="lg" className="w-full" disabled={!selected?.in_stock || !pack || adding} onClick={add}>
-              {adding ? t("frames.adding") : t("frames.addToCart")}
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              {rich(t("frames.deliveryNote", { time: formatLeadTime(product.frame_lead_time_days!) }), {
-                link: (c) => <Link href="/cambios-y-devoluciones" className="underline">{c}</Link>,
-              })}
-            </p>
-          </div>
-        </>
+        // Necesidad visual, tratamiento y receta se eligen en el panel por pasos (SPEC 17).
+        <div className="space-y-3">
+          <LensConfigurator product={product} packages={packages} variant={selected} onRestoreVariant={setSelectedId} />
+          <p className="text-xs text-muted-foreground">
+            {rich(t("frames.deliveryNote", { time: formatLeadTime(product.frame_lead_time_days!) }), {
+              link: (c) => <Link href="/cambios-y-devoluciones" className="underline">{c}</Link>,
+            })}
+          </p>
+        </div>
       ) : (
         <p className="rounded-xl bg-secondary p-4 text-sm">{t("frames.comingSoon")}</p>
       )}

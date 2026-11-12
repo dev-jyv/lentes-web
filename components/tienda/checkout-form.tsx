@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FrameDetails } from "@/components/tienda/cart-view";
 import {
   createAddress, createCheckout, getGetCartQueryKey, getListAddressesQueryKey, useGetCart, useListAddresses,
   useListPrescriptions,
@@ -159,8 +160,10 @@ export function CheckoutForm() {
   const prescriptions = usable.filter((r) => (r.kind ?? "contact_lens") === "contact_lens");
   const glassesPrescriptions = usable.filter((r) => r.kind === "glasses");
   const firstUsable = (list: typeof usable) => list.find((r) => r.status === "approved")?.id ?? list[0]?.id;
+  // La de armazones más reciente, aunque siga en revisión: es la que se acaba de subir desde la ficha (SPEC 17).
+  const newest = (list: typeof usable) => list.reduce<Prescription | undefined>((a, r) => (!a || r.created_at > a.created_at ? r : a), undefined)?.id;
   const prescriptionId = needsRx ? (pickedRx ?? firstUsable(prescriptions)) : undefined;
-  const glassesPrescriptionId = needsGlassesRx ? (pickedGlassesRx ?? firstUsable(glassesPrescriptions)) : undefined;
+  const glassesPrescriptionId = needsGlassesRx ? (pickedGlassesRx ?? newest(glassesPrescriptions)) : undefined;
   const rxMissing = (needsRx && !prescriptionId) || (needsGlassesRx && !glassesPrescriptionId);
   const addressId = picked ?? addresses.find((a) => a.is_default)?.id ?? addresses[0]?.id;
 
@@ -223,9 +226,12 @@ export function CheckoutForm() {
         <h2 className="text-lg">{t("checkout.summary")}</h2>
         <ul className="space-y-1 text-sm">
           {cart.items.map((i) => (
-            <li key={i.id} className="flex justify-between gap-2">
-              <span>{t("format.quantity", { count: i.quantity })}{i.product.name}</span>
-              <span>{formatMxn(i.line_total_cents)}</span>
+            <li key={i.id} className="space-y-0.5">
+              <div className="flex justify-between gap-2">
+                <span>{t("format.quantity", { count: i.quantity })}{i.product.name}</span>
+                <span>{formatMxn(i.line_total_cents)}</span>
+              </div>
+              {i.category === "frame" && <FrameDetails item={i} />}
             </li>
           ))}
         </ul>
