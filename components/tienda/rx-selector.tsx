@@ -16,7 +16,8 @@ import {
 } from "@/lib/api/generated/api";
 import type { GetProductVariantParams, ProductDetail, ProductOptions } from "@/lib/api/generated/model";
 import { track } from "@/lib/analytics";
-import { formatMxn, replacementLabel } from "@/lib/format";
+import { useCatalog } from "@/components/catalog-provider";
+import { formatMxn } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { rich } from "@/lib/rich";
 
@@ -195,6 +196,7 @@ function EyeBlock({
 
 export function RxSelector({ product }: { product: ProductDetail }) {
   const o = product.options;
+  const catalog = useCatalog();
   const soldOut = product.from_price_cents == null;
   const schema = useMemo(() => buildSchema(o), [o]);
   const { control, handleSubmit, getValues, setValue, formState: { errors, isSubmitting } } =
@@ -273,9 +275,9 @@ export function RxSelector({ product }: { product: ProductDetail }) {
   });
 
   const packaging = product.replacement && product.pieces_per_box != null
-    ? t("lenses.packaging", { replacement: replacementLabel[product.replacement], count: product.pieces_per_box })
+    ? t("lenses.packaging", { replacement: catalog.label("replacement", product.replacement), count: product.pieces_per_box })
     : product.pieces_per_box != null ? t("lenses.piecesPerBox", { count: product.pieces_per_box })
-    : product.replacement ? replacementLabel[product.replacement] : null;
+    : product.replacement ? catalog.label("replacement", product.replacement) : null;
   const strong = (c: ReactNode) => <strong className="font-display text-2xl">{c}</strong>;
 
   return (

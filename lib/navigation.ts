@@ -1,5 +1,5 @@
 import type { CatalogFacets } from "@/lib/api/generated/model";
-import { formatMxn, genderLabel, frameMaterialLabel, lensNeedLabel, replacementLabel, shapeLabel } from "@/lib/format";
+import { formatMxn } from "@/lib/format";
 import { t } from "@/lib/i18n";
 
 export type NavLink = { label: string; href: string; value?: string };
@@ -17,19 +17,18 @@ export const FRAME_PRICE_BANDS = [99900, 149900, 249900];
 
 const MAX_BRANDS_IN_COLUMN = 8;
 
-const fromLabels = (labels: Record<string, string>, param: string, base: string): NavLink[] =>
-  Object.entries(labels).map(([value, label]) => ({ label, value, href: `${base}?${param}=${value}` }));
-
 export const priceBandLabel = (cents: number) => t("catalog.upTo", { price: formatMxn(cents).replace(/\.00$/, "") });
 
 // Valor de una faceta que tiene al menos un producto.
 const available = (facets: CatalogFacets, key: string, value: string) =>
   facets.values[key]?.some((v) => v.value === value && v.count > 0) ?? false;
 
-function facetColumn(title: string, facet: string, links: NavLink[], facets: CatalogFacets | null): NavColumn | null {
-  if (!facets) return null;
-  const present = links.filter((l) => l.value && available(facets, facet, l.value));
-  return present.length ? { title, facet, links: present } : null;
+// Columna de un atributo: valores con productos, con la etiqueta y el orden del catálogo (SPEC 16).
+function facetColumn(title: string, facet: string, param: string, base: string, facets: CatalogFacets | null): NavColumn | null {
+  const links = (facets?.values[facet] ?? [])
+    .filter((v) => v.count > 0)
+    .map((v) => ({ label: v.label, value: v.value, href: `${base}?${param}=${v.value}` }));
+  return links.length ? { title, facet, links } : null;
 }
 
 function brandColumn(base: string, facets: CatalogFacets | null): NavColumn | null {
@@ -77,9 +76,9 @@ export function buildNavigation({ frames, lenses, brands }: NavData): NavItem[] 
       href: "/armazones",
       allLabel: t("nav.allFrames"),
       columns: compact([
-        facetColumn(t("catalog.filters.gender"), "gender", fromLabels(genderLabel, "gender", "/armazones"), frames),
-        facetColumn(t("catalog.filters.shape"), "shape", fromLabels(shapeLabel, "shape", "/armazones"), frames),
-        facetColumn(t("catalog.filters.material"), "material", fromLabels(frameMaterialLabel, "frame_material", "/armazones"), frames),
+        facetColumn(t("catalog.filters.gender"), "gender", "gender", "/armazones", frames),
+        facetColumn(t("catalog.filters.shape"), "shape", "shape", "/armazones", frames),
+        facetColumn(t("catalog.filters.material"), "material", "frame_material", "/armazones", frames),
         priceColumn(frames),
         brandColumn("/armazones", frames),
       ]),
@@ -95,8 +94,8 @@ export function buildNavigation({ frames, lenses, brands }: NavData): NavItem[] 
     href: "/lentes",
     allLabel: t("nav.allLenses"),
     columns: compact([
-      facetColumn(t("nav.byUse"), "replacement", fromLabels(replacementLabel, "replacement", "/lentes"), lenses),
-      facetColumn(t("nav.byNeed"), "lens_type", fromLabels(lensNeedLabel, "lens_type", "/lentes"), lenses),
+      facetColumn(t("nav.byUse"), "replacement", "replacement", "/lentes", lenses),
+      facetColumn(t("nav.byNeed"), "lens_type", "lens_type", "/lentes", lenses),
       brandColumn("/lentes", lenses),
       {
         title: t("nav.yourPrescription"),
@@ -135,8 +134,8 @@ const MAX_SEARCH_CHIPS = 6;
 
 // Búsquedas sugeridas (SPEC 07): formas y marcas con más productos, enlazadas al catálogo filtrado.
 export function searchChips(frames: CatalogFacets | null, lenses: CatalogFacets | null): NavLink[] {
-  const shapes = (frames?.values.shape ?? []).filter((v) => v.count > 0 && v.value in shapeLabel).map((v) => ({
-    label: shapeLabel[v.value as keyof typeof shapeLabel],
+  const shapes = (frames?.values.shape ?? []).filter((v) => v.count > 0).map((v) => ({
+    label: v.label,
     href: `/armazones?shape=${v.value}`,
     count: v.count,
   }));

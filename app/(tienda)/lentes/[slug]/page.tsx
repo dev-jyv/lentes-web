@@ -8,7 +8,8 @@ import { RxSelector } from "@/components/tienda/rx-selector";
 import { getProduct } from "@/lib/api/generated/api";
 import { env } from "@/lib/env";
 import { imageSrc } from "@/lib/images";
-import { lensTypeLabel, productHref, replacementLabel } from "@/lib/format";
+import { productHref } from "@/lib/format";
+import { loadCatalog } from "@/lib/storefront";
 import { t } from "@/lib/i18n";
 import { FavoriteButton } from "@/components/tienda/favorite-button";
 
@@ -56,12 +57,13 @@ export default async function ProductPage({ params }: Props) {
     }),
   };
 
+  const catalog = await loadCatalog();
   const brandHref = `/marcas/${p.brand.slug}`;
   const yesNo = (v: boolean | null) => (v == null ? null : v ? t("lenses.yes") : t("lenses.no"));
   // Filas de "Detalles del lente"; las que no tienen valor no se muestran.
   const details = [
-    [t("lenses.details.lensType"), p.lens_type && lensTypeLabel[p.lens_type]],
-    [t("lenses.details.replacement"), p.replacement && replacementLabel[p.replacement]],
+    [t("lenses.details.lensType"), p.lens_type && catalog.label("lens_type", p.lens_type)],
+    [t("lenses.details.replacement"), p.replacement && catalog.label("replacement", p.replacement)],
     [t("lenses.details.piecesPerBox"), p.pieces_per_box],
     [t("lenses.details.material"), p.material],
     [t("lenses.details.waterContent"), p.water_content_pct != null ? t("lenses.waterContentValue", { value: p.water_content_pct }) : null],

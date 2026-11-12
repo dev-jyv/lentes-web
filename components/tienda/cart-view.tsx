@@ -13,7 +13,8 @@ import {
   getGetCartQueryKey, useDeleteCartItem, useGetCart, useUpdateCartItem,
 } from "@/lib/api/generated/api";
 import type { Cart, CartItem } from "@/lib/api/generated/model";
-import { colorLabel, formatMxn, productHref } from "@/lib/format";
+import { useCatalog } from "@/components/catalog-provider";
+import { formatMxn, productHref } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { imageSrc } from "@/lib/images";
 import { rich } from "@/lib/rich";
@@ -38,7 +39,8 @@ function describe(i: CartItem) {
 }
 
 function FrameLine({ item }: { item: CartItem }) {
-  const color = item.color ? colorLabel[item.color as keyof typeof colorLabel] ?? item.color : null;
+  const catalog = useCatalog();
+  const color = item.color ? catalog.label("frame_color", item.color) : null;
   return (
     <>
       <p className="text-sm">{color}{item.lens_package && ` · ${item.lens_package.name}`}</p>

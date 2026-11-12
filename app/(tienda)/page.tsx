@@ -7,12 +7,11 @@ import { HeroLens } from "@/components/tienda/hero-lens";
 import { HomeMosaic } from "@/components/tienda/home-mosaic";
 import { ProductCard } from "@/components/tienda/product-card";
 import { listProducts } from "@/lib/api/generated/api";
-import type { FrameShape, HomeBanner, Product } from "@/lib/api/generated/model";
-import { lensNeedLabel, replacementLabel, shapeLabel } from "@/lib/format";
+import type { CatalogFacets, HomeBanner, Product } from "@/lib/api/generated/model";
 import { imageSrc } from "@/lib/images";
 import { FRAME_PRICE_BANDS, mergeBrands, priceBandLabel } from "@/lib/navigation";
 import { isInternalHref } from "@/lib/safe-next";
-import { loadFacets, loadHome } from "@/lib/storefront";
+import { loadCatalog, loadFacets, loadHome } from "@/lib/storefront";
 import { t } from "@/lib/i18n";
 import { rich } from "@/lib/rich";
 
@@ -147,20 +146,24 @@ function ProductRow({ title, href, products, className = "" }: { title: string; 
 }
 
 export default async function HomePage() {
-  const [home, frames, lenses] = await Promise.all([loadHome(), loadFacets("frame"), loadFacets("contact_lens")]);
+  const [home, frames, lenses, catalog] = await Promise.all([loadHome(), loadFacets("frame"), loadFacets("contact_lens"), loadCatalog()]);
   const hasFrames = (frames?.total ?? 0) > 0;
   const [frameProducts, lensProducts] = await Promise.all([
     hasFrames ? featuredOrNewest(home?.featured.frame, "frame") : Promise.resolve([]),
     featuredOrNewest(home?.featured.contact_lens, "contact_lens"),
   ]);
 
-  const has = (facet: typeof frames, key: string, value: string) => facet?.values[key]?.some((v) => v.value === value) ?? false;
-  const shapes = (Object.keys(shapeLabel) as FrameShape[]).filter((s) => has(frames, "shape", s));
+  // Valores con productos, con la etiqueta y el orden del catálogo (SPEC 16).
+  const present = (facet: CatalogFacets, key: string): [string, string][] =>
+    (facet.values[key] ?? []).filter((v) => v.count > 0).map((v) => [v.value, v.label]);
+  const shapes = frames ? present(frames, "shape") : [];
   const minFramePrice = frames?.min_price_cents;
   const priceBands = minFramePrice == null ? [] : FRAME_PRICE_BANDS.filter((band) => band >= minFramePrice);
   // Sin datos del catálogo (API caída) quedan solo los enlaces fijos que el home ya ofrecía.
-  const uses = Object.entries(replacementLabel).filter(([v]) => (lenses ? has(lenses, "replacement", v) : v === "daily" || v === "monthly"));
-  const needs = Object.entries(lensNeedLabel).filter(([v]) => (lenses ? has(lenses, "lens_type", v) : v !== "cosmetic"));
+  const fallback = (kind: "replacement" | "lens_type", keep: (code: string) => boolean): [string, string][] =>
+    catalog.entries(kind).filter((e) => keep(e.code)).map((e) => [e.code, e.label]);
+  const uses = lenses ? present(lenses, "replacement") : fallback("replacement", (v) => v === "daily" || v === "monthly");
+  const needs = lenses ? present(lenses, "lens_type") : fallback("lens_type", (v) => v !== "cosmetic");
   const brands = mergeBrands(frames, lenses);
   // `hero` cubre a una API que aún no publique `heroes`. Un banner sin imagen no entra al carrusel.
   const heroes = (home?.heroes ?? (home?.hero ? [home.hero] : [])).filter((b) => imageSrc(b.image_url));
@@ -182,11 +185,11 @@ export default async function HomePage() {
         <section className="container-page space-y-4 pt-12 pb-4">
           <h2 className="text-2xl">{t("home.byShape")}</h2>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {shapes.map((shape) => (
+            {shapes.map(([shape, label]) => (
               <li key={shape}>
                 <Link href={`/armazones?shape=${shape}`} className="flex h-full flex-col items-center gap-2 rounded-2xl bg-secondary p-5 text-center font-medium transition-colors hover:bg-accent hover:text-primary">
                   <FrameShapeIcon shape={shape} className="h-10 text-primary" />
-                  {shapeLabel[shape]}
+                  {label}
                 </Link>
               </li>
             ))}

@@ -1,7 +1,6 @@
-import type { FrameShape } from "@/lib/api/generated/model";
-
 // Silueta de cada forma de armazón: dos lentes y un puente. Usa el color del texto, así sigue el tema.
-const lens: Record<FrameShape, (cx: number) => React.ReactNode> = {
+// Una forma creada en el admin después del despliegue (SPEC 16) usa la silueta rectangular.
+const lens: Record<string, (cx: number) => React.ReactNode> = {
   rectangular: (cx) => <rect x={cx - 15} y={14} width={30} height={20} rx={3} />,
   square: (cx) => <rect x={cx - 14} y={10} width={28} height={28} rx={5} />,
   round: (cx) => <circle cx={cx} cy={24} r={15} />,
@@ -27,11 +26,12 @@ const lens: Record<FrameShape, (cx: number) => React.ReactNode> = {
   ),
 };
 
-export function FrameShapeIcon({ shape, className }: { shape: FrameShape; className?: string }) {
+export function FrameShapeIcon({ shape, className }: { shape: string; className?: string }) {
+  const draw = Object.hasOwn(lens, shape) ? lens[shape] : lens.rectangular;
   return (
     <svg viewBox="0 0 80 48" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round" aria-hidden="true" className={className}>
-      {lens[shape](20)}
-      {lens[shape](60)}
+      {draw(20)}
+      {draw(60)}
       <path d="M35 20 Q40 16 45 20" />
     </svg>
   );

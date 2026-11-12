@@ -4,7 +4,8 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useGetOrder } from "@/lib/api/generated/api";
-import { colorLabel, formatMxn } from "@/lib/format";
+import { useCatalog } from "@/components/catalog-provider";
+import { formatMxn } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { orderFolio } from "@/lib/order";
 
@@ -12,6 +13,7 @@ const FINAL = ["paid", "preparing", "shipped", "delivered", "cancelled", "refund
 
 // El estado real lo fija el webhook de Mercado Pago en el backend; aquí solo se consulta.
 export function OrderStatus({ orderId }: { orderId: string }) {
+  const catalog = useCatalog();
   const { data, isLoading } = useGetOrder(orderId, {
     query: {
       refetchInterval: (q) => {
@@ -47,7 +49,7 @@ export function OrderStatus({ orderId }: { orderId: string }) {
           {o.items.filter((i) => i.category === "frame").map((i) => (
             <li key={i.sku + (i.lens_package_name ?? "")}>
               {t("format.quantity", { count: i.quantity })}{i.product_name}
-              {i.color && ` · ${colorLabel[i.color as keyof typeof colorLabel] ?? i.color}`}
+              {i.color && ` · ${catalog.label("frame_color", i.color)}`}
               {i.lens_package_name && ` · ${i.lens_package_name}`}
             </li>
           ))}

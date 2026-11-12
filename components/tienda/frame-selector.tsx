@@ -9,16 +9,10 @@ import { useCartDrawer } from "@/components/tienda/cart-drawer";
 import { addCartItem, getGetCartQueryKey } from "@/lib/api/generated/api";
 import type { FrameVariant, ProductDetail } from "@/lib/api/generated/model";
 import { track } from "@/lib/analytics";
-import { colorLabel, formatLeadTime, formatMxn } from "@/lib/format";
+import { useCatalog } from "@/components/catalog-provider";
+import { formatLeadTime, formatMxn } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { rich } from "@/lib/rich";
-
-// Muestras de color del producto: son datos del catálogo, no parte de la paleta de la marca.
-const swatch: Record<FrameVariant["color"], string> = {
-  black: "#1b1b1f", tortoise: "#7a4a22", brown: "#6b4226", transparent: "#e8eef0", gray: "#8a8f94", blue: "#2f5fa8",
-  green: "#3f7d58", red: "#b3312f", pink: "#e39ab0", purple: "#6d4aa0", gold: "#c9a24a", silver: "#c2c7cc",
-  multicolor: "conic-gradient(#b3312f, #c9a24a, #3f7d58, #2f5fa8, #b3312f)",
-};
 
 // El color elegido se comparte con la sección de características de la ficha.
 const Selection = createContext<[string | undefined, (id: string) => void]>([undefined, () => {}]);
@@ -30,8 +24,9 @@ export function FrameSelection({ variants, children }: { variants: FrameVariant[
 }
 
 export function SelectedColor({ variants }: { variants: FrameVariant[] }) {
+  const catalog = useCatalog();
   const v = variants.find((x) => x.id === use(Selection)[0]);
-  return v ? colorLabel[v.color] : null;
+  return v ? catalog.label("frame_color", v.color) : null;
 }
 
 export function FrameSelector({ product }: { product: ProductDetail }) {
@@ -41,6 +36,8 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
     ? product.lens_packages.filter((p) => p.vision_type !== "progressive")
     : product.lens_packages;
   const cartDrawer = useCartDrawer();
+  const catalog = useCatalog();
+  const colorLabel = (code: string) => catalog.label("frame_color", code);
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = use(Selection);
   const [packageId, setPackageId] = useState<string | undefined>();
@@ -75,13 +72,13 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
     <div className="space-y-5">
       <fieldset>
         <legend className="mb-2 text-sm font-medium">
-          {t("catalog.filters.color")}{selected && <span className="font-normal text-muted-foreground">: {colorLabel[selected.color]}</span>}
+          {t("catalog.filters.color")}{selected && <span className="font-normal text-muted-foreground">: {colorLabel(selected.color)}</span>}
         </legend>
         <div className="flex flex-wrap gap-2">
           {variants.map((v) => (
             <label
               key={v.id}
-              title={v.in_stock ? colorLabel[v.color] : t("frames.colorSoldOutTitle", { color: colorLabel[v.color] })}
+              title={v.in_stock ? colorLabel(v.color) : t("frames.colorSoldOutTitle", { color: colorLabel(v.color) })}
               className={`grid size-11 place-items-center rounded-full border-2 ${v.id === selectedId ? "border-primary" : "border-transparent"} ${v.in_stock ? "cursor-pointer" : "cursor-not-allowed opacity-40"} has-focus-visible:ring-3 has-focus-visible:ring-ring/50`}
             >
               <input
@@ -92,9 +89,10 @@ export function FrameSelector({ product }: { product: ProductDetail }) {
                 disabled={!v.in_stock}
                 checked={v.id === selectedId}
                 onChange={() => setSelectedId(v.id)}
-                aria-label={v.in_stock ? colorLabel[v.color] : t("frames.colorSoldOutLabel", { color: colorLabel[v.color] })}
+                aria-label={v.in_stock ? colorLabel(v.color) : t("frames.colorSoldOutLabel", { color: colorLabel(v.color) })}
               />
-              <span className="size-8 rounded-full border" style={{ background: swatch[v.color] }} aria-hidden="true" />
+              {/* Muestra del catálogo; sin ella (API caída) queda un círculo neutro con la etiqueta en el título. */}
+              <span className="size-8 rounded-full border bg-muted" style={{ background: catalog.swatch(v.color) }} aria-hidden="true" />
             </label>
           ))}
         </div>
