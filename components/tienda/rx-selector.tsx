@@ -2,10 +2,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient, type UseQueryResult } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Controller, useForm, useWatch, type Control } from "react-hook-form";
 import { z } from "zod";
+import { useCartDrawer } from "@/components/tienda/cart-drawer";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -207,7 +207,7 @@ export function RxSelector({ product }: { product: ProductDetail }) {
       },
     });
 
-  const router = useRouter();
+  const cartDrawer = useCartDrawer();
   const queryClient = useQueryClient();
   const [boxesOd, setBoxesOd] = useState("1");
   const [boxesOs, setBoxesOs] = useState("1");
@@ -269,7 +269,7 @@ export function RxSelector({ product }: { product: ProductDetail }) {
       slug: product.slug, name: product.name, boxes_od: lines[0].quantity, boxes_os: lines[1].quantity,
       category: "contact_lens", lens_package: null,
     });
-    router.push("/carrito");
+    cartDrawer.open();
   });
 
   const packaging = product.replacement && product.pieces_per_box != null
