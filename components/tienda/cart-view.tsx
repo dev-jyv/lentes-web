@@ -38,17 +38,33 @@ function describe(i: CartItem) {
   ].filter(Boolean).join(" · ");
 }
 
-function FrameLine({ item }: { item: CartItem }) {
+// Color, necesidad visual y tratamiento de una línea de armazón, con su desglose de precios vigente.
+// También la usa el resumen del checkout.
+export function FrameDetails({ item }: { item: CartItem }) {
   const catalog = useCatalog();
   const color = item.color ? catalog.label("frame_color", item.color) : null;
+  const parts = [color, item.lens_package?.name, item.lens_treatment?.name].filter(Boolean);
+  const { frame_price_cents: frame, package_price_cents: lenses, treatment_price_cents: treatment } = item;
   return (
     <>
-      <p className="text-sm">{color}{item.lens_package && ` · ${item.lens_package.name}`}</p>
-      {item.frame_price_cents != null && item.package_price_cents != null && (
+      <p className="text-sm">{parts.join(" · ")}</p>
+      {frame != null && lenses != null && (
         <p className="text-xs text-muted-foreground">
-          {t("cart.framePlusLenses", { frame: formatMxn(item.frame_price_cents), lenses: formatMxn(item.package_price_cents) })}
+          {item.lens_treatment && treatment != null
+            ? t("cart.framePlusLensesAndTreatment", {
+              frame: formatMxn(frame), lenses: formatMxn(lenses), treatment: item.lens_treatment.name, price: formatMxn(treatment),
+            })
+            : t("cart.framePlusLenses", { frame: formatMxn(frame), lenses: formatMxn(lenses) })}
         </p>
       )}
+    </>
+  );
+}
+
+function FrameLine({ item }: { item: CartItem }) {
+  return (
+    <>
+      <FrameDetails item={item} />
       <Link href={productHref({ category: item.category, slug: item.product.slug })} className="text-xs text-primary underline">
         {t("cart.changeFrameOptions")}
       </Link>

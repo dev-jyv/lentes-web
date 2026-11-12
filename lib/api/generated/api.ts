@@ -31,10 +31,12 @@ import type {
   AdminHomeBanner,
   AdminImportVariants200,
   AdminLensPackage,
+  AdminLensTreatment,
   AdminListHomeBanners200,
   AdminListHomeFeatured200,
   AdminListHomeFeaturedParams,
   AdminListLensPackages200,
+  AdminListLensTreatments200,
   AdminListLowStock200,
   AdminListLowStockParams,
   AdminListOrders200,
@@ -55,6 +57,8 @@ import type {
   AdminReorderHomeBannersBody,
   AdminReorderLensPackages200,
   AdminReorderLensPackagesBody,
+  AdminReorderLensTreatments200,
+  AdminReorderLensTreatmentsBody,
   AdminReorderProductImages200,
   AdminRepurchaseReportParams,
   AdminSalesReportParams,
@@ -91,6 +95,7 @@ import type {
   ImageUploadInput,
   ImportProblem,
   LensPackageInput,
+  LensTreatmentInput,
   ListAddresses200,
   ListBrands200,
   ListBrandsParams,
@@ -7151,6 +7156,451 @@ export const useAdminUpdateLensPackage = <TError = ProblemResponse,
         TContext
       > => {
       return useMutation(getAdminUpdateLensPackageMutationOptions(options), queryClient);
+    }
+
+export type adminListLensTreatmentsResponse200 = {
+  data: AdminListLensTreatments200
+  status: 200
+}
+
+export type adminListLensTreatmentsResponseSuccess = (adminListLensTreatmentsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminListLensTreatmentsResponse = (adminListLensTreatmentsResponseSuccess)
+
+export const getAdminListLensTreatmentsUrl = () => {
+
+
+
+
+  return `/v1/admin/lens-treatments`
+}
+
+/**
+ * @summary Todos los tratamientos de micas, activos o no
+ */
+export const adminListLensTreatments = async ( options?: Parameters<typeof apiFetch>[1]): Promise<adminListLensTreatmentsResponse> => {
+
+  return apiFetch<adminListLensTreatmentsResponse>(getAdminListLensTreatmentsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListLensTreatmentsQueryKey = () => {
+    return [
+    `/v1/admin/lens-treatments`
+    ] as const;
+    }
+
+
+export const getAdminListLensTreatmentsQueryOptions = <TData = Awaited<ReturnType<typeof adminListLensTreatments>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensTreatments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListLensTreatmentsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListLensTreatments>>> = ({ signal }) => adminListLensTreatments({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListLensTreatments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminListLensTreatmentsQueryResult = NonNullable<Awaited<ReturnType<typeof adminListLensTreatments>>>
+export type AdminListLensTreatmentsQueryError = unknown
+
+
+export function useAdminListLensTreatments<TData = Awaited<ReturnType<typeof adminListLensTreatments>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensTreatments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListLensTreatments>>,
+          TError,
+          Awaited<ReturnType<typeof adminListLensTreatments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListLensTreatments<TData = Awaited<ReturnType<typeof adminListLensTreatments>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensTreatments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminListLensTreatments>>,
+          TError,
+          Awaited<ReturnType<typeof adminListLensTreatments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminListLensTreatments<TData = Awaited<ReturnType<typeof adminListLensTreatments>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensTreatments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Todos los tratamientos de micas, activos o no
+ */
+
+export function useAdminListLensTreatments<TData = Awaited<ReturnType<typeof adminListLensTreatments>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensTreatments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminListLensTreatmentsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type adminCreateLensTreatmentResponse201 = {
+  data: AdminLensTreatment
+  status: 201
+}
+
+export type adminCreateLensTreatmentResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminCreateLensTreatmentResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type adminCreateLensTreatmentResponseSuccess = (adminCreateLensTreatmentResponse201) & {
+  headers: Headers;
+};
+export type adminCreateLensTreatmentResponseError = (adminCreateLensTreatmentResponse400 | adminCreateLensTreatmentResponse409) & {
+  headers: Headers;
+};
+
+export type adminCreateLensTreatmentResponse = (adminCreateLensTreatmentResponseSuccess | adminCreateLensTreatmentResponseError)
+
+export const getAdminCreateLensTreatmentUrl = () => {
+
+
+
+
+  return `/v1/admin/lens-treatments`
+}
+
+/**
+ * @summary Crea un tratamiento de micas
+ */
+export const adminCreateLensTreatment = async (lensTreatmentInput: LensTreatmentInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateLensTreatmentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminCreateLensTreatmentResponse>(getAdminCreateLensTreatmentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(lensTreatmentInput)
+  }
+);}
+
+
+
+
+
+export const getAdminCreateLensTreatmentMutationKey = () => ['adminCreateLensTreatment'] as const;
+
+export const getAdminCreateLensTreatmentMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateLensTreatment>>, TError,AdminCreateLensTreatmentMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminCreateLensTreatment>>, TError,AdminCreateLensTreatmentMutationVariables, TContext> => {
+
+const mutationKey = getAdminCreateLensTreatmentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCreateLensTreatment>>, AdminCreateLensTreatmentMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminCreateLensTreatment(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminCreateLensTreatmentMutationResult = NonNullable<Awaited<ReturnType<typeof adminCreateLensTreatment>>>
+    export type AdminCreateLensTreatmentMutationBody = LensTreatmentInput
+    export type AdminCreateLensTreatmentMutationError = ProblemResponse
+    export type AdminCreateLensTreatmentMutationVariables = {data: LensTreatmentInput}
+
+    /**
+ * @summary Crea un tratamiento de micas
+ */
+export const useAdminCreateLensTreatment = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateLensTreatment>>, TError,AdminCreateLensTreatmentMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminCreateLensTreatment>>,
+        TError,
+        AdminCreateLensTreatmentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminCreateLensTreatmentMutationOptions(options), queryClient);
+    }
+
+export type adminReorderLensTreatmentsResponse200 = {
+  data: AdminReorderLensTreatments200
+  status: 200
+}
+
+export type adminReorderLensTreatmentsResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminReorderLensTreatmentsResponseSuccess = (adminReorderLensTreatmentsResponse200) & {
+  headers: Headers;
+};
+export type adminReorderLensTreatmentsResponseError = (adminReorderLensTreatmentsResponse400) & {
+  headers: Headers;
+};
+
+export type adminReorderLensTreatmentsResponse = (adminReorderLensTreatmentsResponseSuccess | adminReorderLensTreatmentsResponseError)
+
+export const getAdminReorderLensTreatmentsUrl = () => {
+
+
+
+
+  return `/v1/admin/lens-treatments/order`
+}
+
+/**
+ * @summary Fija el orden completo de los tratamientos
+ */
+export const adminReorderLensTreatments = async (adminReorderLensTreatmentsBody: AdminReorderLensTreatmentsBody, options?: Parameters<typeof apiFetch>[1]): Promise<adminReorderLensTreatmentsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminReorderLensTreatmentsResponse>(getAdminReorderLensTreatmentsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(adminReorderLensTreatmentsBody)
+  }
+);}
+
+
+
+
+
+export const getAdminReorderLensTreatmentsMutationKey = () => ['adminReorderLensTreatments'] as const;
+
+export const getAdminReorderLensTreatmentsMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderLensTreatments>>, TError,AdminReorderLensTreatmentsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminReorderLensTreatments>>, TError,AdminReorderLensTreatmentsMutationVariables, TContext> => {
+
+const mutationKey = getAdminReorderLensTreatmentsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminReorderLensTreatments>>, AdminReorderLensTreatmentsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminReorderLensTreatments(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminReorderLensTreatmentsMutationResult = NonNullable<Awaited<ReturnType<typeof adminReorderLensTreatments>>>
+    export type AdminReorderLensTreatmentsMutationBody = AdminReorderLensTreatmentsBody
+    export type AdminReorderLensTreatmentsMutationError = ProblemResponse
+    export type AdminReorderLensTreatmentsMutationVariables = {data: AdminReorderLensTreatmentsBody}
+
+    /**
+ * @summary Fija el orden completo de los tratamientos
+ */
+export const useAdminReorderLensTreatments = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderLensTreatments>>, TError,AdminReorderLensTreatmentsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminReorderLensTreatments>>,
+        TError,
+        AdminReorderLensTreatmentsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminReorderLensTreatmentsMutationOptions(options), queryClient);
+    }
+
+export type adminUpdateLensTreatmentResponse200 = {
+  data: AdminLensTreatment
+  status: 200
+}
+
+export type adminUpdateLensTreatmentResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type adminUpdateLensTreatmentResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type adminUpdateLensTreatmentResponseSuccess = (adminUpdateLensTreatmentResponse200) & {
+  headers: Headers;
+};
+export type adminUpdateLensTreatmentResponseError = (adminUpdateLensTreatmentResponse400 | adminUpdateLensTreatmentResponse404) & {
+  headers: Headers;
+};
+
+export type adminUpdateLensTreatmentResponse = (adminUpdateLensTreatmentResponseSuccess | adminUpdateLensTreatmentResponseError)
+
+export const getAdminUpdateLensTreatmentUrl = (id: string,) => {
+
+
+
+
+  return `/v1/admin/lens-treatments/${id}`
+}
+
+/**
+ * @summary Reemplaza los datos de un tratamiento; se desactiva, no se borra
+ */
+export const adminUpdateLensTreatment = async (id: string,
+    lensTreatmentInput: LensTreatmentInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateLensTreatmentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<adminUpdateLensTreatmentResponse>(getAdminUpdateLensTreatmentUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(lensTreatmentInput)
+  }
+);}
+
+
+
+
+
+export const getAdminUpdateLensTreatmentMutationKey = () => ['adminUpdateLensTreatment'] as const;
+
+export const getAdminUpdateLensTreatmentMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateLensTreatment>>, TError,AdminUpdateLensTreatmentMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUpdateLensTreatment>>, TError,AdminUpdateLensTreatmentMutationVariables, TContext> => {
+
+const mutationKey = getAdminUpdateLensTreatmentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUpdateLensTreatment>>, AdminUpdateLensTreatmentMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminUpdateLensTreatment(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUpdateLensTreatmentMutationResult = NonNullable<Awaited<ReturnType<typeof adminUpdateLensTreatment>>>
+    export type AdminUpdateLensTreatmentMutationBody = LensTreatmentInput
+    export type AdminUpdateLensTreatmentMutationError = ProblemResponse
+    export type AdminUpdateLensTreatmentMutationVariables = {id: string;data: LensTreatmentInput}
+
+    /**
+ * @summary Reemplaza los datos de un tratamiento; se desactiva, no se borra
+ */
+export const useAdminUpdateLensTreatment = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateLensTreatment>>, TError,AdminUpdateLensTreatmentMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminUpdateLensTreatment>>,
+        TError,
+        AdminUpdateLensTreatmentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminUpdateLensTreatmentMutationOptions(options), queryClient);
     }
 
 export type adminListCatalogsResponse200 = {

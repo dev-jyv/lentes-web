@@ -120,7 +120,7 @@
     "framePlusLenses": "Armazón {{frame}} + micas {{lenses}}",
     "changeFrameOptions": "Cambiar color o micas",
     "empty": "Tu carrito está vacío.",
-    "frameUnavailable": "Este armazón o sus micas ya no están disponibles: quítalo y elige de nuevo.",
+    "frameUnavailable": "Este armazón, sus micas o su tratamiento ya no están disponibles: quítalo y elige de nuevo.",
     "onlyLeft": "Solo quedan {{count}} en existencia.",
     "onDemand": "Bajo pedido: la entrega puede tardar más.",
     "soldOut": "Agotado: quítalo para continuar.",
@@ -135,7 +135,8 @@
     "subtotal": "Subtotal",
     "shippingNote": "Envío e impuestos se confirman en el pago.",
     "legalNote": "Al realizar tu pago aceptas los <terms>Términos y condiciones</terms> y el <privacy>Aviso de privacidad</privacy> de {{brand}}.",
-    "continue": "Continuar al pago"
+    "continue": "Continuar al pago",
+    "framePlusLensesAndTreatment": "Armazón {{frame}} + micas {{lenses}} + {{treatment}} {{price}}"
   },
   "checkout": {
     "metaTitle": "Checkout",
@@ -313,11 +314,6 @@
     "colorSoldOutLabel": "{{color}}, agotado",
     "frameLabel": "armazón",
     "available": "Disponible",
-    "chooseLenses": "Elige tus micas",
-    "requiresPrescription": "Requiere receta de armazones.",
-    "included": "Incluido",
-    "packagePrice": "+ {{price}}",
-    "total": "Total",
     "adding": "Agregando…",
     "addToCart": "Agregar al carrito",
     "deliveryNote": "Entrega estimada: {{time}}. Las micas se fabrican a medida; consulta la <link>política de cambios y devoluciones</link>.",
@@ -344,7 +340,44 @@
       "yes": "Sí",
       "no": "No"
     },
-    "about": "Acerca de {{name}}"
+    "about": "Acerca de {{name}}",
+    "configurator": {
+      "open": "Elegir micas",
+      "soldOut": "Este color está agotado. Elige otro para continuar.",
+      "description": "Elige tus micas paso a paso; el resumen muestra el precio de tu selección.",
+      "stepOf": "Paso {{current}} de {{total}}",
+      "progress": "Avance",
+      "back": "Paso anterior",
+      "continue": "Continuar",
+      "steps": {
+        "need": "Elige tu necesidad visual",
+        "treatment": "Elige tu tratamiento",
+        "rx": "Ingresa tu receta"
+      },
+      "from": "Desde {{price}}",
+      "free": "Gratis",
+      "included": "Incluido",
+      "extra": "+{{price}}",
+      "requiresPrescription": "Requiere receta de armazones.",
+      "summary": "Tu selección",
+      "frame": "Armazón {{name}}",
+      "frameColor": "Armazón {{name}} · {{color}}",
+      "subtotal": "Subtotal",
+      "chooseNeed": "Elige una necesidad visual para continuar.",
+      "chooseTreatment": "Elige un tratamiento para continuar.",
+      "chooseRx": "Elige cómo nos darás tu receta para continuar.",
+      "uploadFirst": "Sube tu receta o elige «La elijo al pagar» para continuar.",
+      "rx": {
+        "intro": "Tus micas se fabrican con una receta de armazones; una de lentes de contacto no sirve.",
+        "upload": "Subir mi receta",
+        "uploadHint": "La revisamos antes de mandar tus micas a fabricar.",
+        "later": "La elijo al pagar",
+        "laterHint": "Al pagar eliges una receta guardada o subes una nueva.",
+        "signIn": "<link>Inicia sesión</link> para subir tu receta. Al volver conservamos lo que elegiste.",
+        "sessionExpired": "Tu sesión expiró. <link>Inicia sesión</link> de nuevo para subir tu receta; conservamos lo que elegiste.",
+        "uploaded": "Recibimos tu receta. Al pagar la encontrarás seleccionada."
+      }
+    }
   },
   "search": {
     "title": "Buscar",
@@ -543,7 +576,9 @@
     "order": "Pedido",
     "delayNote": "Esto puede tardar unos segundos. Si pagaste en OXXO o SPEI, se confirma cuando recibamos el pago.",
     "keepShopping": "Seguir comprando",
-    "backToCart": "Volver al carrito"
+    "backToCart": "Volver al carrito",
+    "unitPrice": "{{quantity}} × {{price}}",
+    "treatmentPrice": "{{name}} ({{price}})"
   },
   "promo": {
     "label": "Promoción",
