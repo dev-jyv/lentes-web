@@ -61,7 +61,7 @@ export function Reorder({ orderId }: { orderId: string }) {
             <div>
               <p className="font-medium">{i.product_name} <span className="text-muted-foreground">· {i.brand_name}</span></p>
               {i.category === "frame" ? (
-                <p>{t("reorder.frames", { count: i.quantity })}{i.lens_package_name ? ` · ${i.lens_package_name}` : ""}</p>
+                <p>{t("reorder.frames", { count: i.quantity })}{i.lens_package_name ? ` · ${i.lens_package_name}` : ""}{i.lens_treatment ? ` · ${i.lens_treatment.name}` : ""}</p>
               ) : (
                 <p>{eyeLabel[i.eye]} · {t("reorder.boxes", { count: i.quantity })}</p>
               )}
