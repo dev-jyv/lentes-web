@@ -2,7 +2,9 @@ import type { CatalogEntry, CatalogFacetsValuesItem, PublicCatalogs } from "@/li
 import { t } from "@/lib/i18n";
 
 // Catálogos de atributos administrables (SPEC 16). Las etiquetas, el orden y las muestras de color salen de
-// GET /v1/catalogs; messages/es-MX.json (labels.*) solo es el respaldo si la API falla.
+// GET /v1/catalogs?include_hidden=true; messages/es-MX.json (labels.*) solo es el respaldo si la API falla.
+// La respuesta trae también los valores ocultos (SPEC 18): dan etiqueta y muestra de color a los productos que
+// todavía los usan, pero quedan fuera de filtros, megamenú y listas de opciones.
 export type CatalogKind = keyof PublicCatalogs;
 
 const FALLBACK: Record<CatalogKind, Record<string, string>> = {
@@ -29,22 +31,34 @@ const humanize = (code: string) => {
 
 export type Catalog = ReturnType<typeof makeCatalog>;
 
-// `data` es la respuesta de GET /v1/catalogs, o null si la API falló.
+// Un valor sin `active` cuenta como visible: una API anterior a SPEC 18 solo devuelve los visibles.
+const isActive = (e: CatalogEntry) => e.active !== false;
+
+// `data` es la respuesta de GET /v1/catalogs?include_hidden=true, o null si la API falló.
 export function makeCatalog(data: PublicCatalogs | null) {
+  // Encuentra también los valores ocultos.
   const find = (kind: CatalogKind, code: string) => data?.[kind]?.find((e) => e.code === code);
   return {
-    // Valores visibles, en el orden del catálogo.
+    // Valores visibles, en el orden del catálogo: alimentan filtros, megamenú, chips y opciones.
     entries(kind: CatalogKind): CatalogEntry[] {
-      return data?.[kind] ?? Object.entries(FALLBACK[kind]).map(([code, label]) => ({ code, label }));
+      return (
+        data?.[kind]?.filter(isActive) ??
+        Object.entries(FALLBACK[kind]).map(([code, label]) => ({ code, label, active: true }))
+      );
     },
-    // Un valor oculto no viene en la API: su ficha sigue mostrando la etiqueta de respaldo o el código legible.
+    // Etiqueta administrada, también de un valor oculto. Sin API, o con un valor que la API no conoce, usa el
+    // respaldo de messages o el código legible.
     label(kind: CatalogKind, code: string): string {
       return find(kind, code)?.label ?? (Object.hasOwn(FALLBACK[kind], code) ? FALLBACK[kind][code] : humanize(code));
     },
-    // Si el valor está visible en el catálogo. Sin API no se sabe qué está oculto: cuenta lo conocido.
+    // Si el valor está visible en el catálogo; un valor oculto no lo está. Sin API no se sabe qué está oculto:
+    // cuenta lo conocido.
     visible(kind: CatalogKind, code: string): boolean {
-      return data ? !!find(kind, code) : Object.hasOwn(FALLBACK[kind], code);
+      if (!data) return Object.hasOwn(FALLBACK[kind], code);
+      const entry = find(kind, code);
+      return !!entry && isActive(entry);
     },
+    // Muestra de color administrada, también de un color oculto.
     swatch(code: string): string | undefined {
       return find("frame_color", code)?.swatch;
     },

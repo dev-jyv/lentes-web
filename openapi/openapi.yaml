@@ -210,11 +210,20 @@ paths:
   /v1/catalogs:
     get:
       operationId: getCatalogs
-      summary: Catálogos de atributos con sus valores activos
-      description: Etiquetas, orden y muestras de color de los atributos de producto. Los valores ocultos no aparecen.
+      summary: Catálogos de atributos con sus valores
+      description: >-
+        Etiquetas, orden y muestras de color de los atributos de producto. Sin `include_hidden` los valores
+        ocultos no aparecen. Con `include_hidden=true` aparecen también, con `active: false`, para que la tienda
+        muestre la etiqueta y la muestra de color de un producto que todavía usa un valor oculto.
+      parameters:
+        - name: include_hidden
+          in: query
+          required: false
+          description: "`true`: incluye los valores ocultos, en su orden de `position`."
+          schema: { type: boolean, default: false }
       responses:
         "200":
-          description: Valores activos de cada catálogo, en su orden
+          description: Valores de cada catálogo, en su orden
           headers:
             Cache-Control:
               schema: { type: string, example: "public, s-maxage=300" }
@@ -2175,21 +2184,21 @@ components:
       type: string
       enum: [lens_type, replacement, frame_shape, frame_material, frame_rim, frame_gender, frame_color, frame_size, frame_include]
     CatalogEntry:
-      description: Valor visible de un catálogo, para la tienda.
+      description: Valor de un catálogo, para la tienda.
       type: object
-      required: [code, label]
+      required: [code, label, active]
       properties:
         code: { type: string, pattern: "^[a-z][a-z0-9_]{1,39}$" }
         label: { type: string, minLength: 1, maxLength: 40 }
         swatch: { type: string, description: "Solo en `frame_color`: `#rrggbb` o `conic-gradient(#rrggbb, #rrggbb, ...)`." }
+        active: { type: boolean, description: "`false`: oculto en filtros, facetas y opciones para asignaciones nuevas." }
     CatalogValue:
       allOf:
         - $ref: "#/components/schemas/CatalogEntry"
         - type: object
-          required: [position, active, system]
+          required: [position, system]
           properties:
             position: { type: integer }
-            active: { type: boolean, description: "`false`: oculto en filtros, facetas y opciones para asignaciones nuevas." }
             system: { type: boolean, description: "`true`: no se puede borrar." }
             product_count: { type: integer, description: "Productos que lo usan, activos o no. Un color cuenta armazones, no variantes." }
     CatalogValueInput:
@@ -2217,7 +2226,7 @@ components:
           type: array
           items: { type: string }
     PublicCatalogs:
-      description: Valores activos de cada catálogo, en su orden.
+      description: Valores de cada catálogo, en su orden; los ocultos solo con `include_hidden=true`.
       type: object
       required: [lens_type, replacement, frame_shape, frame_material, frame_rim, frame_gender, frame_color, frame_size, frame_include]
       properties:

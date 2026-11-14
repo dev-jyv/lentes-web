@@ -7,7 +7,7 @@
  */
 
 /**
- * Valor visible de un catálogo, para la tienda.
+ * Valor de un catálogo, para la tienda.
  */
 export interface CatalogEntry {
   /** @pattern ^[a-z][a-z0-9_]{1,39}$ */
@@ -19,4 +19,6 @@ export interface CatalogEntry {
   label: string;
   /** Solo en `frame_color`: `#rrggbb` o `conic-gradient(#rrggbb, #rrggbb, ...)`. */
   swatch?: string;
+  /** `false`: oculto en filtros, facetas y opciones para asignaciones nuevas. */
+  active: boolean;
 }

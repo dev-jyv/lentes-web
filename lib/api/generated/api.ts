@@ -85,6 +85,7 @@ import type {
   Favorite,
   FavoriteMergeInput,
   GetCatalogFacetsParams,
+  GetCatalogsParams,
   GetHealth200,
   GetProductVariantParams,
   HomeBannerInput,
@@ -965,21 +966,28 @@ export type getCatalogsResponseSuccess = (getCatalogsResponse200) & {
 
 export type getCatalogsResponse = (getCatalogsResponseSuccess)
 
-export const getGetCatalogsUrl = () => {
+export const getGetCatalogsUrl = (params?: GetCatalogsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/v1/catalogs`
+  return stringifiedParams.length > 0 ? `/v1/catalogs?${stringifiedParams}` : `/v1/catalogs`
 }
 
 /**
- * Etiquetas, orden y muestras de color de los atributos de producto. Los valores ocultos no aparecen.
- * @summary Catálogos de atributos con sus valores activos
+ * Etiquetas, orden y muestras de color de los atributos de producto. Sin `include_hidden` los valores ocultos no aparecen. Con `include_hidden=true` aparecen también, con `active: false`, para que la tienda muestre la etiqueta y la muestra de color de un producto que todavía usa un valor oculto.
+ * @summary Catálogos de atributos con sus valores
  */
-export const getCatalogs = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getCatalogsResponse> => {
+export const getCatalogs = async (params?: GetCatalogsParams, options?: Parameters<typeof apiFetch>[1]): Promise<getCatalogsResponse> => {
 
-  return apiFetch<getCatalogsResponse>(getGetCatalogsUrl(),
+  return apiFetch<getCatalogsResponse>(getGetCatalogsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -992,23 +1000,23 @@ export const getCatalogs = async ( options?: Parameters<typeof apiFetch>[1]): Pr
 
 
 
-export const getGetCatalogsQueryKey = () => {
+export const getGetCatalogsQueryKey = (params?: GetCatalogsParams,) => {
     return [
-    `/v1/catalogs`
+    `/v1/catalogs`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetCatalogsQueryOptions = <TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetCatalogsQueryOptions = <TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(params?: GetCatalogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetCatalogsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetCatalogsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCatalogs>>> = ({ signal }) => getCatalogs({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCatalogs>>> = ({ signal }) => getCatalogs(params, { signal, ...requestOptions });
 
 
 
@@ -1022,7 +1030,7 @@ export type GetCatalogsQueryError = unknown
 
 
 export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>> & Pick<
+ params: undefined |  GetCatalogsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getCatalogs>>,
           TError,
@@ -1032,7 +1040,7 @@ export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, 
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>> & Pick<
+ params?: GetCatalogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getCatalogs>>,
           TError,
@@ -1042,19 +1050,19 @@ export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, 
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ params?: GetCatalogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Catálogos de atributos con sus valores activos
+ * @summary Catálogos de atributos con sus valores
  */
 
 export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ params?: GetCatalogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetCatalogsQueryOptions(options)
+  const queryOptions = getGetCatalogsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
