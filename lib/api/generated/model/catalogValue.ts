@@ -9,8 +9,6 @@ import type { CatalogEntry } from './catalogEntry';
 
 export type CatalogValue = CatalogEntry & {
   position: number;
-  /** `false`: oculto en filtros, facetas y opciones para asignaciones nuevas. */
-  active: boolean;
   /** `true`: no se puede borrar. */
   system: boolean;
   /** Productos que lo usan, activos o no. Un color cuenta armazones, no variantes. */

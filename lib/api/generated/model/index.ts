@@ -91,6 +91,7 @@ export * from './frameShape';
 export * from './frameSize';
 export * from './frameVariant';
 export * from './getCatalogFacetsParams';
+export * from './getCatalogsParams';
 export * from './getHealth200';
 export * from './getProductVariantParams';
 export * from './heroArt';
