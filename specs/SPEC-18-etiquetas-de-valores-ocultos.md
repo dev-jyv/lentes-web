@@ -1,6 +1,6 @@
 # SPEC 18 — Etiquetas de valores ocultos del catálogo
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-api#22, lentes-web#13
 > **Depends on:** SPEC 16
 > **Date:** 2026-11-14
 > **Objective:** Hacer que la tienda muestre la etiqueta y el color administrados de un valor de catálogo oculto en los productos que todavía lo usan.
