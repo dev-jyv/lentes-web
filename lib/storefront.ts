@@ -29,7 +29,8 @@ export async function loadHome(): Promise<HomeContent | null> {
 
 export async function loadCatalogs(): Promise<PublicCatalogs | null> {
   try {
-    const res = await getCatalogs({ next: { revalidate: CATALOGS_REVALIDATE_SECONDS } });
+    // Con los ocultos, para mostrar la etiqueta de un producto que aún los usa (SPEC 18).
+    const res = await getCatalogs({ include_hidden: true }, { next: { revalidate: CATALOGS_REVALIDATE_SECONDS } });
     return res.status === 200 ? res.data : null;
   } catch {
     return null;

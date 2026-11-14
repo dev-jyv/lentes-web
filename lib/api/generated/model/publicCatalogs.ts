@@ -8,7 +8,7 @@
 import type { CatalogEntry } from './catalogEntry';
 
 /**
- * Valores activos de cada catálogo, en su orden.
+ * Valores de cada catálogo, en su orden; los ocultos solo con `include_hidden=true`.
  */
 export interface PublicCatalogs {
   lens_type: CatalogEntry[];
