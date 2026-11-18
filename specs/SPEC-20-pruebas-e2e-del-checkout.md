@@ -1,6 +1,6 @@
 # SPEC 20 — Pruebas E2E del checkout con Playwright
 
-> **Status:** Approved
+> **Status:** Implemented — commit 76265b4
 > **Depends on:** SPEC 19
 > **Date:** 2026-11-18
 > **Objective:** Agregar Playwright al repo con una suite E2E que recorre el checkout de SPEC 19 contra la API de desarrollo, con un usuario de prueba real.

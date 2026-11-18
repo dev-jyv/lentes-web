@@ -1,6 +1,6 @@
 # SPEC 19 — Checkout en acordeón por pasos
 
-> **Status:** Approved
+> **Status:** Implemented — commit 76265b4
 > **Depends on:** SPEC 04, SPEC 17
 > **Date:** 2026-11-18
 > **Objective:** Rediseñar `/checkout` como un acordeón de pasos (dirección, receta, pago) con avance real, resumen con miniaturas y la identidad visual del sitio.
