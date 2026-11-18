@@ -1,6 +1,6 @@
 # SPEC 21 — Panel de cuenta con perfil y direcciones
 
-> **Status:** Approved
+> **Status:** Implemented — commit 6860506
 > **Depends on:** SPEC 11, SPEC 20
 > **Date:** 2026-11-18
 > **Objective:** Convertir `/cuenta` en un panel con navegación lateral donde el cliente edita sus datos personales y administra sus direcciones de envío.

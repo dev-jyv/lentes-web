@@ -1,6 +1,6 @@
 # SPEC 22 — Mis pedidos: lista y detalle
 
-> **Status:** Approved
+> **Status:** Implemented — commit 6860506
 > **Depends on:** SPEC 21
 > **Date:** 2026-11-18
 > **Objective:** Rediseñar `/cuenta/pedidos` como tarjetas de pedido con estado visual y agregar la página de detalle `/cuenta/pedidos/[id]`.
