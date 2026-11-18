@@ -57,3 +57,8 @@ emails/out/
 
 # Binario de impeccable por plataforma (17 MB); el launcher lo descarga si falta.
 **/skills/impeccable/scripts/bin/
+
+# playwright
+/playwright/.auth/
+/test-results/
+/playwright-report/

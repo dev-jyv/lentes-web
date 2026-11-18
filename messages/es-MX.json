@@ -165,7 +165,9 @@
       "save": "Guardar dirección",
       "title": "Dirección de envío",
       "addAnother": "Agregar otra dirección",
-      "interior": " int. {{number}}"
+      "interior": " int. {{number}}",
+      "makeDefault": "Usar como dirección predeterminada",
+      "cancel": "Cancelar"
     },
     "errors": {
       "unavailable": "Algunos artículos ya no están disponibles. Revisa tu carrito.",
@@ -183,12 +185,24 @@
       "uploadPrompt": "<link>Sube tu receta</link> y regresa aquí."
     },
     "summary": "Resumen",
-    "priceNote": "El backend valida precios y stock al pagar; el total final puede variar por envío.",
+    "priceNote": "Confirmamos precios y existencias al pagar; el total final puede variar por envío.",
     "redirecting": "Redirigiendo…",
     "pay": "Pagar con Mercado Pago",
-    "emptyCart": "Tu carrito está vacío. <frames>Ver armazones</frames> o <lenses>lentes de contacto</lenses>",
+    "emptyCart": "Tu carrito está vacío.",
     "leadTime": "Tus armazones con micas se entregan en {{time}}.",
-    "customLenses": "Las micas se fabrican a medida: consulta la <link>política de cambios y devoluciones</link>."
+    "customLenses": "Las micas se fabrican a medida: consulta la <link>política de cambios y devoluciones</link>.",
+    "continue": "Continuar",
+    "change": "Cambiar",
+    "stepDone": "{{step}}: completado",
+    "summaryToggle": "Ver resumen",
+    "browseFrames": "Ver armazones",
+    "browseLenses": "Ver lentes de contacto",
+    "payment": {
+      "title": "Pago",
+      "note": "Te llevaremos a Mercado Pago para completar el pago de forma segura.",
+      "shipTo": "Envío a",
+      "prescription": "Receta"
+    }
   },
   "returns": {
     "title": "Cambios y devoluciones",
@@ -531,10 +545,6 @@
       "partialAdded": "Agregamos el ojo derecho, pero no pudimos agregar el ojo izquierdo. Intenta de nuevo."
     }
   },
-  "theme": {
-    "dark": "Activar modo oscuro",
-    "light": "Activar modo claro"
-  },
   "carousel": {
     "roleDescription": "carrusel",
     "label": "Promociones destacadas",
@@ -560,8 +570,6 @@
     "allLenses": "Ver todos los lentes de contacto",
     "byUse": "Por uso",
     "byNeed": "Por necesidad",
-    "yourPrescription": "Tu receta",
-    "uploadPrescription": "Subir mi receta",
     "daily": "Diarios",
     "monthly": "Mensuales",
     "allBrands": "Ver todas las marcas",
