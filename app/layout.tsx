@@ -13,8 +13,8 @@ const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: [
 const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"] });
 const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"] });
 
-// Fija el tema antes del primer pintado: preferencia guardada o la del sistema.
-const themeScript = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.dataset.theme=t}catch(e){}})()`;
+// El tema sigue al sistema: se fija antes del primer pintado y cambia en vivo si el sistema cambia.
+const themeScript = `(function(){try{var m=matchMedia("(prefers-color-scheme: dark)");var s=function(){document.documentElement.dataset.theme=m.matches?"dark":"light"};s();m.addEventListener("change",s)}catch(e){}})()`;
 
 export const metadata: Metadata = {
   title: { default: t("meta.defaultTitle"), template: t("meta.titleTemplate") },

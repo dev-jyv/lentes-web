@@ -79,7 +79,63 @@
     "uploadPrescription": "Subir una receta",
     "greeting": "Hola de nuevo",
     "greetingName": "Hola de nuevo, {{name}}",
-    "signOutError": "No pudimos cerrar tu sesión. Inténtalo de nuevo."
+    "signOutError": "No pudimos cerrar tu sesión. Inténtalo de nuevo.",
+    "navLabel": "Mi cuenta",
+    "nav": {
+      "overview": "Resumen",
+      "profile": "Datos personales",
+      "addresses": "Direcciones",
+      "orders": "Pedidos",
+      "prescriptions": "Recetas",
+      "favorites": "Favoritos"
+    },
+    "hello": "Hola, {{name}}",
+    "memberSince": "Cliente desde {{date}}",
+    "loadFailed": "No pudimos cargar tus datos.",
+    "lastOrder": {
+      "title": "Último pedido",
+      "viewAll": "Ver todos",
+      "empty": "Aún no tienes pedidos.",
+      "shop": "Ver catálogo",
+      "detail": "Ver detalle"
+    },
+    "cards": {
+      "profileEmpty": "Completa tus datos",
+      "addressesEmpty": "Agrega una dirección",
+      "addressesCount_one": "{{count}} dirección guardada",
+      "addressesCount_other": "{{count}} direcciones guardadas",
+      "prescriptions": "Sube y consulta tus recetas",
+      "manage": "Administrar"
+    },
+    "profile": {
+      "title": "Datos personales",
+      "fullName": "Nombre completo",
+      "phone": "Teléfono (opcional, 10 dígitos)",
+      "email": "Correo electrónico",
+      "emailNote": "Para cambiar tu correo, escríbenos.",
+      "save": "Guardar cambios",
+      "saved": "Datos guardados",
+      "nameLength": "Entre 2 y 120 caracteres",
+      "passwordTitle": "Contraseña",
+      "changePassword": "Cambiar contraseña",
+      "googleOnly": "Entras con Google; tu contraseña la administra Google."
+    },
+    "addresses": {
+      "title": "Direcciones",
+      "add": "Agregar dirección",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "deleteTitle": "¿Eliminar la dirección de {{name}}?",
+      "deleteBody": "Esta acción no se puede deshacer.",
+      "makeDefault": "Hacer predeterminada",
+      "default": "Predeterminada",
+      "empty": "Aún no tienes direcciones guardadas.",
+      "saved": "Dirección guardada",
+      "deleted": "Dirección eliminada",
+      "updateFailed": "No pudimos actualizar la dirección.",
+      "addTitle": "Nueva dirección",
+      "editTitle": "Editar dirección"
+    }
   },
   "reorder": {
     "metaTitle": "Recompra",
@@ -165,7 +221,9 @@
       "save": "Guardar dirección",
       "title": "Dirección de envío",
       "addAnother": "Agregar otra dirección",
-      "interior": " int. {{number}}"
+      "interior": " int. {{number}}",
+      "makeDefault": "Usar como dirección predeterminada",
+      "cancel": "Cancelar"
     },
     "errors": {
       "unavailable": "Algunos artículos ya no están disponibles. Revisa tu carrito.",
@@ -183,12 +241,24 @@
       "uploadPrompt": "<link>Sube tu receta</link> y regresa aquí."
     },
     "summary": "Resumen",
-    "priceNote": "El backend valida precios y stock al pagar; el total final puede variar por envío.",
+    "priceNote": "Confirmamos precios y existencias al pagar; el total final puede variar por envío.",
     "redirecting": "Redirigiendo…",
     "pay": "Pagar con Mercado Pago",
-    "emptyCart": "Tu carrito está vacío. <frames>Ver armazones</frames> o <lenses>lentes de contacto</lenses>",
+    "emptyCart": "Tu carrito está vacío.",
     "leadTime": "Tus armazones con micas se entregan en {{time}}.",
-    "customLenses": "Las micas se fabrican a medida: consulta la <link>política de cambios y devoluciones</link>."
+    "customLenses": "Las micas se fabrican a medida: consulta la <link>política de cambios y devoluciones</link>.",
+    "continue": "Continuar",
+    "change": "Cambiar",
+    "stepDone": "{{step}}: completado",
+    "summaryToggle": "Ver resumen",
+    "browseFrames": "Ver armazones",
+    "browseLenses": "Ver lentes de contacto",
+    "payment": {
+      "title": "Pago",
+      "note": "Te llevaremos a Mercado Pago para completar el pago de forma segura.",
+      "shipTo": "Envío a",
+      "prescription": "Receta"
+    }
   },
   "returns": {
     "title": "Cambios y devoluciones",
@@ -466,7 +536,59 @@
     "tracking": "Guía",
     "trackingWithCarrier": "Guía {{carrier}}:",
     "reorder": "Volver a pedir",
-    "loadMoreFailed": "No pudimos cargar más pedidos."
+    "loadMoreFailed": "No pudimos cargar más pedidos.",
+    "filterLabel": "Filtrar pedidos",
+    "filter": {
+      "all": "Todos",
+      "active": "En curso",
+      "delivered": "Entregados"
+    },
+    "filterEmpty": "No hay pedidos con este filtro entre los más recientes.",
+    "viewDetail": "Ver detalle",
+    "back": "Mis pedidos",
+    "metaTitle": "Pedido",
+    "detailTitle": "Pedido {{folio}}",
+    "placedOn": "Hecho el {{date}}",
+    "progressLabel": "Avance del pedido",
+    "progress": {
+      "paid": "Pagado",
+      "preparing": "En preparación",
+      "shipped": "Enviado",
+      "delivered": "Entregado"
+    },
+    "stepDone": "completado",
+    "stepPending": "pendiente",
+    "notice": {
+      "pending_payment": "Este pedido espera su pago. Si ya pagaste, puede tardar unos minutos en reflejarse.",
+      "cancelled": "Este pedido se canceló.",
+      "refunded": "Este pedido se reembolsó.",
+      "expired": "El tiempo para pagar este pedido terminó y no se cobró."
+    },
+    "items": "Artículos",
+    "lensesGroup": "Lentes de contacto",
+    "framesGroup": "Armazones",
+    "eye": {
+      "right": "Ojo derecho (OD)",
+      "left": "Ojo izquierdo (OI)",
+      "both": "Ambos ojos"
+    },
+    "unitPrice": "{{count}} × {{price}}",
+    "lensPackage": "Micas: {{name}}",
+    "treatment": "Tratamiento: {{name}} ({{price}})",
+    "breakdown": {
+      "title": "Importes",
+      "subtotal": "Subtotal",
+      "shipping": "Envío",
+      "free": "Gratis",
+      "discount": "Descuento",
+      "total": "Total"
+    },
+    "trackingTitle": "Guía de envío",
+    "copyTracking": "Copiar guía",
+    "copied": "Guía copiada",
+    "notFound": "No encontramos este pedido.",
+    "boxes_one": "{{count}} caja de lentes de contacto",
+    "boxes_other": "{{count}} cajas de lentes de contacto"
   },
   "rx": {
     "form": {
@@ -531,10 +653,6 @@
       "partialAdded": "Agregamos el ojo derecho, pero no pudimos agregar el ojo izquierdo. Intenta de nuevo."
     }
   },
-  "theme": {
-    "dark": "Activar modo oscuro",
-    "light": "Activar modo claro"
-  },
   "carousel": {
     "roleDescription": "carrusel",
     "label": "Promociones destacadas",
@@ -560,8 +678,6 @@
     "allLenses": "Ver todos los lentes de contacto",
     "byUse": "Por uso",
     "byNeed": "Por necesidad",
-    "yourPrescription": "Tu receta",
-    "uploadPrescription": "Subir mi receta",
     "daily": "Diarios",
     "monthly": "Mensuales",
     "allBrands": "Ver todas las marcas",

@@ -3,7 +3,7 @@
 import { Popover } from "@base-ui/react/popover";
 import type { User } from "@supabase/supabase-js";
 import { cn } from "cn";
-import { ChevronDown, FileText, LogOut, Package, UserRound, X } from "lucide-react";
+import { ChevronDown, FileText, LayoutGrid, LogOut, MapPin, Package, UserRound, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,7 +22,9 @@ const openMark = "relative after:absolute after:inset-x-3 after:-bottom-1 after:
 const panel = "z-50 rounded-xl bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 outline-none";
 const entry = "flex min-h-14 w-full items-center gap-3 border-b px-5 text-left text-base outline-none hover:bg-accent focus-visible:bg-accent";
 const entries = [
-  { href: "/cuenta", icon: UserRound, label: "account.title" },
+  { href: "/cuenta", icon: LayoutGrid, label: "account.title" },
+  { href: "/cuenta/perfil", icon: UserRound, label: "account.nav.profile" },
+  { href: "/cuenta/direcciones", icon: MapPin, label: "account.nav.addresses" },
   { href: "/cuenta/pedidos", icon: Package, label: "account.orders" },
   { href: "/cuenta/recetas", icon: FileText, label: "account.prescriptions" },
 ] as const;
