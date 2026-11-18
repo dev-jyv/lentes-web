@@ -136,13 +136,6 @@ export function buildNavigation({ frames, lenses, brands, home }: NavData): NavI
       facetColumn(t("nav.byUse"), "replacement", "replacement", "/lentes", lenses),
       facetColumn(t("nav.byNeed"), "lens_type", "lens_type", "/lentes", lenses),
       brandColumn("/lentes", lenses),
-      {
-        title: t("nav.yourPrescription"),
-        links: [
-          { label: t("nav.uploadPrescription"), href: "/cuenta/recetas" },
-          { label: t("account.orders"), href: "/cuenta/pedidos" },
-        ],
-      },
     ]),
     cards: cards(home, "contact_lens", { frames, lenses }),
   });
