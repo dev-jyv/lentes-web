@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createAddress, getListAddressesQueryKey, updateAddress, useGetPostalCode } from "@/lib/api/generated/api";
-import type { Address } from "@/lib/api/generated/model";
+import type { Address, AddressInput } from "@/lib/api/generated/model";
 import { t } from "@/lib/i18n";
 
 const req = z.string().trim().min(1, t("validation.required"));
@@ -19,6 +19,8 @@ const schema = z.object({
   neighborhood: req, city: req, state: req,
   postal_code: z.string().regex(/^\d{5}$/, t("validation.fiveDigits")),
   phone: z.string().regex(/^\d{10}$/, t("validation.tenDigits")),
+  // Obligatorias en la tienda (SPEC 25); en la API son opcionales para no romper direcciones anteriores.
+  references: req.max(200, t("validation.max200")),
   is_default: z.boolean(),
 });
 type AddressValues = z.infer<typeof schema>;
@@ -30,6 +32,7 @@ const labels: Record<FieldName, string> = {
   ext_number: t("checkout.address.extNumber"), int_number: t("checkout.address.intNumber"),
   neighborhood: t("checkout.address.neighborhood"), city: t("checkout.address.city"), state: t("checkout.address.state"),
   postal_code: t("checkout.address.postalCode"), phone: t("checkout.address.phone"),
+  references: t("checkout.address.references"),
 };
 const f = (name: FieldName, autoComplete: string, extra: Partial<Field> = {}): Field =>
   ({ name, autoComplete, label: labels[name], ...extra });
@@ -41,23 +44,28 @@ const selectClass = "h-8 w-full rounded-lg border border-input bg-transparent px
 
 // Formulario de dirección compartido por el checkout (SPEC 19) y la libreta de direcciones (SPEC 21).
 // El código postal va primero y completa estado, municipio y colonias con el catálogo de Correos de México (SPEC 23).
+// Con `onSubmit` no guarda en la cuenta: el checkout de invitado (SPEC 25) conserva la dirección en su estado.
 export function AddressForm({
-  address, onSaved, onCancel, showDefault = false, idPrefix = "address",
+  address, initial, onSaved, onSubmit, onCancel, showDefault = false, idPrefix = "address", submitLabel,
 }: {
   address?: Address;
-  onSaved: (address: Address) => void;
+  initial?: Partial<AddressInput>;
+  onSaved?: (address: Address) => void;
+  onSubmit?: (address: AddressInput) => void;
   onCancel?: () => void;
   showDefault?: boolean;
   idPrefix?: string;
+  submitLabel?: string;
 }) {
+  const start = address ?? initial;
   const queryClient = useQueryClient();
   const { register, handleSubmit, setValue, getValues, control, formState: { errors, isSubmitting } } = useForm<AddressValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      recipient: address?.recipient ?? "", street: address?.street ?? "", ext_number: address?.ext_number ?? "",
-      int_number: address?.int_number ?? "", neighborhood: address?.neighborhood ?? "", city: address?.city ?? "",
-      state: address?.state ?? "", postal_code: address?.postal_code ?? "", phone: address?.phone ?? "",
-      is_default: address?.is_default ?? !showDefault,
+      recipient: start?.recipient ?? "", street: start?.street ?? "", ext_number: start?.ext_number ?? "",
+      int_number: start?.int_number ?? "", neighborhood: start?.neighborhood ?? "", city: start?.city ?? "",
+      state: start?.state ?? "", postal_code: start?.postal_code ?? "", phone: start?.phone ?? "",
+      references: start?.references ?? "", is_default: address?.is_default ?? !showDefault,
     },
     shouldFocusError: true,
   });
@@ -69,7 +77,7 @@ export function AddressForm({
   const cp = useWatch({ control, name: "postal_code" });
   const neighborhood = useWatch({ control, name: "neighborhood" });
   // Una dirección guardada conserva sus valores hasta que el cliente cambie el código postal.
-  const lookup = /^\d{5}$/.test(cp ?? "") && cp !== address?.postal_code;
+  const lookup = /^\d{5}$/.test(cp ?? "") && cp !== start?.postal_code;
   const query = useGetPostalCode(cp, { query: { enabled: lookup, staleTime: 86_400_000, retry: false } });
   const place = lookup && query.data?.status === 200 ? query.data.data : null;
   const notFound = lookup && !query.isFetching && (query.isError || (query.data && query.data.status !== 200));
@@ -113,13 +121,14 @@ export function AddressForm({
   return (
     <form noValidate className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit(async (v) => {
       setError(null);
-      const body = { ...v, int_number: v.int_number.trim() || null };
+      const body = { ...v, int_number: v.int_number.trim() || null, references: v.references.trim() };
+      if (onSubmit) return onSubmit(body);
       const res = address ? await updateAddress(address.id, body) : await createAddress(body);
       if (res.status !== 200 && res.status !== 201) {
         return setError((res.data as { detail?: string } | undefined)?.detail ?? t("checkout.address.saveFailed"));
       }
       await queryClient.invalidateQueries({ queryKey: getListAddressesQueryKey() });
-      onSaved(res.data as Address);
+      onSaved?.(res.data as Address);
     })}>
       <div className="space-y-1.5 sm:col-span-2">
         <Label htmlFor={id("postal_code")}>{t("checkout.address.postalCode")}</Label>
@@ -174,6 +183,13 @@ export function AddressForm({
       {input(f("street", "address-line1", { wide: true }))}
       {input(f("ext_number", "off"))}
       {input(f("int_number", "address-line2"))}
+      <div className="space-y-1.5 sm:col-span-2">
+        <Label htmlFor={id("references")}>{labels.references}</Label>
+        <Input id={id("references")} autoComplete="off" maxLength={200} placeholder={t("checkout.address.referencesHint")}
+          aria-invalid={!!errors.references} aria-describedby={errors.references ? `${id("references")}-error` : undefined}
+          {...register("references")} />
+        {errors.references && <p id={`${id("references")}-error`} className="text-xs text-destructive">{errors.references.message}</p>}
+      </div>
       {input(f("recipient", "name", { wide: true }))}
       {input(f("phone", "tel-national", { inputMode: "tel" }))}
 
@@ -186,7 +202,7 @@ export function AddressForm({
       {error && <p role="alert" className="text-sm text-destructive sm:col-span-2">{error}</p>}
       <div className="flex flex-wrap gap-2 sm:col-span-2">
         <Button type="submit" size="lg" disabled={isSubmitting} className="px-5">
-          {isSubmitting ? t("common.loading") : t("checkout.address.save")}
+          {isSubmitting ? t("common.loading") : (submitLabel ?? t("checkout.address.save"))}
         </Button>
         {onCancel && <Button type="button" variant="outline" size="lg" onClick={onCancel}>{t("checkout.address.cancel")}</Button>}
       </div>

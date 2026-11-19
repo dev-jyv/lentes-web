@@ -145,3 +145,18 @@ export async function addFrameAnonymous(slug: string): Promise<string> {
   if (!token) throw new Error("La API no devolvió cart_token para el carrito anónimo");
   return token;
 }
+
+// Lentes de contacto en un carrito anónimo (requieren receta); devuelve el cart_token (SPEC 25).
+export async function addLensAnonymous(slug: string): Promise<string> {
+  const req = await request.newContext();
+  const p = await (await req.get(`${apiUrl()}/products/${slug}`)).json() as { options: { spheres: number[]; base_curves: number[]; diameters: number[] } };
+  const q = new URLSearchParams({
+    sphere: String(p.options.spheres.find((s) => s < 0) ?? p.options.spheres[0]),
+    base_curve: String(p.options.base_curves[0]),
+    diameter: String(p.options.diameters[0]),
+  });
+  const variant = await (await req.get(`${apiUrl()}/products/${slug}/variant?${q}`)).json() as { id: string };
+  const res = await req.post(`${apiUrl()}/cart/items`, { data: { variant_id: variant.id, eye: "right", quantity: 1 } });
+  if (!res.ok()) throw new Error(`POST /cart/items anónimo → ${res.status()} ${await res.text()}`);
+  return (await res.json()).cart_token as string;
+}

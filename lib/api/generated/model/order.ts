@@ -7,8 +7,11 @@
  */
 import type { OrderItem } from './orderItem';
 import type { OrderStatus } from './orderStatus';
+import type { ShippingAddress } from './shippingAddress';
 
 export interface Order {
+  /** Copia de la dirección de envío congelada en el pedido, con sus referencias (SPEC 25 de lentes-web). */
+  shipping_address?: ShippingAddress;
   /** @nullable */
   tracking_carrier?: string | null;
   /** @nullable */
