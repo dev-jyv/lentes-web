@@ -132,7 +132,8 @@ test.describe("con armazón sin receta", () => {
     const save = page.getByRole("button", { name: "Guardar dirección" });
     await save.click();
     await expect(page.getByText("Requerido").first()).toBeVisible();
-    await expect(page.getByLabel("Nombre de quien recibe")).toBeFocused();
+    // SPEC 23: el código postal es el primer campo, así que recibe el foco.
+    await expect(page.getByLabel("Código postal")).toBeFocused();
 
     await page.getByLabel("Nombre de quien recibe").fill(`${E2E_PREFIX}Checkout`);
     await page.getByLabel("Calle").fill("Av. Reforma");

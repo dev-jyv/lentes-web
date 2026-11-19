@@ -230,6 +230,29 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PublicCatalogs" }
+  /v1/postal-codes/{cp}:
+    get:
+      operationId: getPostalCode
+      summary: Estado, municipio y colonias de un código postal (catálogo de Correos de México)
+      description: Público y cacheable un día. `404` si el catálogo no tiene el código; la tienda deja capturar la dirección a mano.
+      parameters:
+        - name: cp
+          in: path
+          required: true
+          schema: { type: string, pattern: "^[0-9]{5}$" }
+      responses:
+        "200":
+          description: Datos del código postal
+          headers:
+            Cache-Control:
+              schema: { type: string, example: "public, max-age=86400" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PostalCode" }
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
   /v1/home:
     get:
       operationId: getHome
@@ -2495,6 +2518,23 @@ components:
         full_name: { type: string, nullable: true }
         phone: { type: string, nullable: true }
         marketing_opt_in: { type: boolean }
+    PostalCode:
+      type: object
+      required: [postal_code, state, municipality, neighborhoods]
+      properties:
+        postal_code: { type: string }
+        state: { type: string, description: "Nombre oficial, p. ej. Ciudad de México" }
+        municipality: { type: string }
+        city: { type: string, nullable: true }
+        neighborhoods:
+          type: array
+          items: { $ref: "#/components/schemas/PostalNeighborhood" }
+    PostalNeighborhood:
+      type: object
+      required: [name, type]
+      properties:
+        name: { type: string }
+        type: { type: string, description: "Colonia, Fraccionamiento, Barrio…" }
     AddressInput:
       type: object
       required: [recipient, street, ext_number, neighborhood, city, state, postal_code, phone]

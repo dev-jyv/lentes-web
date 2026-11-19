@@ -134,6 +134,8 @@ export * from './orderItem';
 export * from './orderStatus';
 export * from './orderSummary';
 export * from './orderUpdate';
+export * from './postalCode';
+export * from './postalNeighborhood';
 export * from './prescription';
 export * from './prescriptionFields';
 export * from './prescriptionInput';
