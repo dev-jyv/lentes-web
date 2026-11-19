@@ -7,6 +7,7 @@
  */
 import type { AdminOrderLine } from './adminOrderLine';
 import type { AdminOrderSummary } from './adminOrderSummary';
+import type { GuestContact } from './guestContact';
 import type { RxStatus } from './rxStatus';
 import type { ShippingAddress } from './shippingAddress';
 
@@ -14,6 +15,8 @@ export type AdminOrder = AdminOrderSummary & ({
   /** @nullable */
   glasses_prescription_id: string | null;
   glasses_prescription_status: RxStatus | null;
+  /** Pedido de invitado (SPEC 24 de lentes-web): contacto capturado en el checkout. null para clientes. */
+  guest_contact?: GuestContact | null;
   /** @nullable */
   pd_mm: number | null;
   /** Pedido pagado con receta de armazones rechazada: requiere reembolso manual. */
