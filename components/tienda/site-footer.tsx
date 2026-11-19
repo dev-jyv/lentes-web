@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { t } from "@/lib/i18n";
 import { LEGAL_REVIEWED } from "@/lib/legal";
 
@@ -26,7 +25,6 @@ export function SiteFooter() {
             </>
           )}
         </nav>
-        <ThemeToggle />
       </div>
     </footer>
   );

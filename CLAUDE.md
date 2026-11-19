@@ -21,9 +21,17 @@ pnpm cf-typegen             # Regenerate cloudflare-env.d.ts
 pnpm api:sync               # Copy ../lentes-api/api/openapi.yaml here, then regenerate the client
 pnpm api:gen                # Regenerate the client from openapi/openapi.yaml
 pnpm emails:sync            # Export emails/ to HTML and copy into ../lentes-api/internal/email/templates
+pnpm test:e2e               # Playwright E2E (SPEC 20); one file: pnpm test:e2e tests/checkout/checkout.spec.ts
 ```
 
-There is no test runner, so no unit or single-test command exists. CI runs `lint`, `typecheck` and `build`.
+There are no unit tests. CI runs `lint`, `typecheck` and `build`; the E2E suite is local only.
+
+E2E notes (`playwright.config.ts`, `tests/`):
+- Needs `.env` with `APP_USER`, `APP_PASSWORD`, `E2E_FRAME_SLUG` and `E2E_LENS_SLUG` (see `.env.example`), plus the app's `.env.local`.
+- It runs against the deployed API (today production) with a real account. The `setup` project backs up the cart, the default address and the profile to `playwright/.auth/backup.json`; the `teardown` project restores them. Never delete that file while it exists: it is the only copy of the account's cart.
+- `POST /v1/checkout` is always intercepted, so the suite creates no orders. Test addresses use the `E2E ` prefix and are deleted.
+- The API only allows CORS from `http://localhost:3000`, so the suite needs that port. If `next dev` exits on its upgrade notice, start `pnpm dev` yourself; Playwright reuses it.
+- `tests/seed.spec.ts` is the entry point for the `/test-planner`, `/test-generator` and `/test-healer` commands.
 
 ## Architecture
 
@@ -46,7 +54,7 @@ Public catalog pages fetch in server components with plain generated functions. 
 
 ### Auth and routing
 
-- `proxy.ts` (Next 16's replacement for `middleware.ts`) calls `lib/supabase/proxy.ts`. It refreshes the Supabase session and redirects unauthenticated requests for `/cuenta`, `/checkout` and `/recompra` to `/login?next=...`. Add new private routes to its `PROTECTED` list. `lib/safe-next.ts` guards against open redirects: `safeNext` for `next` targets, `isInternalHref` for admin-managed banner links.
+- `proxy.ts` (Next 16's replacement for `middleware.ts`) calls `lib/supabase/proxy.ts`. It refreshes the Supabase session and redirects unauthenticated requests for `/cuenta`, `/checkout/resultado` and `/recompra` to `/login?next=...`. `/checkout` itself is public: without a session it offers guest checkout (SPEC 25), and paid guests see their order at `/pedido/[id]?t=<token>`. Add new private routes to its `PROTECTED` list. `lib/safe-next.ts` guards against open redirects: `safeNext` for `next` targets, `isInternalHref` for admin-managed banner links.
 - Route groups are `(tienda)`, `(auth)` and `(cuenta)`. The root layout renders the header and footer for all of them.
 - Products have two URL trees by category: `/lentes/[slug]` for `contact_lens` and `/armazones/[slug]` for frames. Use `productHref` from `lib/format.ts` to build links; `/lentes/{frame-slug}` redirects permanently to the frame URL.
 - `lib/navigation.ts` builds the header and mega menu from API facets, hiding values that have no products.

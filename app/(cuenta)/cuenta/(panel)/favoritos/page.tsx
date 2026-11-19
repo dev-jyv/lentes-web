@@ -6,8 +6,8 @@ export const metadata: Metadata = { title: t("favorites.title"), robots: { index
 
 export default function FavoritesPage() {
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-10">
-      <h1 className="text-2xl">{t("favorites.title")}</h1>
+    <div className="space-y-6">
+      <h1 className="text-2xl lg:text-3xl">{t("favorites.title")}</h1>
       <FavoriteList />
     </div>
   );

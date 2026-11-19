@@ -7,10 +7,10 @@
  */
 
 export type ListMyOrdersParams = {
-cursor?: string;
-/**
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
+  cursor?: string;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
 };

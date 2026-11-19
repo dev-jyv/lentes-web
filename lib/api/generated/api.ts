@@ -88,6 +88,8 @@ import type {
   GetCatalogsParams,
   GetHealth200,
   GetProductVariantParams,
+  GuestCheckoutInput,
+  GuestCheckoutResult,
   HomeBannerInput,
   HomeContent,
   ImageAddInput,
@@ -112,6 +114,7 @@ import type {
   MergeFavorites200,
   Order,
   OrderUpdate,
+  PostalCode,
   Prescription,
   PrescriptionInput,
   PrescriptionReview,
@@ -134,6 +137,26 @@ import type {
 import { apiFetch } from '../mutator';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+
+const getHeaders = (...sources: (RequestInit['headers'] | Record<string, string | undefined>)[]) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries = source instanceof Headers
+      ? source.entries()
+      : Symbol.iterator in source
+        ? Array.from(source as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string])
+        : Object.entries<string | readonly string[] | undefined>(source);
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase())) layer.push([name, value]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<RequestInit['headers'], Record<string, unknown>>;
+};
 
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
@@ -225,6 +248,7 @@ export type GetHealthQueryResult = NonNullable<Awaited<ReturnType<typeof getHeal
 export type GetHealthQueryError = ProblemResponse
 
 
+/** @summary Salud del servicio */
 export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = ProblemResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -235,6 +259,7 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Salud del servicio */
 export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -245,14 +270,12 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Salud del servicio */
 export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Salud del servicio
- */
-
+/** @summary Salud del servicio */
 export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -314,25 +337,11 @@ export const getLoginUrl = () => {
  */
 export const login = async (loginInput: LoginInput, options?: Parameters<typeof apiFetch>[1]): Promise<loginResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<loginResponse>(getLoginUrl(),
+  return apiFetch<loginResponse>(getLoginUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(loginInput)
   }
 );}
@@ -376,6 +385,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type LoginMutationVariables = {data: LoginInput}
 
     /**
+ * Devuelve el access token en el cuerpo (el cliente lo guarda en memoria y lo manda como Bearer) y deja el refresh token en una cookie httpOnly limitada a `/v1/auth`.
  * @summary Inicia sesión con correo y contraseña (Supabase Auth vía backend)
  */
 export const useLogin = <TError = ProblemResponse,
@@ -473,9 +483,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type RefreshSessionMutationError = ProblemResponse
 
 
-    /**
- * @summary Renueva el access token con la cookie de refresh (y la rota)
- */
+    /** @summary Renueva el access token con la cookie de refresh (y la rota) */
 export const useRefreshSession = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshSession>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -559,9 +567,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type LogoutMutationError = unknown
 
 
-    /**
- * @summary Cierra la sesión, revoca el refresh token y borra la cookie
- */
+    /** @summary Cierra la sesión, revoca el refresh token y borra la cookie */
 export const useLogout = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -654,6 +660,7 @@ export type ListProductsQueryResult = NonNullable<Awaited<ReturnType<typeof list
 export type ListProductsQueryError = ProblemResponse
 
 
+/** @summary Catálogo con filtros y paginación por cursor */
 export function useListProducts<TData = Awaited<ReturnType<typeof listProducts>>, TError = ProblemResponse>(
  params: undefined |  ListProductsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProducts>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -664,6 +671,7 @@ export function useListProducts<TData = Awaited<ReturnType<typeof listProducts>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Catálogo con filtros y paginación por cursor */
 export function useListProducts<TData = Awaited<ReturnType<typeof listProducts>>, TError = ProblemResponse>(
  params?: ListProductsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProducts>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -674,14 +682,12 @@ export function useListProducts<TData = Awaited<ReturnType<typeof listProducts>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Catálogo con filtros y paginación por cursor */
 export function useListProducts<TData = Awaited<ReturnType<typeof listProducts>>, TError = ProblemResponse>(
  params?: ListProductsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProducts>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Catálogo con filtros y paginación por cursor
- */
-
+/** @summary Catálogo con filtros y paginación por cursor */
 export function useListProducts<TData = Awaited<ReturnType<typeof listProducts>>, TError = ProblemResponse>(
  params?: ListProductsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProducts>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -781,6 +787,7 @@ export type ListBrandsQueryResult = NonNullable<Awaited<ReturnType<typeof listBr
 export type ListBrandsQueryError = ProblemResponse
 
 
+/** @summary Lista de marcas */
 export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = ProblemResponse>(
  params: undefined |  ListBrandsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -791,6 +798,7 @@ export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TE
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Lista de marcas */
 export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = ProblemResponse>(
  params?: ListBrandsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -801,14 +809,12 @@ export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TE
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Lista de marcas */
 export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = ProblemResponse>(
  params?: ListBrandsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Lista de marcas
- */
-
+/** @summary Lista de marcas */
 export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TError = ProblemResponse>(
  params?: ListBrandsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBrands>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -908,6 +914,7 @@ export type GetCatalogFacetsQueryResult = NonNullable<Awaited<ReturnType<typeof 
 export type GetCatalogFacetsQueryError = ProblemResponse
 
 
+/** @summary Valores de filtro con productos activos en una categoría */
 export function useGetCatalogFacets<TData = Awaited<ReturnType<typeof getCatalogFacets>>, TError = ProblemResponse>(
  params: GetCatalogFacetsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogFacets>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -918,6 +925,7 @@ export function useGetCatalogFacets<TData = Awaited<ReturnType<typeof getCatalog
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Valores de filtro con productos activos en una categoría */
 export function useGetCatalogFacets<TData = Awaited<ReturnType<typeof getCatalogFacets>>, TError = ProblemResponse>(
  params: GetCatalogFacetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogFacets>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -928,14 +936,12 @@ export function useGetCatalogFacets<TData = Awaited<ReturnType<typeof getCatalog
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Valores de filtro con productos activos en una categoría */
 export function useGetCatalogFacets<TData = Awaited<ReturnType<typeof getCatalogFacets>>, TError = ProblemResponse>(
  params: GetCatalogFacetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogFacets>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Valores de filtro con productos activos en una categoría
- */
-
+/** @summary Valores de filtro con productos activos en una categoría */
 export function useGetCatalogFacets<TData = Awaited<ReturnType<typeof getCatalogFacets>>, TError = ProblemResponse>(
  params: GetCatalogFacetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogFacets>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1029,6 +1035,10 @@ export type GetCatalogsQueryResult = NonNullable<Awaited<ReturnType<typeof getCa
 export type GetCatalogsQueryError = unknown
 
 
+/**
+ * Etiquetas, orden y muestras de color de los atributos de producto. Sin `include_hidden` los valores ocultos no aparecen. Con `include_hidden=true` aparecen también, con `active: false`, para que la tienda muestre la etiqueta y la muestra de color de un producto que todavía usa un valor oculto.
+ * @summary Catálogos de atributos con sus valores
+ */
 export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
  params: undefined |  GetCatalogsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1039,6 +1049,10 @@ export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Etiquetas, orden y muestras de color de los atributos de producto. Sin `include_hidden` los valores ocultos no aparecen. Con `include_hidden=true` aparecen también, con `active: false`, para que la tienda muestre la etiqueta y la muestra de color de un producto que todavía usa un valor oculto.
+ * @summary Catálogos de atributos con sus valores
+ */
 export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
  params?: GetCatalogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1049,20 +1063,162 @@ export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Etiquetas, orden y muestras de color de los atributos de producto. Sin `include_hidden` los valores ocultos no aparecen. Con `include_hidden=true` aparecen también, con `active: false`, para que la tienda muestre la etiqueta y la muestra de color de un producto que todavía usa un valor oculto.
+ * @summary Catálogos de atributos con sus valores
+ */
 export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
  params?: GetCatalogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Etiquetas, orden y muestras de color de los atributos de producto. Sin `include_hidden` los valores ocultos no aparecen. Con `include_hidden=true` aparecen también, con `active: false`, para que la tienda muestre la etiqueta y la muestra de color de un producto que todavía usa un valor oculto.
  * @summary Catálogos de atributos con sus valores
  */
-
 export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, TError = unknown>(
  params?: GetCatalogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetCatalogsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getPostalCodeResponse200 = {
+  data: PostalCode
+  status: 200
+}
+
+export type getPostalCodeResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type getPostalCodeResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type getPostalCodeResponseSuccess = (getPostalCodeResponse200) & {
+  headers: Headers;
+};
+export type getPostalCodeResponseError = (getPostalCodeResponse400 | getPostalCodeResponse404) & {
+  headers: Headers;
+};
+
+export type getPostalCodeResponse = (getPostalCodeResponseSuccess | getPostalCodeResponseError)
+
+export const getGetPostalCodeUrl = (cp: string,) => {
+
+
+
+
+  return `/v1/postal-codes/${cp}`
+}
+
+/**
+ * Público y cacheable un día. `404` si el catálogo no tiene el código; la tienda deja capturar la dirección a mano.
+ * @summary Estado, municipio y colonias de un código postal (catálogo de Correos de México)
+ */
+export const getPostalCode = async (cp: string, options?: Parameters<typeof apiFetch>[1]): Promise<getPostalCodeResponse> => {
+
+  return apiFetch<getPostalCodeResponse>(getGetPostalCodeUrl(cp),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPostalCodeQueryKey = (cp: string,) => {
+    return [
+    `/v1/postal-codes/${cp}`
+    ] as const;
+    }
+
+
+export const getGetPostalCodeQueryOptions = <TData = Awaited<ReturnType<typeof getPostalCode>>, TError = ProblemResponse>(cp: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPostalCodeQueryKey(cp);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPostalCode>>> = ({ signal }) => getPostalCode(cp, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: cp !== null && cp !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPostalCodeQueryResult = NonNullable<Awaited<ReturnType<typeof getPostalCode>>>
+export type GetPostalCodeQueryError = ProblemResponse
+
+
+/**
+ * Público y cacheable un día. `404` si el catálogo no tiene el código; la tienda deja capturar la dirección a mano.
+ * @summary Estado, municipio y colonias de un código postal (catálogo de Correos de México)
+ */
+export function useGetPostalCode<TData = Awaited<ReturnType<typeof getPostalCode>>, TError = ProblemResponse>(
+ cp: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPostalCode>>,
+          TError,
+          Awaited<ReturnType<typeof getPostalCode>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Público y cacheable un día. `404` si el catálogo no tiene el código; la tienda deja capturar la dirección a mano.
+ * @summary Estado, municipio y colonias de un código postal (catálogo de Correos de México)
+ */
+export function useGetPostalCode<TData = Awaited<ReturnType<typeof getPostalCode>>, TError = ProblemResponse>(
+ cp: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPostalCode>>,
+          TError,
+          Awaited<ReturnType<typeof getPostalCode>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Público y cacheable un día. `404` si el catálogo no tiene el código; la tienda deja capturar la dirección a mano.
+ * @summary Estado, municipio y colonias de un código postal (catálogo de Correos de México)
+ */
+export function useGetPostalCode<TData = Awaited<ReturnType<typeof getPostalCode>>, TError = ProblemResponse>(
+ cp: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Público y cacheable un día. `404` si el catálogo no tiene el código; la tienda deja capturar la dirección a mano.
+ * @summary Estado, municipio y colonias de un código postal (catálogo de Correos de México)
+ */
+export function useGetPostalCode<TData = Awaited<ReturnType<typeof getPostalCode>>, TError = ProblemResponse>(
+ cp: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPostalCodeQueryOptions(cp,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1142,6 +1298,7 @@ export type GetHomeQueryResult = NonNullable<Awaited<ReturnType<typeof getHome>>
 export type GetHomeQueryError = unknown
 
 
+/** @summary Contenido vigente del home */
 export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1152,6 +1309,7 @@ export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError =
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Contenido vigente del home */
 export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1162,14 +1320,12 @@ export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError =
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Contenido vigente del home */
 export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Contenido vigente del home
- */
-
+/** @summary Contenido vigente del home */
 export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1262,6 +1418,7 @@ export type GetProductQueryResult = NonNullable<Awaited<ReturnType<typeof getPro
 export type GetProductQueryError = ProblemResponse
 
 
+/** @summary Detalle del producto y parámetros disponibles */
 export function useGetProduct<TData = Awaited<ReturnType<typeof getProduct>>, TError = ProblemResponse>(
  slug: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProduct>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1272,6 +1429,7 @@ export function useGetProduct<TData = Awaited<ReturnType<typeof getProduct>>, TE
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Detalle del producto y parámetros disponibles */
 export function useGetProduct<TData = Awaited<ReturnType<typeof getProduct>>, TError = ProblemResponse>(
  slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProduct>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1282,14 +1440,12 @@ export function useGetProduct<TData = Awaited<ReturnType<typeof getProduct>>, TE
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Detalle del producto y parámetros disponibles */
 export function useGetProduct<TData = Awaited<ReturnType<typeof getProduct>>, TError = ProblemResponse>(
  slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProduct>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Detalle del producto y parámetros disponibles
- */
-
+/** @summary Detalle del producto y parámetros disponibles */
 export function useGetProduct<TData = Awaited<ReturnType<typeof getProduct>>, TError = ProblemResponse>(
  slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProduct>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1399,6 +1555,10 @@ export type GetProductVariantQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type GetProductVariantQueryError = ProblemResponse
 
 
+/**
+ * Los parámetros que no aplican al modelo (p. ej. `cylinder` en esféricos) se omiten.
+ * @summary Resuelve la variante por parámetros y devuelve precio y stock
+ */
 export function useGetProductVariant<TData = Awaited<ReturnType<typeof getProductVariant>>, TError = ProblemResponse>(
  slug: string,
     params: GetProductVariantParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductVariant>>, TError, TData>> & Pick<
@@ -1410,6 +1570,10 @@ export function useGetProductVariant<TData = Awaited<ReturnType<typeof getProduc
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Los parámetros que no aplican al modelo (p. ej. `cylinder` en esféricos) se omiten.
+ * @summary Resuelve la variante por parámetros y devuelve precio y stock
+ */
 export function useGetProductVariant<TData = Awaited<ReturnType<typeof getProductVariant>>, TError = ProblemResponse>(
  slug: string,
     params: GetProductVariantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductVariant>>, TError, TData>> & Pick<
@@ -1421,15 +1585,19 @@ export function useGetProductVariant<TData = Awaited<ReturnType<typeof getProduc
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Los parámetros que no aplican al modelo (p. ej. `cylinder` en esféricos) se omiten.
+ * @summary Resuelve la variante por parámetros y devuelve precio y stock
+ */
 export function useGetProductVariant<TData = Awaited<ReturnType<typeof getProductVariant>>, TError = ProblemResponse>(
  slug: string,
     params: GetProductVariantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductVariant>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Los parámetros que no aplican al modelo (p. ej. `cylinder` en esféricos) se omiten.
  * @summary Resuelve la variante por parámetros y devuelve precio y stock
  */
-
 export function useGetProductVariant<TData = Awaited<ReturnType<typeof getProductVariant>>, TError = ProblemResponse>(
  slug: string,
     params: GetProductVariantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProductVariant>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
@@ -1517,6 +1685,10 @@ export type GetCartQueryResult = NonNullable<Awaited<ReturnType<typeof getCart>>
 export type GetCartQueryError = unknown
 
 
+/**
+ * Con sesión es el carrito del cliente; sin sesión, el del header `X-Cart-Token`.
+ * @summary Carrito actual (vacío si no existe)
+ */
 export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCart>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1527,6 +1699,10 @@ export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError =
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Con sesión es el carrito del cliente; sin sesión, el del header `X-Cart-Token`.
+ * @summary Carrito actual (vacío si no existe)
+ */
 export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCart>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1537,14 +1713,18 @@ export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError =
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Con sesión es el carrito del cliente; sin sesión, el del header `X-Cart-Token`.
+ * @summary Carrito actual (vacío si no existe)
+ */
 export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCart>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Con sesión es el carrito del cliente; sin sesión, el del header `X-Cart-Token`.
  * @summary Carrito actual (vacío si no existe)
  */
-
 export function useGetCart<TData = Awaited<ReturnType<typeof getCart>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCart>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1607,25 +1787,11 @@ export const getAddCartItemUrl = () => {
  */
 export const addCartItem = async (cartItemInput: CartItemInput, options?: Parameters<typeof apiFetch>[1]): Promise<addCartItemResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<addCartItemResponse>(getAddCartItemUrl(),
+  return apiFetch<addCartItemResponse>(getAddCartItemUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(cartItemInput)
   }
 );}
@@ -1669,6 +1835,8 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AddCartItemMutationVariables = {data: CartItemInput}
 
     /**
+ * Sin sesión ni token válido crea un carrito anónimo y devuelve `cart_token`; el cliente debe
+ * guardarlo y enviarlo en `X-Cart-Token`. Falla con 409 si no hay existencias suficientes.
  * @summary Agrega una variante para un ojo (suma si la línea ya existe)
  */
 export const useAddCartItem = <TError = ProblemResponse,
@@ -1725,25 +1893,11 @@ export const getUpdateCartItemUrl = (id: string,) => {
 export const updateCartItem = async (id: string,
     cartItemUpdate: CartItemUpdate, options?: Parameters<typeof apiFetch>[1]): Promise<updateCartItemResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<updateCartItemResponse>(getUpdateCartItemUrl(id),
+  return apiFetch<updateCartItemResponse>(getUpdateCartItemUrl(id),
   {
     ...options,
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(cartItemUpdate)
   }
 );}
@@ -1786,9 +1940,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateCartItemMutationError = ProblemResponse
     export type UpdateCartItemMutationVariables = {id: string;data: CartItemUpdate}
 
-    /**
- * @summary Cambia la cantidad de una línea
- */
+    /** @summary Cambia la cantidad de una línea */
 export const useUpdateCartItem = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCartItem>>, TError,UpdateCartItemMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1879,9 +2031,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteCartItemMutationError = ProblemResponse
     export type DeleteCartItemMutationVariables = {id: string}
 
-    /**
- * @summary Quita una línea
- */
+    /** @summary Quita una línea */
 export const useDeleteCartItem = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCartItem>>, TError,DeleteCartItemMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1965,9 +2115,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type MergeCartMutationError = unknown
 
 
-    /**
- * @summary Une el carrito anónimo (`X-Cart-Token`) al del cliente al iniciar sesión
- */
+    /** @summary Une el carrito anónimo (`X-Cart-Token`) al del cliente al iniciar sesión */
 export const useMergeCart = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mergeCart>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2046,6 +2194,7 @@ export type GetMeQueryResult = NonNullable<Awaited<ReturnType<typeof getMe>>>
 export type GetMeQueryError = unknown
 
 
+/** @summary Perfil del cliente */
 export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -2056,6 +2205,7 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = unk
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Perfil del cliente */
 export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -2066,14 +2216,12 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = unk
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Perfil del cliente */
 export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Perfil del cliente
- */
-
+/** @summary Perfil del cliente */
 export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2124,25 +2272,11 @@ export const getUpdateMeUrl = () => {
  */
 export const updateMe = async (customerUpdate: CustomerUpdate, options?: Parameters<typeof apiFetch>[1]): Promise<updateMeResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<updateMeResponse>(getUpdateMeUrl(),
+  return apiFetch<updateMeResponse>(getUpdateMeUrl(),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(customerUpdate)
   }
 );}
@@ -2185,9 +2319,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateMeMutationError = ProblemResponse
     export type UpdateMeMutationVariables = {data: CustomerUpdate}
 
-    /**
- * @summary Actualiza el perfil
- */
+    /** @summary Actualiza el perfil */
 export const useUpdateMe = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMe>>, TError,UpdateMeMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2266,6 +2398,7 @@ export type ListAddressesQueryResult = NonNullable<Awaited<ReturnType<typeof lis
 export type ListAddressesQueryError = unknown
 
 
+/** @summary Direcciones del cliente */
 export function useListAddresses<TData = Awaited<ReturnType<typeof listAddresses>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAddresses>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -2276,6 +2409,7 @@ export function useListAddresses<TData = Awaited<ReturnType<typeof listAddresses
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Direcciones del cliente */
 export function useListAddresses<TData = Awaited<ReturnType<typeof listAddresses>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAddresses>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -2286,14 +2420,12 @@ export function useListAddresses<TData = Awaited<ReturnType<typeof listAddresses
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Direcciones del cliente */
 export function useListAddresses<TData = Awaited<ReturnType<typeof listAddresses>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAddresses>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Direcciones del cliente
- */
-
+/** @summary Direcciones del cliente */
 export function useListAddresses<TData = Awaited<ReturnType<typeof listAddresses>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAddresses>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2344,25 +2476,11 @@ export const getCreateAddressUrl = () => {
  */
 export const createAddress = async (addressInput: AddressInput, options?: Parameters<typeof apiFetch>[1]): Promise<createAddressResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<createAddressResponse>(getCreateAddressUrl(),
+  return apiFetch<createAddressResponse>(getCreateAddressUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(addressInput)
   }
 );}
@@ -2405,9 +2523,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateAddressMutationError = ProblemResponse
     export type CreateAddressMutationVariables = {data: AddressInput}
 
-    /**
- * @summary Agrega una dirección (la primera queda predeterminada)
- */
+    /** @summary Agrega una dirección (la primera queda predeterminada) */
 export const useCreateAddress = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAddress>>, TError,CreateAddressMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2457,25 +2573,11 @@ export const getUpdateAddressUrl = (id: string,) => {
 export const updateAddress = async (id: string,
     addressInput: AddressInput, options?: Parameters<typeof apiFetch>[1]): Promise<updateAddressResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<updateAddressResponse>(getUpdateAddressUrl(id),
+  return apiFetch<updateAddressResponse>(getUpdateAddressUrl(id),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(addressInput)
   }
 );}
@@ -2518,9 +2620,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateAddressMutationError = ProblemResponse
     export type UpdateAddressMutationVariables = {id: string;data: AddressInput}
 
-    /**
- * @summary Reemplaza una dirección
- */
+    /** @summary Reemplaza una dirección */
 export const useUpdateAddress = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAddress>>, TError,UpdateAddressMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2611,9 +2711,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteAddressMutationError = ProblemResponse
     export type DeleteAddressMutationVariables = {id: string}
 
-    /**
- * @summary Elimina una dirección
- */
+    /** @summary Elimina una dirección */
 export const useDeleteAddress = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAddress>>, TError,DeleteAddressMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2693,6 +2791,10 @@ export type ListFavoritesQueryResult = NonNullable<Awaited<ReturnType<typeof lis
 export type ListFavoritesQueryError = unknown
 
 
+/**
+ * Del más reciente al más antiguo. No incluye productos desactivados.
+ * @summary Favoritos del cliente
+ */
 export function useListFavorites<TData = Awaited<ReturnType<typeof listFavorites>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -2703,6 +2805,10 @@ export function useListFavorites<TData = Awaited<ReturnType<typeof listFavorites
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Del más reciente al más antiguo. No incluye productos desactivados.
+ * @summary Favoritos del cliente
+ */
 export function useListFavorites<TData = Awaited<ReturnType<typeof listFavorites>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -2713,14 +2819,18 @@ export function useListFavorites<TData = Awaited<ReturnType<typeof listFavorites
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Del más reciente al más antiguo. No incluye productos desactivados.
+ * @summary Favoritos del cliente
+ */
 export function useListFavorites<TData = Awaited<ReturnType<typeof listFavorites>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Del más reciente al más antiguo. No incluye productos desactivados.
  * @summary Favoritos del cliente
  */
-
 export function useListFavorites<TData = Awaited<ReturnType<typeof listFavorites>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2779,25 +2889,11 @@ export const getMergeFavoritesUrl = () => {
  */
 export const mergeFavorites = async (favoriteMergeInput: FavoriteMergeInput, options?: Parameters<typeof apiFetch>[1]): Promise<mergeFavoritesResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<mergeFavoritesResponse>(getMergeFavoritesUrl(),
+  return apiFetch<mergeFavoritesResponse>(getMergeFavoritesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(favoriteMergeInput)
   }
 );}
@@ -2841,6 +2937,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type MergeFavoritesMutationVariables = {data: FavoriteMergeInput}
 
     /**
+ * Agrega hasta 50 productos y devuelve la lista completa. Ignora duplicados y productos inexistentes o
+ * desactivados; un favorito que ya existía conserva su `added_at` (el más antiguo).
+ * `409` si se rebasa el límite de 200 favoritos: entonces no se agrega ninguno.
  * @summary Fusiona los favoritos guardados sin sesión
  */
 export const useMergeFavorites = <TError = ProblemResponse,
@@ -2941,6 +3040,8 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AddFavoriteMutationVariables = {productId: string}
 
     /**
+ * Idempotente: si ya era favorito devuelve el mismo `added_at`. `404` si el producto no existe o está desactivado.
+ * `409` si el cliente ya tiene 200 favoritos (el `detail` en español se muestra al cliente).
  * @summary Marca un producto como favorito
  */
 export const useAddFavorite = <TError = ProblemResponse,
@@ -3033,9 +3134,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type RemoveFavoriteMutationError = ProblemResponse
     export type RemoveFavoriteMutationVariables = {productId: string}
 
-    /**
- * @summary Quita un favorito
- */
+    /** @summary Quita un favorito */
 export const useRemoveFavorite = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeFavorite>>, TError,RemoveFavoriteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -3103,25 +3202,11 @@ export const getCreateCheckoutUrl = () => {
  */
 export const createCheckout = async (checkoutInput: CheckoutInput, options?: Parameters<typeof apiFetch>[1]): Promise<createCheckoutResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<createCheckoutResponse>(getCreateCheckoutUrl(),
+  return apiFetch<createCheckoutResponse>(getCreateCheckoutUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(checkoutInput)
   }
 );}
@@ -3165,6 +3250,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateCheckoutMutationVariables = {data: CheckoutInput}
 
     /**
+ * Aparta las existencias por 15 minutos y devuelve el `init_point` de Checkout Pro. Los precios salen de la base
+ * al momento de apartar (nunca del cliente). Un cliente tiene un solo pedido pendiente: crear otro libera el anterior.
+ * `409` si el carrito está vacío, no hay existencias (type `out-of-stock`), falta o no sirve la receta.
+ * `502` si Mercado Pago falla (el apartado se libera y se puede reintentar).
  * @summary Valida el carrito, aparta inventario, crea el pedido y la preferencia de Mercado Pago
  */
 export const useCreateCheckout = <TError = ProblemResponse,
@@ -3177,6 +3266,371 @@ export const useCreateCheckout = <TError = ProblemResponse,
       > => {
       return useMutation(getCreateCheckoutMutationOptions(options), queryClient);
     }
+
+export type createGuestCheckoutResponse201 = {
+  data: GuestCheckoutResult
+  status: 201
+}
+
+export type createGuestCheckoutResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type createGuestCheckoutResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type createGuestCheckoutResponse429 = {
+  data: ProblemResponse
+  status: 429
+}
+
+export type createGuestCheckoutResponse502 = {
+  data: ProblemResponse
+  status: 502
+}
+
+export type createGuestCheckoutResponseSuccess = (createGuestCheckoutResponse201) & {
+  headers: Headers;
+};
+export type createGuestCheckoutResponseError = (createGuestCheckoutResponse400 | createGuestCheckoutResponse409 | createGuestCheckoutResponse429 | createGuestCheckoutResponse502) & {
+  headers: Headers;
+};
+
+export type createGuestCheckoutResponse = (createGuestCheckoutResponseSuccess | createGuestCheckoutResponseError)
+
+export const getCreateGuestCheckoutUrl = () => {
+
+
+
+
+  return `/v1/checkout/guest`
+}
+
+/**
+ * Mismo flujo que `POST /v1/checkout` (apartado de 15 minutos, precios de la base, Mercado Pago), sin cuenta: el pedido
+ * guarda el contacto del invitado y una copia de la dirección. Exige `X-Cart-Token` y un token de Turnstile.
+ * Una compra pendiente por carrito. Devuelve `order_token`, el enlace privado del pedido (`GET /v1/guest/orders/{id}`).
+ * `400` datos inválidos o CAPTCHA rechazado. `409` carrito vacío, sin existencias, falta la receta, o la petición trae
+ * sesión (type `use-account-checkout`: usa `POST /v1/checkout`). `429` más de 10 intentos por IP en una hora.
+ * `503` si la compra como invitado o los pagos no están configurados.
+ * @summary Compra como invitado desde el carrito anónimo (SPEC 24 de lentes-web)
+ */
+export const createGuestCheckout = async (guestCheckoutInput: GuestCheckoutInput, options?: Parameters<typeof apiFetch>[1]): Promise<createGuestCheckoutResponse> => {
+
+  return apiFetch<createGuestCheckoutResponse>(getCreateGuestCheckoutUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
+    body: JSON.stringify(guestCheckoutInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGuestCheckoutMutationKey = () => ['createGuestCheckout'] as const;
+
+export const getCreateGuestCheckoutMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGuestCheckout>>, TError,CreateGuestCheckoutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGuestCheckout>>, TError,CreateGuestCheckoutMutationVariables, TContext> => {
+
+const mutationKey = getCreateGuestCheckoutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGuestCheckout>>, CreateGuestCheckoutMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGuestCheckout(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGuestCheckoutMutationResult = NonNullable<Awaited<ReturnType<typeof createGuestCheckout>>>
+    export type CreateGuestCheckoutMutationBody = GuestCheckoutInput
+    export type CreateGuestCheckoutMutationError = ProblemResponse
+    export type CreateGuestCheckoutMutationVariables = {data: GuestCheckoutInput}
+
+    /**
+ * Mismo flujo que `POST /v1/checkout` (apartado de 15 minutos, precios de la base, Mercado Pago), sin cuenta: el pedido
+ * guarda el contacto del invitado y una copia de la dirección. Exige `X-Cart-Token` y un token de Turnstile.
+ * Una compra pendiente por carrito. Devuelve `order_token`, el enlace privado del pedido (`GET /v1/guest/orders/{id}`).
+ * `400` datos inválidos o CAPTCHA rechazado. `409` carrito vacío, sin existencias, falta la receta, o la petición trae
+ * sesión (type `use-account-checkout`: usa `POST /v1/checkout`). `429` más de 10 intentos por IP en una hora.
+ * `503` si la compra como invitado o los pagos no están configurados.
+ * @summary Compra como invitado desde el carrito anónimo (SPEC 24 de lentes-web)
+ */
+export const useCreateGuestCheckout = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGuestCheckout>>, TError,CreateGuestCheckoutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createGuestCheckout>>,
+        TError,
+        CreateGuestCheckoutMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGuestCheckoutMutationOptions(options), queryClient);
+    }
+
+export type createGuestPrescriptionUploadUrlResponse200 = {
+  data: PrescriptionUpload
+  status: 200
+}
+
+export type createGuestPrescriptionUploadUrlResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type createGuestPrescriptionUploadUrlResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type createGuestPrescriptionUploadUrlResponse502 = {
+  data: ProblemResponse
+  status: 502
+}
+
+export type createGuestPrescriptionUploadUrlResponseSuccess = (createGuestPrescriptionUploadUrlResponse200) & {
+  headers: Headers;
+};
+export type createGuestPrescriptionUploadUrlResponseError = (createGuestPrescriptionUploadUrlResponse400 | createGuestPrescriptionUploadUrlResponse409 | createGuestPrescriptionUploadUrlResponse502) & {
+  headers: Headers;
+};
+
+export type createGuestPrescriptionUploadUrlResponse = (createGuestPrescriptionUploadUrlResponseSuccess | createGuestPrescriptionUploadUrlResponseError)
+
+export const getCreateGuestPrescriptionUploadUrlUrl = () => {
+
+
+
+
+  return `/v1/guest/prescriptions/upload-url`
+}
+
+/**
+ * Igual que `POST /v1/me/prescriptions/upload-url`, pero ligada al carrito anónimo de `X-Cart-Token`. La llave devuelta
+ * se manda en `POST /v1/checkout/guest` como `prescription_upload.r2_key`. `409` sin carrito.
+ * @summary URL prefirmada para que un invitado suba su receta
+ */
+export const createGuestPrescriptionUploadUrl = async (prescriptionUploadInput: PrescriptionUploadInput, options?: Parameters<typeof apiFetch>[1]): Promise<createGuestPrescriptionUploadUrlResponse> => {
+
+  return apiFetch<createGuestPrescriptionUploadUrlResponse>(getCreateGuestPrescriptionUploadUrlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
+    body: JSON.stringify(prescriptionUploadInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGuestPrescriptionUploadUrlMutationKey = () => ['createGuestPrescriptionUploadUrl'] as const;
+
+export const getCreateGuestPrescriptionUploadUrlMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>, TError,CreateGuestPrescriptionUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>, TError,CreateGuestPrescriptionUploadUrlMutationVariables, TContext> => {
+
+const mutationKey = getCreateGuestPrescriptionUploadUrlMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>, CreateGuestPrescriptionUploadUrlMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGuestPrescriptionUploadUrl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGuestPrescriptionUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>>
+    export type CreateGuestPrescriptionUploadUrlMutationBody = PrescriptionUploadInput
+    export type CreateGuestPrescriptionUploadUrlMutationError = ProblemResponse
+    export type CreateGuestPrescriptionUploadUrlMutationVariables = {data: PrescriptionUploadInput}
+
+    /**
+ * Igual que `POST /v1/me/prescriptions/upload-url`, pero ligada al carrito anónimo de `X-Cart-Token`. La llave devuelta
+ * se manda en `POST /v1/checkout/guest` como `prescription_upload.r2_key`. `409` sin carrito.
+ * @summary URL prefirmada para que un invitado suba su receta
+ */
+export const useCreateGuestPrescriptionUploadUrl = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>, TError,CreateGuestPrescriptionUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>,
+        TError,
+        CreateGuestPrescriptionUploadUrlMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGuestPrescriptionUploadUrlMutationOptions(options), queryClient);
+    }
+
+export type getGuestOrderResponse200 = {
+  data: Order
+  status: 200
+}
+
+export type getGuestOrderResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type getGuestOrderResponseSuccess = (getGuestOrderResponse200) & {
+  headers: Headers;
+};
+export type getGuestOrderResponseError = (getGuestOrderResponse404) & {
+  headers: Headers;
+};
+
+export type getGuestOrderResponse = (getGuestOrderResponseSuccess | getGuestOrderResponseError)
+
+export const getGetGuestOrderUrl = (id: string,) => {
+
+
+
+
+  return `/v1/guest/orders/${id}`
+}
+
+/**
+ * `X-Order-Token` es el `order_token` del checkout (también va en los correos). Sirve hasta 90 días después de la
+ * entrega. Token, id o vigencia incorrectos responden `404` sin distinguir.
+ * @summary Pedido de invitado con su enlace privado
+ */
+export const getGuestOrder = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getGuestOrderResponse> => {
+
+  return apiFetch<getGuestOrderResponse>(getGetGuestOrderUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGuestOrderQueryKey = (id: string,) => {
+    return [
+    `/v1/guest/orders/${id}`
+    ] as const;
+    }
+
+
+export const getGetGuestOrderQueryOptions = <TData = Awaited<ReturnType<typeof getGuestOrder>>, TError = ProblemResponse>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGuestOrderQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGuestOrder>>> = ({ signal }) => getGuestOrder(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetGuestOrderQueryResult = NonNullable<Awaited<ReturnType<typeof getGuestOrder>>>
+export type GetGuestOrderQueryError = ProblemResponse
+
+
+/**
+ * `X-Order-Token` es el `order_token` del checkout (también va en los correos). Sirve hasta 90 días después de la
+ * entrega. Token, id o vigencia incorrectos responden `404` sin distinguir.
+ * @summary Pedido de invitado con su enlace privado
+ */
+export function useGetGuestOrder<TData = Awaited<ReturnType<typeof getGuestOrder>>, TError = ProblemResponse>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGuestOrder>>,
+          TError,
+          Awaited<ReturnType<typeof getGuestOrder>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * `X-Order-Token` es el `order_token` del checkout (también va en los correos). Sirve hasta 90 días después de la
+ * entrega. Token, id o vigencia incorrectos responden `404` sin distinguir.
+ * @summary Pedido de invitado con su enlace privado
+ */
+export function useGetGuestOrder<TData = Awaited<ReturnType<typeof getGuestOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGuestOrder>>,
+          TError,
+          Awaited<ReturnType<typeof getGuestOrder>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * `X-Order-Token` es el `order_token` del checkout (también va en los correos). Sirve hasta 90 días después de la
+ * entrega. Token, id o vigencia incorrectos responden `404` sin distinguir.
+ * @summary Pedido de invitado con su enlace privado
+ */
+export function useGetGuestOrder<TData = Awaited<ReturnType<typeof getGuestOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * `X-Order-Token` es el `order_token` del checkout (también va en los correos). Sirve hasta 90 días después de la
+ * entrega. Token, id o vigencia incorrectos responden `404` sin distinguir.
+ * @summary Pedido de invitado con su enlace privado
+ */
+export function useGetGuestOrder<TData = Awaited<ReturnType<typeof getGuestOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGuestOrderQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export type listMyOrdersResponse200 = {
   data: ListMyOrders200
@@ -3260,6 +3714,10 @@ export type ListMyOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof list
 export type ListMyOrdersQueryError = ProblemResponse
 
 
+/**
+ * Del más reciente al más antiguo, paginado por cursor. No incluye pedidos vencidos (`expired`).
+ * @summary Historial de pedidos del cliente
+ */
 export function useListMyOrders<TData = Awaited<ReturnType<typeof listMyOrders>>, TError = ProblemResponse>(
  params: undefined |  ListMyOrdersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyOrders>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -3270,6 +3728,10 @@ export function useListMyOrders<TData = Awaited<ReturnType<typeof listMyOrders>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Del más reciente al más antiguo, paginado por cursor. No incluye pedidos vencidos (`expired`).
+ * @summary Historial de pedidos del cliente
+ */
 export function useListMyOrders<TData = Awaited<ReturnType<typeof listMyOrders>>, TError = ProblemResponse>(
  params?: ListMyOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyOrders>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -3280,14 +3742,18 @@ export function useListMyOrders<TData = Awaited<ReturnType<typeof listMyOrders>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Del más reciente al más antiguo, paginado por cursor. No incluye pedidos vencidos (`expired`).
+ * @summary Historial de pedidos del cliente
+ */
 export function useListMyOrders<TData = Awaited<ReturnType<typeof listMyOrders>>, TError = ProblemResponse>(
  params?: ListMyOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyOrders>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Del más reciente al más antiguo, paginado por cursor. No incluye pedidos vencidos (`expired`).
  * @summary Historial de pedidos del cliente
  */
-
 export function useListMyOrders<TData = Awaited<ReturnType<typeof listMyOrders>>, TError = ProblemResponse>(
  params?: ListMyOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyOrders>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -3380,6 +3846,7 @@ export type GetOrderQueryResult = NonNullable<Awaited<ReturnType<typeof getOrder
 export type GetOrderQueryError = ProblemResponse
 
 
+/** @summary Detalle de un pedido del cliente */
 export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError = ProblemResponse>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -3390,6 +3857,7 @@ export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Detalle de un pedido del cliente */
 export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -3400,14 +3868,12 @@ export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Detalle de un pedido del cliente */
 export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Detalle de un pedido del cliente
- */
-
+/** @summary Detalle de un pedido del cliente */
 export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -3509,6 +3975,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReorderOrderMutationVariables = {id: string}
 
     /**
+ * Deja cada renglón del pedido en el carrito del cliente con **al menos** la cantidad pedida (no suma, así que repetir la acción no duplica).
+ * Es todo o nada por renglón: si la existencia no alcanza o el producto ya no se vende, no se agrega y se lista en `unavailable`.
+ * Se usa el precio vigente, no el que se pagó. No lleva la receta: se elige al pagar. Un pedido ajeno es `404`.
  * @summary Copia al carrito los artículos de un pedido anterior
  */
 export const useReorderOrder = <TError = ProblemResponse,
@@ -3570,25 +4039,11 @@ export const getMercadoPagoWebhookUrl = (params: MercadoPagoWebhookParams,) => {
 export const mercadoPagoWebhook = async (mercadoPagoWebhookBody: MercadoPagoWebhookBody,
     params: MercadoPagoWebhookParams, options?: Parameters<typeof apiFetch>[1]): Promise<mercadoPagoWebhookResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<mercadoPagoWebhookResponse>(getMercadoPagoWebhookUrl(params),
+  return apiFetch<mercadoPagoWebhookResponse>(getMercadoPagoWebhookUrl(params),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(mercadoPagoWebhookBody)
   }
 );}
@@ -3632,6 +4087,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type MercadoPagoWebhookMutationVariables = {data: MercadoPagoWebhookBody;params: MercadoPagoWebhookParams}
 
     /**
+ * Sin sesión: se autentica con la firma `x-signature` (HMAC-SHA256 con el secreto del webhook, con tolerancia de reloj).
+ * El cuerpo nunca se usa para decidir: se consulta el pago a Mercado Pago y se valida referencia, monto y moneda.
+ * Es idempotente por id de notificación. Responde 200 aunque la notificación no cambie nada; 401 si la firma es inválida.
  * @summary Notificaciones de pago de Mercado Pago
  */
 export const useMercadoPagoWebhook = <TError = ProblemResponse,
@@ -3690,25 +4148,11 @@ export const getCreatePrescriptionUploadUrlUrl = () => {
  */
 export const createPrescriptionUploadUrl = async (prescriptionUploadInput: PrescriptionUploadInput, options?: Parameters<typeof apiFetch>[1]): Promise<createPrescriptionUploadUrlResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<createPrescriptionUploadUrlResponse>(getCreatePrescriptionUploadUrlUrl(),
+  return apiFetch<createPrescriptionUploadUrlResponse>(getCreatePrescriptionUploadUrlUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(prescriptionUploadInput)
   }
 );}
@@ -3752,6 +4196,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreatePrescriptionUploadUrlMutationVariables = {data: PrescriptionUploadInput}
 
     /**
+ * El navegador sube el archivo directo a R2 con `PUT` (cabecera `Content-Type` igual a la declarada; el tamaño exacto va firmado).
+ * Vigencia 10 minutos, máximo 10 MB, solo JPG, PNG, WebP o PDF. Después se registra la receta con `POST /v1/me/prescriptions`.
+ * `409` si el cliente ya tiene 10 recetas en revisión. `503` si el almacenamiento no está configurado.
  * @summary URL prefirmada de R2 para subir el archivo de una receta
  */
 export const useCreatePrescriptionUploadUrl = <TError = ProblemResponse,
@@ -3833,6 +4280,10 @@ export type ListPrescriptionsQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type ListPrescriptionsQueryError = unknown
 
 
+/**
+ * `file_url` es una URL de lectura prefirmada de 10 minutos.
+ * @summary Recetas del cliente, la más reciente primero
+ */
 export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -3843,6 +4294,10 @@ export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPresc
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * `file_url` es una URL de lectura prefirmada de 10 minutos.
+ * @summary Recetas del cliente, la más reciente primero
+ */
 export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -3853,14 +4308,18 @@ export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPresc
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * `file_url` es una URL de lectura prefirmada de 10 minutos.
+ * @summary Recetas del cliente, la más reciente primero
+ */
 export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * `file_url` es una URL de lectura prefirmada de 10 minutos.
  * @summary Recetas del cliente, la más reciente primero
  */
-
 export function useListPrescriptions<TData = Awaited<ReturnType<typeof listPrescriptions>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -3923,25 +4382,11 @@ export const getCreatePrescriptionUrl = () => {
  */
 export const createPrescription = async (prescriptionInput: PrescriptionInput, options?: Parameters<typeof apiFetch>[1]): Promise<createPrescriptionResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<createPrescriptionResponse>(getCreatePrescriptionUrl(),
+  return apiFetch<createPrescriptionResponse>(getCreatePrescriptionUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(prescriptionInput)
   }
 );}
@@ -3985,6 +4430,8 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreatePrescriptionMutationVariables = {data: PrescriptionInput}
 
     /**
+ * Valida rangos y pasos de 0.25, eje con cilindro, fechas y vigencia, que el archivo sea del cliente y que exista en R2.
+ * La revisión clínica es del admin.
  * @summary Registra una receta ya subida (queda pendiente de revisión)
  */
 export const useCreatePrescription = <TError = ProblemResponse,
@@ -4080,6 +4527,10 @@ export type AdminListPrescriptionsQueryResult = NonNullable<Awaited<ReturnType<t
 export type AdminListPrescriptionsQueryError = ProblemResponse
 
 
+/**
+ * Pendientes de la más antigua a la más nueva; las demás, la más reciente primero. Máximo 100.
+ * @summary Cola de revisión de recetas
+ */
 export function useAdminListPrescriptions<TData = Awaited<ReturnType<typeof adminListPrescriptions>>, TError = ProblemResponse>(
  params: undefined |  AdminListPrescriptionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListPrescriptions>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -4090,6 +4541,10 @@ export function useAdminListPrescriptions<TData = Awaited<ReturnType<typeof admi
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Pendientes de la más antigua a la más nueva; las demás, la más reciente primero. Máximo 100.
+ * @summary Cola de revisión de recetas
+ */
 export function useAdminListPrescriptions<TData = Awaited<ReturnType<typeof adminListPrescriptions>>, TError = ProblemResponse>(
  params?: AdminListPrescriptionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListPrescriptions>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -4100,14 +4555,18 @@ export function useAdminListPrescriptions<TData = Awaited<ReturnType<typeof admi
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Pendientes de la más antigua a la más nueva; las demás, la más reciente primero. Máximo 100.
+ * @summary Cola de revisión de recetas
+ */
 export function useAdminListPrescriptions<TData = Awaited<ReturnType<typeof adminListPrescriptions>>, TError = ProblemResponse>(
  params?: AdminListPrescriptionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Pendientes de la más antigua a la más nueva; las demás, la más reciente primero. Máximo 100.
  * @summary Cola de revisión de recetas
  */
-
 export function useAdminListPrescriptions<TData = Awaited<ReturnType<typeof adminListPrescriptions>>, TError = ProblemResponse>(
  params?: AdminListPrescriptionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListPrescriptions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -4170,25 +4629,11 @@ export const getAdminReviewPrescriptionUrl = (id: string,) => {
 export const adminReviewPrescription = async (id: string,
     prescriptionReview: PrescriptionReview, options?: Parameters<typeof apiFetch>[1]): Promise<adminReviewPrescriptionResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminReviewPrescriptionResponse>(getAdminReviewPrescriptionUrl(id),
+  return apiFetch<adminReviewPrescriptionResponse>(getAdminReviewPrescriptionUrl(id),
   {
     ...options,
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(prescriptionReview)
   }
 );}
@@ -4232,6 +4677,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminReviewPrescriptionMutationVariables = {id: string;data: PrescriptionReview}
 
     /**
+ * Rechazar exige `reject_reason` (se le muestra al cliente). No se puede aprobar una receta vencida ni revisar dos veces (`409`).
  * @summary Aprueba o rechaza una receta pendiente
  */
 export const useAdminReviewPrescription = <TError = ProblemResponse,
@@ -4327,6 +4773,10 @@ export type AdminListOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof a
 export type AdminListOrdersQueryError = ProblemResponse
 
 
+/**
+ * Filtra por estado y pagina por cursor (límite 1 a 100, 20 por defecto).
+ * @summary Pedidos, el más reciente primero
+ */
 export function useAdminListOrders<TData = Awaited<ReturnType<typeof adminListOrders>>, TError = ProblemResponse>(
  params: undefined |  AdminListOrdersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListOrders>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -4337,6 +4787,10 @@ export function useAdminListOrders<TData = Awaited<ReturnType<typeof adminListOr
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Filtra por estado y pagina por cursor (límite 1 a 100, 20 por defecto).
+ * @summary Pedidos, el más reciente primero
+ */
 export function useAdminListOrders<TData = Awaited<ReturnType<typeof adminListOrders>>, TError = ProblemResponse>(
  params?: AdminListOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListOrders>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -4347,14 +4801,18 @@ export function useAdminListOrders<TData = Awaited<ReturnType<typeof adminListOr
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Filtra por estado y pagina por cursor (límite 1 a 100, 20 por defecto).
+ * @summary Pedidos, el más reciente primero
+ */
 export function useAdminListOrders<TData = Awaited<ReturnType<typeof adminListOrders>>, TError = ProblemResponse>(
  params?: AdminListOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListOrders>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Filtra por estado y pagina por cursor (límite 1 a 100, 20 por defecto).
  * @summary Pedidos, el más reciente primero
  */
-
 export function useAdminListOrders<TData = Awaited<ReturnType<typeof adminListOrders>>, TError = ProblemResponse>(
  params?: AdminListOrdersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListOrders>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -4447,6 +4905,7 @@ export type AdminGetOrderQueryResult = NonNullable<Awaited<ReturnType<typeof adm
 export type AdminGetOrderQueryError = ProblemResponse
 
 
+/** @summary Detalle de un pedido */
 export function useAdminGetOrder<TData = Awaited<ReturnType<typeof adminGetOrder>>, TError = ProblemResponse>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminGetOrder>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -4457,6 +4916,7 @@ export function useAdminGetOrder<TData = Awaited<ReturnType<typeof adminGetOrder
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Detalle de un pedido */
 export function useAdminGetOrder<TData = Awaited<ReturnType<typeof adminGetOrder>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminGetOrder>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -4467,14 +4927,12 @@ export function useAdminGetOrder<TData = Awaited<ReturnType<typeof adminGetOrder
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Detalle de un pedido */
 export function useAdminGetOrder<TData = Awaited<ReturnType<typeof adminGetOrder>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminGetOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Detalle de un pedido
- */
-
+/** @summary Detalle de un pedido */
 export function useAdminGetOrder<TData = Awaited<ReturnType<typeof adminGetOrder>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminGetOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -4541,25 +4999,11 @@ export const getAdminUpdateOrderUrl = (id: string,) => {
 export const adminUpdateOrder = async (id: string,
     orderUpdate: OrderUpdate, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateOrderResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminUpdateOrderResponse>(getAdminUpdateOrderUrl(id),
+  return apiFetch<adminUpdateOrderResponse>(getAdminUpdateOrderUrl(id),
   {
     ...options,
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(orderUpdate)
   }
 );}
@@ -4603,6 +5047,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminUpdateOrderMutationVariables = {id: string;data: OrderUpdate}
 
     /**
+ * Transiciones: `paid` → `preparing` | `cancelled`; `preparing` → `shipped` | `cancelled`; `shipped` → `delivered`.
+ * `shipped` exige `tracking_carrier` y `tracking_number`. Con el pedido ya enviado se puede corregir la guía sin cambiar el estado.
+ * Cancelar un pedido que no salió devuelve su existencia al inventario; **no reembolsa**: el reembolso en Mercado Pago es manual (ver docs/ADMIN_ORDERS.md).
+ * Un pedido con micas graduadas no pasa a `preparing` sin receta de armazones aprobada y con distancia pupilar.
+ * `409` si la transición no es válida, falta la guía, la receta no está lista o el estado cambió mientras tanto.
  * @summary Cambia el estado de un pedido o corrige su guía
  */
 export const useAdminUpdateOrder = <TError = ProblemResponse,
@@ -4660,25 +5109,11 @@ export const getAdminCreateImageUploadUrlUrl = () => {
  */
 export const adminCreateImageUploadUrl = async (imageUploadInput: ImageUploadInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateImageUploadUrlResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminCreateImageUploadUrlResponse>(getAdminCreateImageUploadUrlUrl(),
+  return apiFetch<adminCreateImageUploadUrlResponse>(getAdminCreateImageUploadUrlUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(imageUploadInput)
   }
 );}
@@ -4722,6 +5157,8 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminCreateImageUploadUrlMutationVariables = {data: ImageUploadInput}
 
     /**
+ * PUT directo desde el navegador al bucket público, 10 minutos, tamaño y tipo firmados. Solo JPG, PNG o WebP, máx. 5 MB.
+ * Después se registra con `POST /v1/admin/products/{id}/images`.
  * @summary URL prefirmada de R2 para subir una foto de producto
  */
 export const useAdminCreateImageUploadUrl = <TError = ProblemResponse,
@@ -4809,6 +5246,7 @@ export type AdminListProductImagesQueryResult = NonNullable<Awaited<ReturnType<t
 export type AdminListProductImagesQueryError = ProblemResponse
 
 
+/** @summary Galería del producto en orden (la primera es la principal) */
 export function useAdminListProductImages<TData = Awaited<ReturnType<typeof adminListProductImages>>, TError = ProblemResponse>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProductImages>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -4819,6 +5257,7 @@ export function useAdminListProductImages<TData = Awaited<ReturnType<typeof admi
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Galería del producto en orden (la primera es la principal) */
 export function useAdminListProductImages<TData = Awaited<ReturnType<typeof adminListProductImages>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProductImages>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -4829,14 +5268,12 @@ export function useAdminListProductImages<TData = Awaited<ReturnType<typeof admi
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Galería del producto en orden (la primera es la principal) */
 export function useAdminListProductImages<TData = Awaited<ReturnType<typeof adminListProductImages>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProductImages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Galería del producto en orden (la primera es la principal)
- */
-
+/** @summary Galería del producto en orden (la primera es la principal) */
 export function useAdminListProductImages<TData = Awaited<ReturnType<typeof adminListProductImages>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProductImages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -4905,25 +5342,11 @@ export const getAdminAddProductImageUrl = (id: string,) => {
 export const adminAddProductImage = async (id: string,
     imageAddInput: ImageAddInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminAddProductImageResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminAddProductImageResponse>(getAdminAddProductImageUrl(id),
+  return apiFetch<adminAddProductImageResponse>(getAdminAddProductImageUrl(id),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(imageAddInput)
   }
 );}
@@ -4967,6 +5390,8 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminAddProductImageMutationVariables = {id: string;data: ImageAddInput}
 
     /**
+ * La llave debe empezar con `productos/{id}/` y el archivo existir en R2 como imagen válida (tipo y ≤ 5 MB).
+ * `409` si la galería ya tiene 10 imágenes o el archivo ya está registrado. El catálogo público puede tardar hasta 5 minutos en reflejarlo (caché de borde).
  * @summary Registra una imagen ya subida al final de la galería
  */
 export const useAdminAddProductImage = <TError = ProblemResponse,
@@ -5019,25 +5444,11 @@ export const getAdminReorderProductImagesUrl = (id: string,) => {
 export const adminReorderProductImages = async (id: string,
     imageOrderInput: ImageOrderInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminReorderProductImagesResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminReorderProductImagesResponse>(getAdminReorderProductImagesUrl(id),
+  return apiFetch<adminReorderProductImagesResponse>(getAdminReorderProductImagesUrl(id),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(imageOrderInput)
   }
 );}
@@ -5081,6 +5492,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminReorderProductImagesMutationVariables = {id: string;data: ImageOrderInput}
 
     /**
+ * Debe traer exactamente las imágenes actuales, sin repetir ni agregar ajenas (`400`).
  * @summary Define el orden completo de la galería
  */
 export const useAdminReorderProductImages = <TError = ProblemResponse,
@@ -5177,6 +5589,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminDeleteProductImageMutationVariables = {id: string;imageId: string}
 
     /**
+ * Borra el registro y compacta las posiciones. El archivo en R2 se conserva.
  * @summary Quita una imagen de la galería
  */
 export const useAdminDeleteProductImage = <TError = ProblemResponse,
@@ -5265,6 +5678,10 @@ export type AdminListStockAdjustmentsQueryResult = NonNullable<Awaited<ReturnTyp
 export type AdminListStockAdjustmentsQueryError = ProblemResponse
 
 
+/**
+ * Los últimos 100, el más reciente primero.
+ * @summary Historial de ajustes de existencia de una variante
+ */
 export function useAdminListStockAdjustments<TData = Awaited<ReturnType<typeof adminListStockAdjustments>>, TError = ProblemResponse>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListStockAdjustments>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -5275,6 +5692,10 @@ export function useAdminListStockAdjustments<TData = Awaited<ReturnType<typeof a
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Los últimos 100, el más reciente primero.
+ * @summary Historial de ajustes de existencia de una variante
+ */
 export function useAdminListStockAdjustments<TData = Awaited<ReturnType<typeof adminListStockAdjustments>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListStockAdjustments>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -5285,14 +5706,18 @@ export function useAdminListStockAdjustments<TData = Awaited<ReturnType<typeof a
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Los últimos 100, el más reciente primero.
+ * @summary Historial de ajustes de existencia de una variante
+ */
 export function useAdminListStockAdjustments<TData = Awaited<ReturnType<typeof adminListStockAdjustments>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListStockAdjustments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Los últimos 100, el más reciente primero.
  * @summary Historial de ajustes de existencia de una variante
  */
-
 export function useAdminListStockAdjustments<TData = Awaited<ReturnType<typeof adminListStockAdjustments>>, TError = ProblemResponse>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListStockAdjustments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -5357,25 +5782,11 @@ export const getAdminCreateStockAdjustmentUrl = (id: string,) => {
 export const adminCreateStockAdjustment = async (id: string,
     stockAdjustmentInput: StockAdjustmentInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateStockAdjustmentResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminCreateStockAdjustmentResponse>(getAdminCreateStockAdjustmentUrl(id),
+  return apiFetch<adminCreateStockAdjustmentResponse>(getAdminCreateStockAdjustmentUrl(id),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(stockAdjustmentInput)
   }
 );}
@@ -5419,6 +5830,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminCreateStockAdjustmentMutationVariables = {id: string;data: StockAdjustmentInput}
 
     /**
+ * `delta` con signo (suma o resta, distinto de 0, máx. 100,000). Queda en una bitácora de solo agregar con quién, cuándo y cuánto quedó.
+ * `409` si la existencia quedaría negativa o por debajo de lo apartado por pedidos sin pagar. Con motivo `other` la nota es obligatoria.
+ * La carga masiva por CSV y la edición de una variante fijan la existencia directamente y **no** pasan por esta bitácora.
  * @summary Ajusta la existencia de una variante con motivo
  */
 export const useAdminCreateStockAdjustment = <TError = ProblemResponse,
@@ -5514,6 +5928,10 @@ export type AdminListLowStockQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type AdminListLowStockQueryError = ProblemResponse
 
 
+/**
+ * Disponible = existencia − apartado, menor o igual al umbral (0 a 10,000; 5 por defecto). Las más urgentes primero, máximo 500.
+ * @summary Variantes activas con poca existencia disponible
+ */
 export function useAdminListLowStock<TData = Awaited<ReturnType<typeof adminListLowStock>>, TError = ProblemResponse>(
  params: undefined |  AdminListLowStockParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLowStock>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -5524,6 +5942,10 @@ export function useAdminListLowStock<TData = Awaited<ReturnType<typeof adminList
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Disponible = existencia − apartado, menor o igual al umbral (0 a 10,000; 5 por defecto). Las más urgentes primero, máximo 500.
+ * @summary Variantes activas con poca existencia disponible
+ */
 export function useAdminListLowStock<TData = Awaited<ReturnType<typeof adminListLowStock>>, TError = ProblemResponse>(
  params?: AdminListLowStockParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLowStock>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -5534,14 +5956,18 @@ export function useAdminListLowStock<TData = Awaited<ReturnType<typeof adminList
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Disponible = existencia − apartado, menor o igual al umbral (0 a 10,000; 5 por defecto). Las más urgentes primero, máximo 500.
+ * @summary Variantes activas con poca existencia disponible
+ */
 export function useAdminListLowStock<TData = Awaited<ReturnType<typeof adminListLowStock>>, TError = ProblemResponse>(
  params?: AdminListLowStockParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLowStock>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Disponible = existencia − apartado, menor o igual al umbral (0 a 10,000; 5 por defecto). Las más urgentes primero, máximo 500.
  * @summary Variantes activas con poca existencia disponible
  */
-
 export function useAdminListLowStock<TData = Awaited<ReturnType<typeof adminListLowStock>>, TError = ProblemResponse>(
  params?: AdminListLowStockParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLowStock>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -5642,6 +6068,10 @@ export type AdminSalesReportQueryResult = NonNullable<Awaited<ReturnType<typeof 
 export type AdminSalesReportQueryError = ProblemResponse
 
 
+/**
+ * Pedidos pagados en adelante (paid, preparing, shipped, delivered; sin cancelados, reembolsados ni expirados) cuyo pago cae en el rango. Días calendario en America/Mexico_City, `to` inclusivo, máximo 366 días. El ingreso es el total cobrado (incluye envío). `daily` trae un renglón por día, con ceros; `top_products` los 10 más vendidos por cajas.
+ * @summary Ventas del rango
+ */
 export function useAdminSalesReport<TData = Awaited<ReturnType<typeof adminSalesReport>>, TError = ProblemResponse>(
  params: AdminSalesReportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSalesReport>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -5652,6 +6082,10 @@ export function useAdminSalesReport<TData = Awaited<ReturnType<typeof adminSales
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Pedidos pagados en adelante (paid, preparing, shipped, delivered; sin cancelados, reembolsados ni expirados) cuyo pago cae en el rango. Días calendario en America/Mexico_City, `to` inclusivo, máximo 366 días. El ingreso es el total cobrado (incluye envío). `daily` trae un renglón por día, con ceros; `top_products` los 10 más vendidos por cajas.
+ * @summary Ventas del rango
+ */
 export function useAdminSalesReport<TData = Awaited<ReturnType<typeof adminSalesReport>>, TError = ProblemResponse>(
  params: AdminSalesReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSalesReport>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -5662,14 +6096,18 @@ export function useAdminSalesReport<TData = Awaited<ReturnType<typeof adminSales
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Pedidos pagados en adelante (paid, preparing, shipped, delivered; sin cancelados, reembolsados ni expirados) cuyo pago cae en el rango. Días calendario en America/Mexico_City, `to` inclusivo, máximo 366 días. El ingreso es el total cobrado (incluye envío). `daily` trae un renglón por día, con ceros; `top_products` los 10 más vendidos por cajas.
+ * @summary Ventas del rango
+ */
 export function useAdminSalesReport<TData = Awaited<ReturnType<typeof adminSalesReport>>, TError = ProblemResponse>(
  params: AdminSalesReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSalesReport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Pedidos pagados en adelante (paid, preparing, shipped, delivered; sin cancelados, reembolsados ni expirados) cuyo pago cae en el rango. Días calendario en America/Mexico_City, `to` inclusivo, máximo 366 días. El ingreso es el total cobrado (incluye envío). `daily` trae un renglón por día, con ceros; `top_products` los 10 más vendidos por cajas.
  * @summary Ventas del rango
  */
-
 export function useAdminSalesReport<TData = Awaited<ReturnType<typeof adminSalesReport>>, TError = ProblemResponse>(
  params: AdminSalesReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminSalesReport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -5770,6 +6208,10 @@ export type AdminRepurchaseReportQueryResult = NonNullable<Awaited<ReturnType<ty
 export type AdminRepurchaseReportQueryError = ProblemResponse
 
 
+/**
+ * Mismas reglas de fechas que ventas. `customers`: clientes con compra pagada en el rango; `repeat_customers`: de ellos, los que ya habían comprado antes del rango. `reminders_sent`: recordatorios enviados en el rango; `reorders_from_reminder`: de esos, los de clientes que pagaron otro pedido después del recordatorio. El pedido no guarda de qué enlace vino, así que la atribución es por tiempo, no por clic.
+ * @summary Recompra del rango
+ */
 export function useAdminRepurchaseReport<TData = Awaited<ReturnType<typeof adminRepurchaseReport>>, TError = ProblemResponse>(
  params: AdminRepurchaseReportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminRepurchaseReport>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -5780,6 +6222,10 @@ export function useAdminRepurchaseReport<TData = Awaited<ReturnType<typeof admin
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Mismas reglas de fechas que ventas. `customers`: clientes con compra pagada en el rango; `repeat_customers`: de ellos, los que ya habían comprado antes del rango. `reminders_sent`: recordatorios enviados en el rango; `reorders_from_reminder`: de esos, los de clientes que pagaron otro pedido después del recordatorio. El pedido no guarda de qué enlace vino, así que la atribución es por tiempo, no por clic.
+ * @summary Recompra del rango
+ */
 export function useAdminRepurchaseReport<TData = Awaited<ReturnType<typeof adminRepurchaseReport>>, TError = ProblemResponse>(
  params: AdminRepurchaseReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminRepurchaseReport>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -5790,14 +6236,18 @@ export function useAdminRepurchaseReport<TData = Awaited<ReturnType<typeof admin
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Mismas reglas de fechas que ventas. `customers`: clientes con compra pagada en el rango; `repeat_customers`: de ellos, los que ya habían comprado antes del rango. `reminders_sent`: recordatorios enviados en el rango; `reorders_from_reminder`: de esos, los de clientes que pagaron otro pedido después del recordatorio. El pedido no guarda de qué enlace vino, así que la atribución es por tiempo, no por clic.
+ * @summary Recompra del rango
+ */
 export function useAdminRepurchaseReport<TData = Awaited<ReturnType<typeof adminRepurchaseReport>>, TError = ProblemResponse>(
  params: AdminRepurchaseReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminRepurchaseReport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Mismas reglas de fechas que ventas. `customers`: clientes con compra pagada en el rango; `repeat_customers`: de ellos, los que ya habían comprado antes del rango. `reminders_sent`: recordatorios enviados en el rango; `reorders_from_reminder`: de esos, los de clientes que pagaron otro pedido después del recordatorio. El pedido no guarda de qué enlace vino, así que la atribución es por tiempo, no por clic.
  * @summary Recompra del rango
  */
-
 export function useAdminRepurchaseReport<TData = Awaited<ReturnType<typeof adminRepurchaseReport>>, TError = ProblemResponse>(
  params: AdminRepurchaseReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminRepurchaseReport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -5883,6 +6333,7 @@ export type AdminListHomeBannersQueryResult = NonNullable<Awaited<ReturnType<typ
 export type AdminListHomeBannersQueryError = unknown
 
 
+/** @summary Todos los banners, vigentes o no */
 export function useAdminListHomeBanners<TData = Awaited<ReturnType<typeof adminListHomeBanners>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeBanners>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -5893,6 +6344,7 @@ export function useAdminListHomeBanners<TData = Awaited<ReturnType<typeof adminL
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Todos los banners, vigentes o no */
 export function useAdminListHomeBanners<TData = Awaited<ReturnType<typeof adminListHomeBanners>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeBanners>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -5903,14 +6355,12 @@ export function useAdminListHomeBanners<TData = Awaited<ReturnType<typeof adminL
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Todos los banners, vigentes o no */
 export function useAdminListHomeBanners<TData = Awaited<ReturnType<typeof adminListHomeBanners>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeBanners>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Todos los banners, vigentes o no
- */
-
+/** @summary Todos los banners, vigentes o no */
 export function useAdminListHomeBanners<TData = Awaited<ReturnType<typeof adminListHomeBanners>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeBanners>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -5966,25 +6416,11 @@ export const getAdminCreateHomeBannerUrl = () => {
  */
 export const adminCreateHomeBanner = async (homeBannerInput: HomeBannerInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateHomeBannerResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminCreateHomeBannerResponse>(getAdminCreateHomeBannerUrl(),
+  return apiFetch<adminCreateHomeBannerResponse>(getAdminCreateHomeBannerUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(homeBannerInput)
   }
 );}
@@ -6027,9 +6463,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminCreateHomeBannerMutationError = ProblemResponse
     export type AdminCreateHomeBannerMutationVariables = {data: HomeBannerInput}
 
-    /**
- * @summary Crea un banner al final de su ubicación
- */
+    /** @summary Crea un banner al final de su ubicación */
 export const useAdminCreateHomeBanner = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateHomeBanner>>, TError,AdminCreateHomeBannerMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -6073,25 +6507,11 @@ export const getAdminReorderHomeBannersUrl = () => {
  */
 export const adminReorderHomeBanners = async (adminReorderHomeBannersBody: AdminReorderHomeBannersBody, options?: Parameters<typeof apiFetch>[1]): Promise<adminReorderHomeBannersResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminReorderHomeBannersResponse>(getAdminReorderHomeBannersUrl(),
+  return apiFetch<adminReorderHomeBannersResponse>(getAdminReorderHomeBannersUrl(),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(adminReorderHomeBannersBody)
   }
 );}
@@ -6134,9 +6554,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminReorderHomeBannersMutationError = ProblemResponse
     export type AdminReorderHomeBannersMutationVariables = {data: AdminReorderHomeBannersBody}
 
-    /**
- * @summary Fija el orden completo de una ubicación
- */
+    /** @summary Fija el orden completo de una ubicación */
 export const useAdminReorderHomeBanners = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderHomeBanners>>, TError,AdminReorderHomeBannersMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -6191,25 +6609,11 @@ export const getAdminCreateBannerImageUploadUrlUrl = () => {
  */
 export const adminCreateBannerImageUploadUrl = async (adminCreateBannerImageUploadUrlBody: AdminCreateBannerImageUploadUrlBody, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateBannerImageUploadUrlResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminCreateBannerImageUploadUrlResponse>(getAdminCreateBannerImageUploadUrlUrl(),
+  return apiFetch<adminCreateBannerImageUploadUrlResponse>(getAdminCreateBannerImageUploadUrlUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(adminCreateBannerImageUploadUrlBody)
   }
 );}
@@ -6253,6 +6657,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminCreateBannerImageUploadUrlMutationVariables = {data: AdminCreateBannerImageUploadUrlBody}
 
     /**
+ * PUT directo al bucket público, 10 minutos, tamaño y tipo firmados. Solo JPG, PNG o WebP, máx. 5 MB.
  * @summary URL prefirmada de R2 para subir la imagen de un banner
  */
 export const useAdminCreateBannerImageUploadUrl = <TError = ProblemResponse,
@@ -6309,25 +6714,11 @@ export const getAdminUpdateHomeBannerUrl = (id: string,) => {
 export const adminUpdateHomeBanner = async (id: string,
     homeBannerInput: HomeBannerInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateHomeBannerResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminUpdateHomeBannerResponse>(getAdminUpdateHomeBannerUrl(id),
+  return apiFetch<adminUpdateHomeBannerResponse>(getAdminUpdateHomeBannerUrl(id),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(homeBannerInput)
   }
 );}
@@ -6370,9 +6761,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminUpdateHomeBannerMutationError = ProblemResponse
     export type AdminUpdateHomeBannerMutationVariables = {id: string;data: HomeBannerInput}
 
-    /**
- * @summary Reemplaza los datos de un banner
- */
+    /** @summary Reemplaza los datos de un banner */
 export const useAdminUpdateHomeBanner = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateHomeBanner>>, TError,AdminUpdateHomeBannerMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -6463,9 +6852,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminDeleteHomeBannerMutationError = ProblemResponse
     export type AdminDeleteHomeBannerMutationVariables = {id: string}
 
-    /**
- * @summary Borra un banner; el archivo en R2 se conserva
- */
+    /** @summary Borra un banner; el archivo en R2 se conserva */
 export const useAdminDeleteHomeBanner = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeleteHomeBanner>>, TError,AdminDeleteHomeBannerMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -6558,6 +6945,7 @@ export type AdminListHomeFeaturedQueryResult = NonNullable<Awaited<ReturnType<ty
 export type AdminListHomeFeaturedQueryError = ProblemResponse
 
 
+/** @summary Destacados de una categoría, incluidos inactivos y agotados */
 export function useAdminListHomeFeatured<TData = Awaited<ReturnType<typeof adminListHomeFeatured>>, TError = ProblemResponse>(
  params: AdminListHomeFeaturedParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeFeatured>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -6568,6 +6956,7 @@ export function useAdminListHomeFeatured<TData = Awaited<ReturnType<typeof admin
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Destacados de una categoría, incluidos inactivos y agotados */
 export function useAdminListHomeFeatured<TData = Awaited<ReturnType<typeof adminListHomeFeatured>>, TError = ProblemResponse>(
  params: AdminListHomeFeaturedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeFeatured>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -6578,14 +6967,12 @@ export function useAdminListHomeFeatured<TData = Awaited<ReturnType<typeof admin
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Destacados de una categoría, incluidos inactivos y agotados */
 export function useAdminListHomeFeatured<TData = Awaited<ReturnType<typeof adminListHomeFeatured>>, TError = ProblemResponse>(
  params: AdminListHomeFeaturedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeFeatured>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Destacados de una categoría, incluidos inactivos y agotados
- */
-
+/** @summary Destacados de una categoría, incluidos inactivos y agotados */
 export function useAdminListHomeFeatured<TData = Awaited<ReturnType<typeof adminListHomeFeatured>>, TError = ProblemResponse>(
  params: AdminListHomeFeaturedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListHomeFeatured>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -6646,25 +7033,11 @@ export const getAdminSetHomeFeaturedUrl = () => {
  */
 export const adminSetHomeFeatured = async (adminSetHomeFeaturedBody: AdminSetHomeFeaturedBody, options?: Parameters<typeof apiFetch>[1]): Promise<adminSetHomeFeaturedResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminSetHomeFeaturedResponse>(getAdminSetHomeFeaturedUrl(),
+  return apiFetch<adminSetHomeFeaturedResponse>(getAdminSetHomeFeaturedUrl(),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(adminSetHomeFeaturedBody)
   }
 );}
@@ -6707,9 +7080,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminSetHomeFeaturedMutationError = ProblemResponse
     export type AdminSetHomeFeaturedMutationVariables = {data: AdminSetHomeFeaturedBody}
 
-    /**
- * @summary Reemplaza la lista de destacados de una categoría y fija su orden
- */
+    /** @summary Reemplaza la lista de destacados de una categoría y fija su orden */
 export const useAdminSetHomeFeatured = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminSetHomeFeatured>>, TError,AdminSetHomeFeaturedMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -6788,6 +7159,7 @@ export type AdminListLensPackagesQueryResult = NonNullable<Awaited<ReturnType<ty
 export type AdminListLensPackagesQueryError = unknown
 
 
+/** @summary Todos los paquetes de micas, activos o no */
 export function useAdminListLensPackages<TData = Awaited<ReturnType<typeof adminListLensPackages>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensPackages>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -6798,6 +7170,7 @@ export function useAdminListLensPackages<TData = Awaited<ReturnType<typeof admin
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Todos los paquetes de micas, activos o no */
 export function useAdminListLensPackages<TData = Awaited<ReturnType<typeof adminListLensPackages>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensPackages>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -6808,14 +7181,12 @@ export function useAdminListLensPackages<TData = Awaited<ReturnType<typeof admin
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Todos los paquetes de micas, activos o no */
 export function useAdminListLensPackages<TData = Awaited<ReturnType<typeof adminListLensPackages>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensPackages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Todos los paquetes de micas, activos o no
- */
-
+/** @summary Todos los paquetes de micas, activos o no */
 export function useAdminListLensPackages<TData = Awaited<ReturnType<typeof adminListLensPackages>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensPackages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -6871,25 +7242,11 @@ export const getAdminCreateLensPackageUrl = () => {
  */
 export const adminCreateLensPackage = async (lensPackageInput: LensPackageInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateLensPackageResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminCreateLensPackageResponse>(getAdminCreateLensPackageUrl(),
+  return apiFetch<adminCreateLensPackageResponse>(getAdminCreateLensPackageUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(lensPackageInput)
   }
 );}
@@ -6932,9 +7289,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminCreateLensPackageMutationError = ProblemResponse
     export type AdminCreateLensPackageMutationVariables = {data: LensPackageInput}
 
-    /**
- * @summary Crea un paquete de micas
- */
+    /** @summary Crea un paquete de micas */
 export const useAdminCreateLensPackage = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateLensPackage>>, TError,AdminCreateLensPackageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -6978,25 +7333,11 @@ export const getAdminReorderLensPackagesUrl = () => {
  */
 export const adminReorderLensPackages = async (adminReorderLensPackagesBody: AdminReorderLensPackagesBody, options?: Parameters<typeof apiFetch>[1]): Promise<adminReorderLensPackagesResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminReorderLensPackagesResponse>(getAdminReorderLensPackagesUrl(),
+  return apiFetch<adminReorderLensPackagesResponse>(getAdminReorderLensPackagesUrl(),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(adminReorderLensPackagesBody)
   }
 );}
@@ -7039,9 +7380,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminReorderLensPackagesMutationError = ProblemResponse
     export type AdminReorderLensPackagesMutationVariables = {data: AdminReorderLensPackagesBody}
 
-    /**
- * @summary Fija el orden completo de los paquetes
- */
+    /** @summary Fija el orden completo de los paquetes */
 export const useAdminReorderLensPackages = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderLensPackages>>, TError,AdminReorderLensPackagesMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -7091,25 +7430,11 @@ export const getAdminUpdateLensPackageUrl = (id: string,) => {
 export const adminUpdateLensPackage = async (id: string,
     lensPackageInput: LensPackageInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateLensPackageResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminUpdateLensPackageResponse>(getAdminUpdateLensPackageUrl(id),
+  return apiFetch<adminUpdateLensPackageResponse>(getAdminUpdateLensPackageUrl(id),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(lensPackageInput)
   }
 );}
@@ -7152,9 +7477,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminUpdateLensPackageMutationError = ProblemResponse
     export type AdminUpdateLensPackageMutationVariables = {id: string;data: LensPackageInput}
 
-    /**
- * @summary Reemplaza los datos de un paquete; se desactiva, no se borra
- */
+    /** @summary Reemplaza los datos de un paquete; se desactiva, no se borra */
 export const useAdminUpdateLensPackage = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateLensPackage>>, TError,AdminUpdateLensPackageMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -7233,6 +7556,7 @@ export type AdminListLensTreatmentsQueryResult = NonNullable<Awaited<ReturnType<
 export type AdminListLensTreatmentsQueryError = unknown
 
 
+/** @summary Todos los tratamientos de micas, activos o no */
 export function useAdminListLensTreatments<TData = Awaited<ReturnType<typeof adminListLensTreatments>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensTreatments>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -7243,6 +7567,7 @@ export function useAdminListLensTreatments<TData = Awaited<ReturnType<typeof adm
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Todos los tratamientos de micas, activos o no */
 export function useAdminListLensTreatments<TData = Awaited<ReturnType<typeof adminListLensTreatments>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensTreatments>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -7253,14 +7578,12 @@ export function useAdminListLensTreatments<TData = Awaited<ReturnType<typeof adm
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Todos los tratamientos de micas, activos o no */
 export function useAdminListLensTreatments<TData = Awaited<ReturnType<typeof adminListLensTreatments>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensTreatments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Todos los tratamientos de micas, activos o no
- */
-
+/** @summary Todos los tratamientos de micas, activos o no */
 export function useAdminListLensTreatments<TData = Awaited<ReturnType<typeof adminListLensTreatments>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListLensTreatments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -7316,25 +7639,11 @@ export const getAdminCreateLensTreatmentUrl = () => {
  */
 export const adminCreateLensTreatment = async (lensTreatmentInput: LensTreatmentInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateLensTreatmentResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminCreateLensTreatmentResponse>(getAdminCreateLensTreatmentUrl(),
+  return apiFetch<adminCreateLensTreatmentResponse>(getAdminCreateLensTreatmentUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(lensTreatmentInput)
   }
 );}
@@ -7377,9 +7686,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminCreateLensTreatmentMutationError = ProblemResponse
     export type AdminCreateLensTreatmentMutationVariables = {data: LensTreatmentInput}
 
-    /**
- * @summary Crea un tratamiento de micas
- */
+    /** @summary Crea un tratamiento de micas */
 export const useAdminCreateLensTreatment = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateLensTreatment>>, TError,AdminCreateLensTreatmentMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -7423,25 +7730,11 @@ export const getAdminReorderLensTreatmentsUrl = () => {
  */
 export const adminReorderLensTreatments = async (adminReorderLensTreatmentsBody: AdminReorderLensTreatmentsBody, options?: Parameters<typeof apiFetch>[1]): Promise<adminReorderLensTreatmentsResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminReorderLensTreatmentsResponse>(getAdminReorderLensTreatmentsUrl(),
+  return apiFetch<adminReorderLensTreatmentsResponse>(getAdminReorderLensTreatmentsUrl(),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(adminReorderLensTreatmentsBody)
   }
 );}
@@ -7484,9 +7777,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminReorderLensTreatmentsMutationError = ProblemResponse
     export type AdminReorderLensTreatmentsMutationVariables = {data: AdminReorderLensTreatmentsBody}
 
-    /**
- * @summary Fija el orden completo de los tratamientos
- */
+    /** @summary Fija el orden completo de los tratamientos */
 export const useAdminReorderLensTreatments = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderLensTreatments>>, TError,AdminReorderLensTreatmentsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -7536,25 +7827,11 @@ export const getAdminUpdateLensTreatmentUrl = (id: string,) => {
 export const adminUpdateLensTreatment = async (id: string,
     lensTreatmentInput: LensTreatmentInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateLensTreatmentResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminUpdateLensTreatmentResponse>(getAdminUpdateLensTreatmentUrl(id),
+  return apiFetch<adminUpdateLensTreatmentResponse>(getAdminUpdateLensTreatmentUrl(id),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(lensTreatmentInput)
   }
 );}
@@ -7597,9 +7874,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminUpdateLensTreatmentMutationError = ProblemResponse
     export type AdminUpdateLensTreatmentMutationVariables = {id: string;data: LensTreatmentInput}
 
-    /**
- * @summary Reemplaza los datos de un tratamiento; se desactiva, no se borra
- */
+    /** @summary Reemplaza los datos de un tratamiento; se desactiva, no se borra */
 export const useAdminUpdateLensTreatment = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateLensTreatment>>, TError,AdminUpdateLensTreatmentMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -7678,6 +7953,7 @@ export type AdminListCatalogsQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type AdminListCatalogsQueryError = unknown
 
 
+/** @summary Todos los catálogos, con valores ocultos y cuántos productos usan cada valor */
 export function useAdminListCatalogs<TData = Awaited<ReturnType<typeof adminListCatalogs>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListCatalogs>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -7688,6 +7964,7 @@ export function useAdminListCatalogs<TData = Awaited<ReturnType<typeof adminList
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Todos los catálogos, con valores ocultos y cuántos productos usan cada valor */
 export function useAdminListCatalogs<TData = Awaited<ReturnType<typeof adminListCatalogs>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListCatalogs>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -7698,14 +7975,12 @@ export function useAdminListCatalogs<TData = Awaited<ReturnType<typeof adminList
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Todos los catálogos, con valores ocultos y cuántos productos usan cada valor */
 export function useAdminListCatalogs<TData = Awaited<ReturnType<typeof adminListCatalogs>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Todos los catálogos, con valores ocultos y cuántos productos usan cada valor
- */
-
+/** @summary Todos los catálogos, con valores ocultos y cuántos productos usan cada valor */
 export function useAdminListCatalogs<TData = Awaited<ReturnType<typeof adminListCatalogs>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListCatalogs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -7763,25 +8038,11 @@ export const getAdminCreateCatalogValueUrl = (catalog: CatalogKind,) => {
 export const adminCreateCatalogValue = async (catalog: CatalogKind,
     catalogValueInput: CatalogValueInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateCatalogValueResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminCreateCatalogValueResponse>(getAdminCreateCatalogValueUrl(catalog),
+  return apiFetch<adminCreateCatalogValueResponse>(getAdminCreateCatalogValueUrl(catalog),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(catalogValueInput)
   }
 );}
@@ -7825,6 +8086,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminCreateCatalogValueMutationVariables = {catalog: CatalogKind;data: CatalogValueInput}
 
     /**
+ * `400` en `lens_type` y `replacement`, con código inválido o repetido, o con `swatch` faltante o inválido. `404` si el catálogo no existe.
  * @summary Agrega un valor al final de un catálogo descriptivo
  */
 export const useAdminCreateCatalogValue = <TError = ProblemResponse,
@@ -7878,25 +8140,11 @@ export const adminUpdateCatalogValue = async (catalog: CatalogKind,
     code: string,
     catalogValuePatch: CatalogValuePatch, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateCatalogValueResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminUpdateCatalogValueResponse>(getAdminUpdateCatalogValueUrl(catalog,code),
+  return apiFetch<adminUpdateCatalogValueResponse>(getAdminUpdateCatalogValueUrl(catalog,code),
   {
     ...options,
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(catalogValuePatch)
   }
 );}
@@ -7939,9 +8187,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminUpdateCatalogValueMutationError = ProblemResponse
     export type AdminUpdateCatalogValueMutationVariables = {catalog: CatalogKind;code: string;data: CatalogValuePatch}
 
-    /**
- * @summary Cambia etiqueta, visibilidad o muestra de color de un valor, incluidos los de sistema
- */
+    /** @summary Cambia etiqueta, visibilidad o muestra de color de un valor, incluidos los de sistema */
 export const useAdminUpdateCatalogValue = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateCatalogValue>>, TError,AdminUpdateCatalogValueMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -8041,6 +8287,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminDeleteCatalogValueMutationVariables = {catalog: CatalogKind;code: string}
 
     /**
+ * `409` si es de sistema o si lo usa algún producto (el `detail` dice cuántos): en ese caso se oculta.
  * @summary Borra un valor que no es de sistema y que ningún producto usa
  */
 export const useAdminDeleteCatalogValue = <TError = ProblemResponse,
@@ -8092,25 +8339,11 @@ export const getAdminReorderCatalogUrl = (catalog: CatalogKind,) => {
 export const adminReorderCatalog = async (catalog: CatalogKind,
     catalogOrderInput: CatalogOrderInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminReorderCatalogResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminReorderCatalogResponse>(getAdminReorderCatalogUrl(catalog),
+  return apiFetch<adminReorderCatalogResponse>(getAdminReorderCatalogUrl(catalog),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(catalogOrderInput)
   }
 );}
@@ -8153,9 +8386,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminReorderCatalogMutationError = ProblemResponse
     export type AdminReorderCatalogMutationVariables = {catalog: CatalogKind;data: CatalogOrderInput}
 
-    /**
- * @summary Fija el orden completo de un catálogo
- */
+    /** @summary Fija el orden completo de un catálogo */
 export const useAdminReorderCatalog = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminReorderCatalog>>, TError,AdminReorderCatalogMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -8204,25 +8435,11 @@ export const getAdminCreateBrandUrl = () => {
  */
 export const adminCreateBrand = async (brandInput: BrandInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateBrandResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminCreateBrandResponse>(getAdminCreateBrandUrl(),
+  return apiFetch<adminCreateBrandResponse>(getAdminCreateBrandUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(brandInput)
   }
 );}
@@ -8265,9 +8482,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminCreateBrandMutationError = ProblemResponse
     export type AdminCreateBrandMutationVariables = {data: BrandInput}
 
-    /**
- * @summary Crea una marca
- */
+    /** @summary Crea una marca */
 export const useAdminCreateBrand = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateBrand>>, TError,AdminCreateBrandMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -8360,6 +8575,7 @@ export type AdminListProductsQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type AdminListProductsQueryError = ProblemResponse
 
 
+/** @summary Productos, incluidos los inactivos */
 export function useAdminListProducts<TData = Awaited<ReturnType<typeof adminListProducts>>, TError = ProblemResponse>(
  params: undefined |  AdminListProductsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProducts>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -8370,6 +8586,7 @@ export function useAdminListProducts<TData = Awaited<ReturnType<typeof adminList
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Productos, incluidos los inactivos */
 export function useAdminListProducts<TData = Awaited<ReturnType<typeof adminListProducts>>, TError = ProblemResponse>(
  params?: AdminListProductsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProducts>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -8380,14 +8597,12 @@ export function useAdminListProducts<TData = Awaited<ReturnType<typeof adminList
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Productos, incluidos los inactivos */
 export function useAdminListProducts<TData = Awaited<ReturnType<typeof adminListProducts>>, TError = ProblemResponse>(
  params?: AdminListProductsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProducts>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Productos, incluidos los inactivos
- */
-
+/** @summary Productos, incluidos los inactivos */
 export function useAdminListProducts<TData = Awaited<ReturnType<typeof adminListProducts>>, TError = ProblemResponse>(
  params?: AdminListProductsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListProducts>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -8443,25 +8658,11 @@ export const getAdminCreateProductUrl = () => {
  */
 export const adminCreateProduct = async (productInput: ProductInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateProductResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminCreateProductResponse>(getAdminCreateProductUrl(),
+  return apiFetch<adminCreateProductResponse>(getAdminCreateProductUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(productInput)
   }
 );}
@@ -8504,9 +8705,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminCreateProductMutationError = ProblemResponse
     export type AdminCreateProductMutationVariables = {data: ProductInput}
 
-    /**
- * @summary Crea un producto
- */
+    /** @summary Crea un producto */
 export const useAdminCreateProduct = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateProduct>>, TError,AdminCreateProductMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -8561,25 +8760,11 @@ export const getAdminUpdateProductUrl = (id: string,) => {
 export const adminUpdateProduct = async (id: string,
     productInput: ProductInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateProductResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminUpdateProductResponse>(getAdminUpdateProductUrl(id),
+  return apiFetch<adminUpdateProductResponse>(getAdminUpdateProductUrl(id),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(productInput)
   }
 );}
@@ -8622,9 +8807,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminUpdateProductMutationError = ProblemResponse
     export type AdminUpdateProductMutationVariables = {id: string;data: ProductInput}
 
-    /**
- * @summary Reemplaza un producto (para retirarlo, active=false)
- */
+    /** @summary Reemplaza un producto (para retirarlo, active=false) */
 export const useAdminUpdateProduct = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateProduct>>, TError,AdminUpdateProductMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -8710,6 +8893,7 @@ export type AdminListVariantsQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type AdminListVariantsQueryError = unknown
 
 
+/** @summary Variantes de un producto, incluidas las inactivas */
 export function useAdminListVariants<TData = Awaited<ReturnType<typeof adminListVariants>>, TError = unknown>(
  params: AdminListVariantsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListVariants>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -8720,6 +8904,7 @@ export function useAdminListVariants<TData = Awaited<ReturnType<typeof adminList
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Variantes de un producto, incluidas las inactivas */
 export function useAdminListVariants<TData = Awaited<ReturnType<typeof adminListVariants>>, TError = unknown>(
  params: AdminListVariantsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListVariants>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -8730,14 +8915,12 @@ export function useAdminListVariants<TData = Awaited<ReturnType<typeof adminList
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Variantes de un producto, incluidas las inactivas */
 export function useAdminListVariants<TData = Awaited<ReturnType<typeof adminListVariants>>, TError = unknown>(
  params: AdminListVariantsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListVariants>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Variantes de un producto, incluidas las inactivas
- */
-
+/** @summary Variantes de un producto, incluidas las inactivas */
 export function useAdminListVariants<TData = Awaited<ReturnType<typeof adminListVariants>>, TError = unknown>(
  params: AdminListVariantsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListVariants>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -8798,25 +8981,11 @@ export const getAdminCreateVariantUrl = () => {
  */
 export const adminCreateVariant = async (variantInput: VariantInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminCreateVariantResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminCreateVariantResponse>(getAdminCreateVariantUrl(),
+  return apiFetch<adminCreateVariantResponse>(getAdminCreateVariantUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(variantInput)
   }
 );}
@@ -8859,9 +9028,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminCreateVariantMutationError = ProblemResponse
     export type AdminCreateVariantMutationVariables = {data: VariantInput}
 
-    /**
- * @summary Crea una variante
- */
+    /** @summary Crea una variante */
 export const useAdminCreateVariant = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateVariant>>, TError,AdminCreateVariantMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -8916,25 +9083,11 @@ export const getAdminUpdateVariantUrl = (id: string,) => {
 export const adminUpdateVariant = async (id: string,
     variantInput: VariantInput, options?: Parameters<typeof apiFetch>[1]): Promise<adminUpdateVariantResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminUpdateVariantResponse>(getAdminUpdateVariantUrl(id),
+  return apiFetch<adminUpdateVariantResponse>(getAdminUpdateVariantUrl(id),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(variantInput)
   }
 );}
@@ -8977,9 +9130,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminUpdateVariantMutationError = ProblemResponse
     export type AdminUpdateVariantMutationVariables = {id: string;data: VariantInput}
 
-    /**
- * @summary Reemplaza una variante (el producto no cambia; para retirarla, active=false)
- */
+    /** @summary Reemplaza una variante (el producto no cambia; para retirarla, active=false) */
 export const useAdminUpdateVariant = <TError = ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateVariant>>, TError,AdminUpdateVariantMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -9027,25 +9178,11 @@ export const getAdminImportVariantsUrl = () => {
  */
 export const adminImportVariants = async (adminImportVariantsBody: Blob, options?: Parameters<typeof apiFetch>[1]): Promise<adminImportVariantsResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<adminImportVariantsResponse>(getAdminImportVariantsUrl(),
+  return apiFetch<adminImportVariantsResponse>(getAdminImportVariantsUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'text/csv', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'text/csv' }, options?.headers),
     body: adminImportVariantsBody
   }
 );}
@@ -9089,6 +9226,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminImportVariantsMutationVariables = {data: Blob}
 
     /**
+ * Columnas: `product_slug,sku,sphere,cylinder,axis,addition,dominance,base_curve,diameter,color,price_cents,compare_at_cents,stock,on_demand,active`.
+ * Requeridas: `product_slug`, `sku`, `base_curve`, `diameter`, `price_cents`, `stock`. Máximo 5 MB y 5,000 filas.
+ * Una variante con `on_demand=true` debe llevar `stock=0`.
+ * El encabezado es la fila 1. Si hay errores no se aplica nada y se devuelven por fila.
  * @summary Carga masiva de variantes por CSV (upsert por sku, todo o nada)
  */
 export const useAdminImportVariants = <TError = ImportProblem,

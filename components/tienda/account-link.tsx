@@ -3,7 +3,7 @@
 import { Popover } from "@base-ui/react/popover";
 import type { User } from "@supabase/supabase-js";
 import { cn } from "cn";
-import { ChevronDown, FileText, LogOut, Package, UserRound, X } from "lucide-react";
+import { ChevronDown, FileText, LayoutGrid, LogOut, MapPin, Package, UserRound, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,10 +19,12 @@ const LoginForm = dynamic(() => import("@/components/auth/auth-forms").then((m) 
 const control = "flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full text-sm font-medium whitespace-nowrap hover:bg-accent lg:px-3";
 // Marca de color bajo el control mientras su panel está abierto.
 const openMark = "relative after:absolute after:inset-x-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-primary after:opacity-0 data-popup-open:after:opacity-100";
-const panel = "z-50 rounded-xl bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 outline-none";
+const panel = "z-50 rounded-2xl bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 outline-none";
 const entry = "flex min-h-14 w-full items-center gap-3 border-b px-5 text-left text-base outline-none hover:bg-accent focus-visible:bg-accent";
 const entries = [
-  { href: "/cuenta", icon: UserRound, label: "account.title" },
+  { href: "/cuenta", icon: LayoutGrid, label: "account.title" },
+  { href: "/cuenta/perfil", icon: UserRound, label: "account.nav.profile" },
+  { href: "/cuenta/direcciones", icon: MapPin, label: "account.nav.addresses" },
   { href: "/cuenta/pedidos", icon: Package, label: "account.orders" },
   { href: "/cuenta/recetas", icon: FileText, label: "account.prescriptions" },
 ] as const;
@@ -112,12 +114,15 @@ export function AccountLink() {
             <Popover.Positioner align="end" sideOffset={8} className="z-50">
               {/* Ancho fijo; Turnstile solo puede hacerlo crecer en alto. */}
               <Popover.Popup
-                className={cn(panel, "max-h-(--available-height) w-88 overflow-y-auto p-5 [--field-bg:var(--popover)] data-closed:hidden")}
+                className={cn(panel, "max-h-(--available-height) w-96 overflow-y-auto p-6 data-closed:hidden")}
                 onClick={(e) => (e.target as Element).closest("a") && setOpen(false)}
               >
-                <div className="mb-4 flex items-center justify-between">
-                  <Popover.Title className="text-lg font-bold">{t("auth.login.title")}</Popover.Title>
-                  <Popover.Close aria-label={t("common.close")} className="flex size-8 items-center justify-center rounded-full hover:bg-accent">
+                <div className="mb-5 flex items-start justify-between gap-3">
+                  <div>
+                    <Popover.Title className="font-display text-xl font-bold">{t("auth.login.welcome")}</Popover.Title>
+                    <Popover.Description className="mt-1 text-sm text-muted-foreground">{t("auth.login.subtitle")}</Popover.Description>
+                  </div>
+                  <Popover.Close aria-label={t("common.close")} className="-mt-1 -mr-2 flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-accent">
                     <X className="size-4" aria-hidden="true" />
                   </Popover.Close>
                 </div>

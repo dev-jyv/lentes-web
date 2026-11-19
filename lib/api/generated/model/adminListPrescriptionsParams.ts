@@ -8,5 +8,5 @@
 import type { RxStatus } from './rxStatus';
 
 export type AdminListPrescriptionsParams = {
-status?: RxStatus;
+  status?: RxStatus;
 };

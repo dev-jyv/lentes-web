@@ -2,7 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
 
-const PROTECTED = ["/cuenta", "/checkout", "/recompra"];
+// /checkout es público: sin sesión se compra como invitado (SPEC 25). El resultado del pago sí es de la cuenta.
+const PROTECTED = ["/cuenta", "/checkout/resultado", "/recompra"];
 
 // Refresca la sesión en cada request y protege rutas privadas.
 export async function updateSession(request: NextRequest) {

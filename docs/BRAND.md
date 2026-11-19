@@ -8,7 +8,7 @@ Fuente: brand book compartido como artifact (`claude.ai/artifact/7tXv281yj6tx4mV
 | Brand book | Dónde |
 |---|---|
 | Paleta marino + azul + menta (reemplaza a "Película lagrimal" y "Consulta nocturna"; ver `docs/superpowers/specs/2026-11-05-paleta-y-home-design.md`) | tokens en `app/globals.css` (`--navy`, `--blue`, `--blue-vivid`, `--blue-soft`, `--mint`, `--sun`, `--ink`…) mapeados a los de shadcn. El logo conserva sus colores originales con `--logo-ring`, `--logo-iris`, `--logo-iris-soft` y `--logo-pupil` |
-| Tema claro/oscuro | `data-theme` en `<html>`; el script de `app/layout.tsx` lo fija antes del primer pintado (preferencia guardada o del sistema); `components/theme-toggle.tsx` |
+| Tema claro/oscuro | `data-theme` en `<html>`; el script de `app/layout.tsx` lo fija desde `prefers-color-scheme` antes del primer pintado y lo actualiza si el sistema cambia; no hay selector manual |
 | Tipografía: Bricolage Grotesque (títulos), Figtree (texto), IBM Plex Mono (valores ópticos) | `next/font` en `app/layout.tsx`; `font-display`, `font-sans`, utilidad `optic` |
 | Valores ópticos en monoespaciada con cifras tabulares | `.optic` en esfera, cilindro, eje, curva base, diámetro, carrito, pedidos y recetas |
 | Breakpoints 600 / 1024 / 1440 y contenedor de 1280 px | `@theme` y `container-page` en `globals.css` |

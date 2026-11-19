@@ -12,8 +12,6 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { mergeCart } from "@/lib/api/generated/api";
-import { clearCartToken, getCartToken } from "@/lib/cart-token";
 import { useTurnstile } from "@/components/turnstile";
 import { env } from "@/lib/env";
 import { LEGAL_REVIEWED } from "@/lib/legal";
@@ -26,7 +24,7 @@ import { rich } from "@/lib/rich";
 const email = z.string().email(t("validation.invalidEmail"));
 const password = z.string().min(8, t("validation.minPassword"));
 
-// Etiqueta flotante sobre el borde; `--field-bg` la iguala al fondo del contenedor.
+// Etiqueta flotante dentro del campo: sube al enfocar o escribir, sin fondo que tapar.
 export function FloatingField({
   id, label, type = "text", error, autoComplete, reg, className,
 }: {
@@ -39,19 +37,43 @@ export function FloatingField({
     <div className={cn("space-y-1", className)}>
       <div className="relative">
         <Input id={id} type={password && shown ? "text" : type} autoComplete={autoComplete} aria-invalid={!!error}
-          aria-describedby={error ? `${id}-error` : undefined} placeholder=" " className={cn("peer h-11 px-3", password && "pr-11")} {...reg} />
-        <Label htmlFor={id} className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 bg-(--field-bg,var(--background)) px-1 font-normal text-muted-foreground transition-all peer-focus:top-0 peer-focus:text-xs peer-focus:text-foreground peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-xs">
+          aria-describedby={error ? `${id}-error` : undefined} placeholder=" "
+          className={cn("peer h-14 rounded-xl px-4 pt-5 pb-1.5 text-base md:text-base", password && "pr-12")} {...reg} />
+        <Label htmlFor={id} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 font-normal text-muted-foreground transition-all peer-focus:top-4 peer-focus:text-xs peer-focus:text-primary peer-[:not(:placeholder-shown)]:top-4 peer-[:not(:placeholder-shown)]:text-xs">
           {label}
         </Label>
         {password && (
           <button type="button" aria-label={t("auth.showPassword")} aria-pressed={shown} onClick={() => setShown(!shown)}
-            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-lg text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
-            {shown ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+            className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-xl text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
+            {shown ? <EyeOff className="size-5" aria-hidden="true" /> : <Eye className="size-5" aria-hidden="true" />}
           </button>
         )}
       </div>
       {error && <p id={`${id}-error`} className="text-xs text-destructive">{error}</p>}
     </div>
+  );
+}
+
+// Botones grandes y redondeados del flujo de acceso.
+export const authButton = "h-12 w-full rounded-xl text-base font-semibold";
+
+export function Divider({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+      {children}
+    </p>
+  );
+}
+
+// Logo oficial de Google para el botón de acceso (permitido por sus guías de marca).
+function GoogleLogo() {
+  return (
+    <svg viewBox="0 0 48 48" className="size-5" aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
+      <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
+    </svg>
   );
 }
 
@@ -68,7 +90,7 @@ function GoogleButton({ next }: { next?: string }) {
   const [error, setError] = useState<string | null>(null);
   return (
     <div className="space-y-2">
-      <Button type="button" variant="outline" className="w-full" onClick={async () => {
+      <Button type="button" variant="outline" className={cn(authButton, "gap-3 font-medium")} onClick={async () => {
         const { error } = await createClient().auth.signInWithOAuth({
           provider: "google",
           options: { redirectTo: `${origin()}/auth/callback?next=${encodeURIComponent(
@@ -77,6 +99,7 @@ function GoogleButton({ next }: { next?: string }) {
         });
         if (error) setError(t("auth.googleFailed"));
       }}>
+        <GoogleLogo />
         {t("auth.continueWithGoogle")}
       </Button>
       <Notice error={error} />
@@ -103,27 +126,26 @@ export function LoginForm({ next, onSuccess }: { next?: string; onSuccess?: () =
       });
       turnstile.reset();
       if (error) return setError(t("auth.wrongCredentials"));
-      // Une el carrito anónimo al del cliente; si falla, el carrito anónimo se conserva.
-      if (getCartToken() && (await mergeCart()).status === 200) clearCartToken();
+      // El carrito anónimo se une en Providers al recibir SIGNED_IN (también cubre Google).
       if (onSuccess) onSuccess();
       else router.replace(target);
       router.refresh();
     })}>
+      <GoogleButton next={onSuccess ? undefined : target} />
+      <Divider>{t("auth.orContinueWith")}</Divider>
       <FloatingField id={`${id}email`} label={t("auth.email")} type="email" autoComplete="email"
         error={errors.email?.message} reg={register("email")} />
-      <FloatingField id={`${id}password`} label={t("auth.password")} type="password" autoComplete="current-password"
-        error={errors.password?.message} reg={register("password")} />
-      <Link href="/recuperar" className="block text-right text-sm underline">{t("auth.forgotPassword")}</Link>
+      <div className="space-y-2">
+        <FloatingField id={`${id}password`} label={t("auth.password")} type="password" autoComplete="current-password"
+          error={errors.password?.message} reg={register("password")} />
+        <Link href="/recuperar" className="block w-fit ml-auto text-sm font-medium text-primary hover:underline">{t("auth.forgotPassword")}</Link>
+      </div>
       {turnstile.widget}
       <Notice error={error} />
-      <Button type="submit" className="w-full" disabled={isSubmitting}>{t("auth.login.title")}</Button>
-      <p className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
-        {t("auth.orContinueWith")}
-      </p>
-      <GoogleButton next={onSuccess ? undefined : target} />
-      <p className="text-center text-sm">
+      <Button type="submit" className={authButton} disabled={isSubmitting}>{t("auth.login.title")}</Button>
+      <p className="text-center text-sm text-muted-foreground">
         {rich(t("auth.noAccount"), { link: (c) => (
-          <Link href={next ? `/registro?next=${encodeURIComponent(target)}` : "/registro"} className="font-medium underline">{c}</Link>
+          <Link href={next ? `/registro?next=${encodeURIComponent(target)}` : "/registro"} className="font-semibold text-primary hover:underline">{c}</Link>
         ) })}
       </p>
     </form>
@@ -156,7 +178,8 @@ function StrengthMeter({ value }: { value: string }) {
   );
 }
 
-export function RegisterForm({ next }: { next?: string }) {
+// `email` prellena el correo, p. ej. tras comprar como invitado (SPEC 25).
+export function RegisterForm({ next, email: initialEmail }: { next?: string; email?: string }) {
   const router = useRouter();
   const id = useId();
   // Destino tras confirmar el correo; sin `next` se conserva el de antes (/cuenta).
@@ -172,17 +195,17 @@ export function RegisterForm({ next }: { next?: string }) {
       phone,
       marketing_opt_in: z.boolean(),
     })),
-    defaultValues: { full_name: "", email: "", password: "", phone: "", marketing_opt_in: false },
+    defaultValues: { full_name: "", email: initialEmail ?? "", password: "", phone: "", marketing_opt_in: false },
   });
   const pw = useWatch({ control, name: "password" });
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">{t("auth.register.socialTitle")}</h2>
       <GoogleButton next={afterConfirm} />
-      <p className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
-        {t("auth.register.orEmail")}
-      </p>
+      {LEGAL_REVIEWED && (
+        <p className="text-xs text-muted-foreground">{rich(t("auth.register.googleLegalNote"), legalLinks)}</p>
+      )}
+      <Divider>{t("auth.register.orEmail")}</Divider>
       <form className="space-y-4" onSubmit={handleSubmit(async ({ full_name, phone, marketing_opt_in, ...v }) => {
         if (done) return;
         setError(null);
@@ -212,7 +235,7 @@ export function RegisterForm({ next }: { next?: string }) {
           <StrengthMeter value={pw} />
         </div>
         <div className="ph-no-capture flex items-start gap-2">
-          <span className="flex h-11 items-center rounded-lg border border-input px-3 text-sm text-muted-foreground">
+          <span className="flex h-14 items-center rounded-xl border border-input px-4 text-base text-muted-foreground">
             {t("auth.register.phonePrefix")}<span className="sr-only">{t("auth.register.phonePrefixLabel")}</span>
           </span>
           <FloatingField id={`${id}phone`} label={t("auth.register.phone")} type="tel" autoComplete="tel-national"
@@ -226,7 +249,7 @@ export function RegisterForm({ next }: { next?: string }) {
         )}
         {turnstile.widget}
         <Notice error={error} />
-        <Button type="submit" className="w-full" disabled={isSubmitting || done}>{t("auth.register.title")}</Button>
+        <Button type="submit" className={authButton} disabled={isSubmitting || done}>{t("auth.register.title")}</Button>
         {LEGAL_REVIEWED && (
           <p className="text-xs text-muted-foreground">{rich(t("auth.register.legalNote"), legalLinks)}</p>
         )}
@@ -266,7 +289,7 @@ export function RecoverForm() {
       <FloatingField id="email" label={t("auth.email")} type="email" autoComplete="email"
         error={errors.email?.message} reg={register("email")} />
       <Notice info={info} />
-      <Button type="submit" className="w-full" disabled={isSubmitting}>{t("auth.recover.send")}</Button>
+      <Button type="submit" className={authButton} disabled={isSubmitting}>{t("auth.recover.send")}</Button>
     </form>
   );
 }
@@ -287,7 +310,7 @@ export function NewPasswordForm() {
       <FloatingField id="password" label={t("auth.newPassword.title")} type="password" autoComplete="new-password"
         error={errors.password?.message} reg={register("password")} />
       <Notice error={error} />
-      <Button type="submit" className="w-full" disabled={isSubmitting}>{t("common.save")}</Button>
+      <Button type="submit" className={authButton} disabled={isSubmitting}>{t("common.save")}</Button>
     </form>
   );
 }

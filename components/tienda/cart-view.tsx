@@ -73,7 +73,7 @@ function FrameLine({ item }: { item: CartItem }) {
 }
 
 // Sin imagen, o si no carga, queda un ícono neutro en lugar del ícono de imagen rota del navegador.
-function LineImage({ src }: { src: string | null }) {
+export function LineImage({ src }: { src: string | null }) {
   const [failed, setFailed] = useState(false);
   if (!src || failed) return <ImageIcon className="absolute inset-0 m-auto size-6 text-muted-foreground/60" aria-hidden="true" />;
   return <Image src={src} alt="" fill unoptimized sizes="80px" className="object-contain p-1.5" onError={() => setFailed(true)} />;

@@ -16,7 +16,7 @@ export interface CartItemInput {
      */
   quantity: number;
   /**
-     * Requerido en armazones, con eye = both; prohibido en lentes de contacto.
+     * Requerido en armazones, con eye = both; prohibido en lentes de contacto. Un paquete `progressive` en un armazón con `progressive_eligible = false` responde 400.
      * @nullable
      */
   lens_package_id?: string | null;

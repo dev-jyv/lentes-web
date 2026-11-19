@@ -58,7 +58,7 @@ export interface FrameDetails {
   /** @nullable */
   adjustable_nose_pads: boolean | null;
   /**
-     * Solo lectura (no existe en FrameInput); calculado, no se guarda. `true` si `lens_height_mm` >= 28; `null` sin alto de mica.
+     * Solo lectura (no existe en FrameInput); calculado, no se guarda. `true` si `lens_height_mm` >= 28; `null` sin alto de mica. Con `false`, el carrito rechaza paquetes `progressive` (400) y el checkout responde 409; con `null` se permiten.
      * @nullable
      */
   progressive_eligible: boolean | null;
