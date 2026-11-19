@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { request, type APIRequestContext } from "@playwright/test";
+import { createServerClient } from "@supabase/ssr";
 
 // Ayudantes que preparan y limpian datos del usuario de prueba directo en lentes-api (SPEC 20).
 // La suite corre contra la API real con la cuenta real: todo lo que se borra se respalda antes.
@@ -24,20 +25,52 @@ function need(name: string): string {
 
 const apiUrl = () => need("NEXT_PUBLIC_API_URL").replace(/\/$/, "");
 
+// Inicia sesión con la cuenta de prueba sin pasar por el formulario (y sin Turnstile).
+// Con SUPABASE_SECRET_KEY usa un enlace mágico generado por la API de administración: no pide captcha, así que
+// funciona con la protección CAPTCHA de Supabase activa. Sin ella, cae al login con contraseña.
+// Devuelve el access token para lentes-api y las cookies de sesión de @supabase/ssr para el navegador.
+export async function signInTestUser() {
+  const user = process.env.APP_USER;
+  if (!user) throw new Error("Define APP_USER en .env");
+  const url = need("NEXT_PUBLIC_SUPABASE_URL");
+  const jar = new Map<string, string>();
+  const supabase = createServerClient(url, need("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"), {
+    cookies: {
+      getAll: () => [...jar].map(([name, value]) => ({ name, value })),
+      setAll: (list) => list.forEach(({ name, value }) => (value ? jar.set(name, value) : jar.delete(name))),
+    },
+  });
+
+  const secret = process.env.SUPABASE_SECRET_KEY;
+  if (secret) {
+    const res = await fetch(`${url}/auth/v1/admin/generate_link`, {
+      method: "POST",
+      headers: { apikey: secret, Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "magiclink", email: user }),
+    });
+    if (!res.ok) throw new Error(`Supabase no generó el enlace de prueba: ${res.status} ${await res.text()}`);
+    const link = await res.json();
+    const tokenHash = link.hashed_token ?? link.properties?.hashed_token;
+    const { error } = await supabase.auth.verifyOtp({ type: "magiclink", token_hash: tokenHash });
+    if (error) throw new Error(`Supabase rechazó el enlace de prueba: ${error.message}`);
+  } else {
+    const password = process.env.APP_PASSWORD;
+    if (!password) throw new Error("Define SUPABASE_SECRET_KEY, o APP_PASSWORD, en .env");
+    const { error } = await supabase.auth.signInWithPassword({ email: user, password });
+    if (error) throw new Error(`Supabase rechazó el login de prueba: ${error.message}`);
+  }
+
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) throw new Error("Supabase no devolvió sesión para la cuenta de prueba");
+  return { session: data.session, accessToken: data.session.access_token, cookies: [...jar].map(([name, value]) => ({ name, value })) };
+}
+
 let ctx: { req: APIRequestContext; token: string } | null = null;
 
 async function session() {
   if (ctx) return ctx;
-  const user = process.env.APP_USER;
-  const password = process.env.APP_PASSWORD;
-  if (!user || !password) throw new Error("Define APP_USER y APP_PASSWORD en .env");
-  const req = await request.newContext();
-  const res = await req.post(`${need("NEXT_PUBLIC_SUPABASE_URL")}/auth/v1/token?grant_type=password`, {
-    headers: { apikey: need("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") },
-    data: { email: user, password },
-  });
-  if (!res.ok()) throw new Error(`Supabase rechazó el login de prueba: ${res.status()} ${await res.text()}`);
-  ctx = { req, token: (await res.json()).access_token };
+  const { accessToken } = await signInTestUser();
+  ctx = { req: await request.newContext(), token: accessToken };
   return ctx;
 }
 
