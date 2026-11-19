@@ -1,6 +1,6 @@
 # SPEC 25 — Checkout como invitado en la tienda
 
-> **Status:** Implemented — lentes-web (commit siguiente), lentes-api da42423 y 30e82d4
+> **Status:** Implemented — lentes-web 33ebbd7, lentes-api da42423 y 30e82d4
 > **Depends on:** SPEC 19, SPEC 23, SPEC 24
 > **Date:** 2026-11-18
 > **Objective:** Dejar que un visitante sin cuenta pague desde el carrito con un paso de identificación (correo, nombre, apellidos y teléfono) antes del envío y el pago del checkout en acordeón.
