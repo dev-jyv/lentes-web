@@ -29,7 +29,7 @@ const apiUrl = () => need("NEXT_PUBLIC_API_URL").replace(/\/$/, "");
 // Con SUPABASE_SECRET_KEY usa un enlace mágico generado por la API de administración: no pide captcha, así que
 // funciona con la protección CAPTCHA de Supabase activa. Sin ella, cae al login con contraseña.
 // Devuelve el access token para lentes-api y las cookies de sesión de @supabase/ssr para el navegador.
-export async function signInTestUser() {
+export async function signInTestUser(linkType: "magiclink" | "recovery" = "magiclink") {
   const user = process.env.APP_USER;
   if (!user) throw new Error("Define APP_USER en .env");
   const url = need("NEXT_PUBLIC_SUPABASE_URL");
@@ -42,16 +42,17 @@ export async function signInTestUser() {
   });
 
   const secret = process.env.SUPABASE_SECRET_KEY;
+  if (linkType === "recovery" && !secret) throw new Error("El enlace de recuperación requiere SUPABASE_SECRET_KEY en .env");
   if (secret) {
     const res = await fetch(`${url}/auth/v1/admin/generate_link`, {
       method: "POST",
       headers: { apikey: secret, Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "magiclink", email: user }),
+      body: JSON.stringify({ type: linkType, email: user }),
     });
     if (!res.ok) throw new Error(`Supabase no generó el enlace de prueba: ${res.status} ${await res.text()}`);
     const link = await res.json();
     const tokenHash = link.hashed_token ?? link.properties?.hashed_token;
-    const { error } = await supabase.auth.verifyOtp({ type: "magiclink", token_hash: tokenHash });
+    const { error } = await supabase.auth.verifyOtp({ type: linkType, token_hash: tokenHash });
     if (error) throw new Error(`Supabase rechazó el enlace de prueba: ${error.message}`);
   } else {
     const password = process.env.APP_PASSWORD;
