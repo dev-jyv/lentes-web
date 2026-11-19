@@ -9,7 +9,8 @@ import { safeNext } from "@/lib/safe-next";
 
 type Tab = "login" | "register";
 
-const tabClass = "-mb-px flex-1 border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 data-active:border-primary data-active:text-foreground";
+// Control segmentado: la pestaña activa es una píldora sobre el riel.
+const tabClass = "h-10 flex-1 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 data-active:bg-background data-active:text-foreground data-active:shadow-sm";
 
 // /login y /registro son la misma página: la URL decide la pestaña y cambiar de pestaña cambia la URL.
 export function AuthTabs({ initial, next }: { initial: Tab; next?: string }) {
@@ -23,7 +24,7 @@ export function AuthTabs({ initial, next }: { initial: Tab; next?: string }) {
       setTab(value);
       router.replace(`${value === "login" ? "/login" : "/registro"}${query}`, { scroll: false });
     }}>
-      <Tabs.List aria-label={t("auth.tabs.label")} className="mb-6 flex border-b border-border">
+      <Tabs.List aria-label={t("auth.tabs.label")} className="mb-6 flex rounded-full bg-muted p-1">
         <Tabs.Tab value="login" className={tabClass}>{t("auth.tabs.login")}</Tabs.Tab>
         <Tabs.Tab value="register" className={tabClass}>{t("auth.tabs.register")}</Tabs.Tab>
       </Tabs.List>
