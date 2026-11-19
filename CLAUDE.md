@@ -54,7 +54,7 @@ Public catalog pages fetch in server components with plain generated functions. 
 
 ### Auth and routing
 
-- `proxy.ts` (Next 16's replacement for `middleware.ts`) calls `lib/supabase/proxy.ts`. It refreshes the Supabase session and redirects unauthenticated requests for `/cuenta`, `/checkout` and `/recompra` to `/login?next=...`. Add new private routes to its `PROTECTED` list. `lib/safe-next.ts` guards against open redirects: `safeNext` for `next` targets, `isInternalHref` for admin-managed banner links.
+- `proxy.ts` (Next 16's replacement for `middleware.ts`) calls `lib/supabase/proxy.ts`. It refreshes the Supabase session and redirects unauthenticated requests for `/cuenta`, `/checkout/resultado` and `/recompra` to `/login?next=...`. `/checkout` itself is public: without a session it offers guest checkout (SPEC 25), and paid guests see their order at `/pedido/[id]?t=<token>`. Add new private routes to its `PROTECTED` list. `lib/safe-next.ts` guards against open redirects: `safeNext` for `next` targets, `isInternalHref` for admin-managed banner links.
 - Route groups are `(tienda)`, `(auth)` and `(cuenta)`. The root layout renders the header and footer for all of them.
 - Products have two URL trees by category: `/lentes/[slug]` for `contact_lens` and `/armazones/[slug]` for frames. Use `productHref` from `lib/format.ts` to build links; `/lentes/{frame-slug}` redirects permanently to the frame URL.
 - `lib/navigation.ts` builds the header and mega menu from API facets, hiding values that have no products.
