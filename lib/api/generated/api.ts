@@ -112,6 +112,7 @@ import type {
   MergeFavorites200,
   Order,
   OrderUpdate,
+  PostalCode,
   Prescription,
   PrescriptionInput,
   PrescriptionReview,
@@ -1078,6 +1079,144 @@ export function useGetCatalogs<TData = Awaited<ReturnType<typeof getCatalogs>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetCatalogsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getPostalCodeResponse200 = {
+  data: PostalCode
+  status: 200
+}
+
+export type getPostalCodeResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type getPostalCodeResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type getPostalCodeResponseSuccess = (getPostalCodeResponse200) & {
+  headers: Headers;
+};
+export type getPostalCodeResponseError = (getPostalCodeResponse400 | getPostalCodeResponse404) & {
+  headers: Headers;
+};
+
+export type getPostalCodeResponse = (getPostalCodeResponseSuccess | getPostalCodeResponseError)
+
+export const getGetPostalCodeUrl = (cp: string,) => {
+
+
+
+
+  return `/v1/postal-codes/${cp}`
+}
+
+/**
+ * Público y cacheable un día. `404` si el catálogo no tiene el código; la tienda deja capturar la dirección a mano.
+ * @summary Estado, municipio y colonias de un código postal (catálogo de Correos de México)
+ */
+export const getPostalCode = async (cp: string, options?: Parameters<typeof apiFetch>[1]): Promise<getPostalCodeResponse> => {
+
+  return apiFetch<getPostalCodeResponse>(getGetPostalCodeUrl(cp),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPostalCodeQueryKey = (cp: string,) => {
+    return [
+    `/v1/postal-codes/${cp}`
+    ] as const;
+    }
+
+
+export const getGetPostalCodeQueryOptions = <TData = Awaited<ReturnType<typeof getPostalCode>>, TError = ProblemResponse>(cp: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPostalCodeQueryKey(cp);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPostalCode>>> = ({ signal }) => getPostalCode(cp, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: cp !== null && cp !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPostalCodeQueryResult = NonNullable<Awaited<ReturnType<typeof getPostalCode>>>
+export type GetPostalCodeQueryError = ProblemResponse
+
+
+/**
+ * Público y cacheable un día. `404` si el catálogo no tiene el código; la tienda deja capturar la dirección a mano.
+ * @summary Estado, municipio y colonias de un código postal (catálogo de Correos de México)
+ */
+export function useGetPostalCode<TData = Awaited<ReturnType<typeof getPostalCode>>, TError = ProblemResponse>(
+ cp: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPostalCode>>,
+          TError,
+          Awaited<ReturnType<typeof getPostalCode>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Público y cacheable un día. `404` si el catálogo no tiene el código; la tienda deja capturar la dirección a mano.
+ * @summary Estado, municipio y colonias de un código postal (catálogo de Correos de México)
+ */
+export function useGetPostalCode<TData = Awaited<ReturnType<typeof getPostalCode>>, TError = ProblemResponse>(
+ cp: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPostalCode>>,
+          TError,
+          Awaited<ReturnType<typeof getPostalCode>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Público y cacheable un día. `404` si el catálogo no tiene el código; la tienda deja capturar la dirección a mano.
+ * @summary Estado, municipio y colonias de un código postal (catálogo de Correos de México)
+ */
+export function useGetPostalCode<TData = Awaited<ReturnType<typeof getPostalCode>>, TError = ProblemResponse>(
+ cp: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Público y cacheable un día. `404` si el catálogo no tiene el código; la tienda deja capturar la dirección a mano.
+ * @summary Estado, municipio y colonias de un código postal (catálogo de Correos de México)
+ */
+export function useGetPostalCode<TData = Awaited<ReturnType<typeof getPostalCode>>, TError = ProblemResponse>(
+ cp: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPostalCode>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPostalCodeQueryOptions(cp,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
