@@ -1,6 +1,6 @@
 # SPEC 24 — Compra como invitado en la API
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-api da42423
 > **Depends on:** SPEC 19
 > **Date:** 2026-11-18
 > **Objective:** Permitir que `lentes-api` cree y cobre un pedido a partir del carrito anónimo con datos de contacto, dirección y receta capturados en el mismo checkout, sin cuenta de Supabase.
@@ -35,12 +35,12 @@ Este spec cubre solo el backend y su contrato. La pantalla está en SPEC 25. Las
 
 ## Functional requirements
 
-1. Migración: `shop.orders.user_id` pasa a aceptar `NULL` y se agrega `guest_contact jsonb` (correo, nombre, apellidos, teléfono, aviso de promociones) y `guest_token_hash text`. Una restricción exige que un pedido tenga `user_id` o `guest_contact`, nunca ninguno.
+1. Migración: `shop.orders.user_id` pasa a aceptar `NULL` y se agrega `guest_contact jsonb` (correo, nombre, apellidos, teléfono, aviso de promociones) y `delivered_at timestamptz` (se fija al pasar a `delivered`; hoy solo existe `shipped_at`). Una restricción exige que un pedido tenga `user_id` o `guest_contact`, nunca ninguno.
 2. `POST /v1/checkout/guest` no lleva sesión. Exige `X-Cart-Token`, un token de Turnstile válido y el cuerpo `GuestCheckoutInput`. Si llega con un bearer válido responde `409` con `type: use-account-checkout` para que la tienda use el checkout normal.
 3. Valida igual que el checkout de cliente: carrito no vacío, existencias, precios de la base y receta cuando un producto la requiere. La dirección se valida con las mismas reglas de `AddressInput` y se copia al pedido en `shipping_address`, como hoy.
 4. **Una compra pendiente por carrito:** un segundo checkout de invitado con el mismo `cart_token` vence el pedido pendiente anterior y devuelve lo apartado.
 5. La receta del invitado es solo el archivo (foto o PDF; decisión del responsable). Se sube con `POST /v1/guest/prescriptions/upload-url` (sin sesión, exige `X-Cart-Token`; mismas reglas de tipo y tamaño que la de clientes) y se manda en el checkout como `prescription_upload` con su `r2_key`. Los valores ópticos ya van en cada renglón del carrito. La API crea la receta en estado `pending`, ligada al pedido y no a un cliente.
-6. La respuesta incluye `order_token`: un valor aleatorio de 32 bytes que la API guarda solo como hash. Sirve para `GET /v1/guest/orders/{id}` con el encabezado `X-Order-Token`. Un token o id incorrecto responde `404`, sin distinguir cuál falló. El token deja de servir 90 días después de la entrega (`delivered_at` + 90 días); mientras el pedido no se entrega, sigue vigente. Un token vencido también responde `404`.
+6. La respuesta incluye `order_token` = base64url(HMAC-SHA256(`ORDER_TOKEN_SECRET`, id del pedido)): 32 bytes imposibles de adivinar sin el secreto. No se guarda; la API lo recalcula para cada correo y lo compara en tiempo constante (ajuste del 2026-11-18 aprobado por el responsable: con solo un hash no se podían armar los enlaces de los correos posteriores). Sin `ORDER_TOKEN_SECRET`, las rutas de invitado responden `503`. Sirve para `GET /v1/guest/orders/{id}` con el encabezado `X-Order-Token`. Un token o id incorrecto responde `404`, sin distinguir cuál falló. El token deja de servir 90 días después de la entrega (`delivered_at` + 90 días); mientras el pedido no se entrega, sigue vigente. Un token vencido también responde `404`.
 7. El correo de confirmación de pago (y los de cambio de estado) se manda a `guest_contact.email` con un enlace `/pedido/{id}?t={order_token}`. El token también se incluye en la `back_url` de Mercado Pago para que la tienda muestre el pedido al volver.
 8. **Ligar pedidos a una cuenta:** cuando un cliente confirma su correo (o entra con Google con un correo verificado) y ese correo coincide con `guest_contact.email` de pedidos de invitado, esos pedidos pasan a su `user_id` en el primer request autenticado (el mismo momento en que hoy se hace el upsert en `customers`). Sus recetas de invitado pasan con ellos. Solo se ligan con correo verificado (`email_confirmed_at` en el JWT).
 9. Límite: 10 checkouts de invitado por IP por hora; el siguiente responde `429`.
@@ -116,7 +116,7 @@ GuestCheckoutResult:
     - type: object
       required: [order_token]
       properties:
-        order_token: { type: string, description: "Se muestra una sola vez; la API guarda solo su hash" }
+        order_token: { type: string, description: "HMAC del id del pedido; la API no lo guarda" }
 ```
 
 ## Non-functional requirements
@@ -149,5 +149,5 @@ GuestCheckoutResult:
 ## Risks
 
 - **Abuso del apartado:** sin cuenta, un bot podría apartar existencias. Mitigación: Turnstile, límite por IP y vencimiento de 15 minutos.
-- **Enlace del pedido filtrado:** quien tenga el enlace ve la dirección del invitado. Mitigación: token de 32 bytes y la vista de invitado oculta la receta.
+- **Enlace del pedido filtrado:** quien tenga el enlace ve la dirección del invitado. Mitigación: token HMAC de 32 bytes, vence 90 días después de la entrega, y la vista de invitado oculta la receta. Rotar `ORDER_TOKEN_SECRET` invalida todos los enlaces.
 - **Ligar por correo:** alguien que controle el buzón de un invitado verá sus pedidos al registrarse. Es aceptable: ese buzón ya recibe los enlaces de los pedidos.

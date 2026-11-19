@@ -650,6 +650,88 @@ paths:
           $ref: "#/components/responses/Problem"
         "502":
           $ref: "#/components/responses/Problem"
+  /v1/checkout/guest:
+    post:
+      operationId: createGuestCheckout
+      summary: Compra como invitado desde el carrito anónimo (SPEC 24 de lentes-web)
+      description: |
+        Mismo flujo que `POST /v1/checkout` (apartado de 15 minutos, precios de la base, Mercado Pago), sin cuenta: el pedido
+        guarda el contacto del invitado y una copia de la dirección. Exige `X-Cart-Token` y un token de Turnstile.
+        Una compra pendiente por carrito. Devuelve `order_token`, el enlace privado del pedido (`GET /v1/guest/orders/{id}`).
+        `400` datos inválidos o CAPTCHA rechazado. `409` carrito vacío, sin existencias, falta la receta, o la petición trae
+        sesión (type `use-account-checkout`: usa `POST /v1/checkout`). `429` más de 10 intentos por IP en una hora.
+        `503` si la compra como invitado o los pagos no están configurados.
+      parameters:
+        - $ref: "#/components/parameters/CartToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GuestCheckoutInput" }
+      responses:
+        "201":
+          description: Pedido creado; el invitado debe ir al init_point
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GuestCheckoutResult" }
+        "400":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        "502":
+          $ref: "#/components/responses/Problem"
+  /v1/guest/prescriptions/upload-url:
+    post:
+      operationId: createGuestPrescriptionUploadUrl
+      summary: URL prefirmada para que un invitado suba su receta
+      description: |
+        Igual que `POST /v1/me/prescriptions/upload-url`, pero ligada al carrito anónimo de `X-Cart-Token`. La llave devuelta
+        se manda en `POST /v1/checkout/guest` como `prescription_upload.r2_key`. `409` sin carrito.
+      parameters:
+        - $ref: "#/components/parameters/CartToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrescriptionUploadInput" }
+      responses:
+        "200":
+          description: URL de subida
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrescriptionUpload" }
+        "400":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        "502":
+          $ref: "#/components/responses/Problem"
+  /v1/guest/orders/{id}:
+    get:
+      operationId: getGuestOrder
+      summary: Pedido de invitado con su enlace privado
+      description: |
+        `X-Order-Token` es el `order_token` del checkout (también va en los correos). Sirve hasta 90 días después de la
+        entrega. Token, id o vigencia incorrectos responden `404` sin distinguir.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: X-Order-Token
+          in: header
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Pedido con renglones congelados
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "404":
+          $ref: "#/components/responses/Problem"
   /v1/me/orders:
     get:
       operationId: listMyOrders
@@ -2709,6 +2791,44 @@ components:
         address_id: { type: string, format: uuid }
         prescription_id: { type: string, format: uuid, nullable: true, description: Receta de lentes de contacto }
         glasses_prescription_id: { type: string, format: uuid, nullable: true, description: Receta de armazones }
+    GuestContact:
+      type: object
+      required: [email, first_name, last_name, phone]
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        first_name: { type: string, minLength: 1, maxLength: 80 }
+        last_name: { type: string, minLength: 1, maxLength: 80 }
+        phone: { type: string, pattern: "^[0-9]{10}$" }
+        marketing_opt_in: { type: boolean, default: false }
+    GuestPrescriptionInput:
+      type: object
+      required: [r2_key]
+      properties:
+        r2_key: { type: string, description: "Llave devuelta por /v1/guest/prescriptions/upload-url" }
+    GuestCheckoutInput:
+      type: object
+      required: [contact, address, captcha_token]
+      properties:
+        contact: { $ref: "#/components/schemas/GuestContact" }
+        address: { $ref: "#/components/schemas/AddressInput" }
+        prescription_upload:
+          allOf: [{ $ref: "#/components/schemas/GuestPrescriptionInput" }]
+          nullable: true
+          description: Receta de lentes de contacto (solo el archivo)
+        glasses_prescription_upload:
+          allOf: [{ $ref: "#/components/schemas/GuestPrescriptionInput" }]
+          nullable: true
+          description: Receta de armazones (solo el archivo)
+        captcha_token: { type: string, description: "Token de Cloudflare Turnstile" }
+    GuestCheckoutResult:
+      type: object
+      required: [order_id, number, total_cents, init_point, order_token]
+      properties:
+        order_id: { type: string, format: uuid }
+        number: { type: integer, format: int64 }
+        total_cents: { type: integer, format: int64 }
+        init_point: { type: string, format: uri }
+        order_token: { type: string, description: "HMAC del id del pedido; la API no lo guarda" }
     CheckoutResult:
       type: object
       required: [order_id, number, total_cents, init_point]
@@ -2895,6 +3015,10 @@ components:
           properties:
             glasses_prescription_id: { type: string, format: uuid, nullable: true }
             glasses_prescription_status: { allOf: [{ $ref: "#/components/schemas/RxStatus" }], nullable: true }
+            guest_contact:
+              allOf: [{ $ref: "#/components/schemas/GuestContact" }]
+              nullable: true
+              description: "Pedido de invitado (SPEC 24 de lentes-web): contacto capturado en el checkout. null para clientes."
             pd_mm: { type: number, format: double, nullable: true }
             refund_required: { type: boolean, description: "Pedido pagado con receta de armazones rechazada: requiere reembolso manual." }
             prescription_file_url: { type: string, format: uri, nullable: true, description: "URL de lectura de corta vida" }

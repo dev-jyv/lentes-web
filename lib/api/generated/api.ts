@@ -88,6 +88,8 @@ import type {
   GetCatalogsParams,
   GetHealth200,
   GetProductVariantParams,
+  GuestCheckoutInput,
+  GuestCheckoutResult,
   HomeBannerInput,
   HomeContent,
   ImageAddInput,
@@ -3264,6 +3266,371 @@ export const useCreateCheckout = <TError = ProblemResponse,
       > => {
       return useMutation(getCreateCheckoutMutationOptions(options), queryClient);
     }
+
+export type createGuestCheckoutResponse201 = {
+  data: GuestCheckoutResult
+  status: 201
+}
+
+export type createGuestCheckoutResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type createGuestCheckoutResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type createGuestCheckoutResponse429 = {
+  data: ProblemResponse
+  status: 429
+}
+
+export type createGuestCheckoutResponse502 = {
+  data: ProblemResponse
+  status: 502
+}
+
+export type createGuestCheckoutResponseSuccess = (createGuestCheckoutResponse201) & {
+  headers: Headers;
+};
+export type createGuestCheckoutResponseError = (createGuestCheckoutResponse400 | createGuestCheckoutResponse409 | createGuestCheckoutResponse429 | createGuestCheckoutResponse502) & {
+  headers: Headers;
+};
+
+export type createGuestCheckoutResponse = (createGuestCheckoutResponseSuccess | createGuestCheckoutResponseError)
+
+export const getCreateGuestCheckoutUrl = () => {
+
+
+
+
+  return `/v1/checkout/guest`
+}
+
+/**
+ * Mismo flujo que `POST /v1/checkout` (apartado de 15 minutos, precios de la base, Mercado Pago), sin cuenta: el pedido
+ * guarda el contacto del invitado y una copia de la dirección. Exige `X-Cart-Token` y un token de Turnstile.
+ * Una compra pendiente por carrito. Devuelve `order_token`, el enlace privado del pedido (`GET /v1/guest/orders/{id}`).
+ * `400` datos inválidos o CAPTCHA rechazado. `409` carrito vacío, sin existencias, falta la receta, o la petición trae
+ * sesión (type `use-account-checkout`: usa `POST /v1/checkout`). `429` más de 10 intentos por IP en una hora.
+ * `503` si la compra como invitado o los pagos no están configurados.
+ * @summary Compra como invitado desde el carrito anónimo (SPEC 24 de lentes-web)
+ */
+export const createGuestCheckout = async (guestCheckoutInput: GuestCheckoutInput, options?: Parameters<typeof apiFetch>[1]): Promise<createGuestCheckoutResponse> => {
+
+  return apiFetch<createGuestCheckoutResponse>(getCreateGuestCheckoutUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
+    body: JSON.stringify(guestCheckoutInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGuestCheckoutMutationKey = () => ['createGuestCheckout'] as const;
+
+export const getCreateGuestCheckoutMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGuestCheckout>>, TError,CreateGuestCheckoutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGuestCheckout>>, TError,CreateGuestCheckoutMutationVariables, TContext> => {
+
+const mutationKey = getCreateGuestCheckoutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGuestCheckout>>, CreateGuestCheckoutMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGuestCheckout(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGuestCheckoutMutationResult = NonNullable<Awaited<ReturnType<typeof createGuestCheckout>>>
+    export type CreateGuestCheckoutMutationBody = GuestCheckoutInput
+    export type CreateGuestCheckoutMutationError = ProblemResponse
+    export type CreateGuestCheckoutMutationVariables = {data: GuestCheckoutInput}
+
+    /**
+ * Mismo flujo que `POST /v1/checkout` (apartado de 15 minutos, precios de la base, Mercado Pago), sin cuenta: el pedido
+ * guarda el contacto del invitado y una copia de la dirección. Exige `X-Cart-Token` y un token de Turnstile.
+ * Una compra pendiente por carrito. Devuelve `order_token`, el enlace privado del pedido (`GET /v1/guest/orders/{id}`).
+ * `400` datos inválidos o CAPTCHA rechazado. `409` carrito vacío, sin existencias, falta la receta, o la petición trae
+ * sesión (type `use-account-checkout`: usa `POST /v1/checkout`). `429` más de 10 intentos por IP en una hora.
+ * `503` si la compra como invitado o los pagos no están configurados.
+ * @summary Compra como invitado desde el carrito anónimo (SPEC 24 de lentes-web)
+ */
+export const useCreateGuestCheckout = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGuestCheckout>>, TError,CreateGuestCheckoutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createGuestCheckout>>,
+        TError,
+        CreateGuestCheckoutMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGuestCheckoutMutationOptions(options), queryClient);
+    }
+
+export type createGuestPrescriptionUploadUrlResponse200 = {
+  data: PrescriptionUpload
+  status: 200
+}
+
+export type createGuestPrescriptionUploadUrlResponse400 = {
+  data: ProblemResponse
+  status: 400
+}
+
+export type createGuestPrescriptionUploadUrlResponse409 = {
+  data: ProblemResponse
+  status: 409
+}
+
+export type createGuestPrescriptionUploadUrlResponse502 = {
+  data: ProblemResponse
+  status: 502
+}
+
+export type createGuestPrescriptionUploadUrlResponseSuccess = (createGuestPrescriptionUploadUrlResponse200) & {
+  headers: Headers;
+};
+export type createGuestPrescriptionUploadUrlResponseError = (createGuestPrescriptionUploadUrlResponse400 | createGuestPrescriptionUploadUrlResponse409 | createGuestPrescriptionUploadUrlResponse502) & {
+  headers: Headers;
+};
+
+export type createGuestPrescriptionUploadUrlResponse = (createGuestPrescriptionUploadUrlResponseSuccess | createGuestPrescriptionUploadUrlResponseError)
+
+export const getCreateGuestPrescriptionUploadUrlUrl = () => {
+
+
+
+
+  return `/v1/guest/prescriptions/upload-url`
+}
+
+/**
+ * Igual que `POST /v1/me/prescriptions/upload-url`, pero ligada al carrito anónimo de `X-Cart-Token`. La llave devuelta
+ * se manda en `POST /v1/checkout/guest` como `prescription_upload.r2_key`. `409` sin carrito.
+ * @summary URL prefirmada para que un invitado suba su receta
+ */
+export const createGuestPrescriptionUploadUrl = async (prescriptionUploadInput: PrescriptionUploadInput, options?: Parameters<typeof apiFetch>[1]): Promise<createGuestPrescriptionUploadUrlResponse> => {
+
+  return apiFetch<createGuestPrescriptionUploadUrlResponse>(getCreateGuestPrescriptionUploadUrlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
+    body: JSON.stringify(prescriptionUploadInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGuestPrescriptionUploadUrlMutationKey = () => ['createGuestPrescriptionUploadUrl'] as const;
+
+export const getCreateGuestPrescriptionUploadUrlMutationOptions = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>, TError,CreateGuestPrescriptionUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>, TError,CreateGuestPrescriptionUploadUrlMutationVariables, TContext> => {
+
+const mutationKey = getCreateGuestPrescriptionUploadUrlMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>, CreateGuestPrescriptionUploadUrlMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGuestPrescriptionUploadUrl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGuestPrescriptionUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>>
+    export type CreateGuestPrescriptionUploadUrlMutationBody = PrescriptionUploadInput
+    export type CreateGuestPrescriptionUploadUrlMutationError = ProblemResponse
+    export type CreateGuestPrescriptionUploadUrlMutationVariables = {data: PrescriptionUploadInput}
+
+    /**
+ * Igual que `POST /v1/me/prescriptions/upload-url`, pero ligada al carrito anónimo de `X-Cart-Token`. La llave devuelta
+ * se manda en `POST /v1/checkout/guest` como `prescription_upload.r2_key`. `409` sin carrito.
+ * @summary URL prefirmada para que un invitado suba su receta
+ */
+export const useCreateGuestPrescriptionUploadUrl = <TError = ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>, TError,CreateGuestPrescriptionUploadUrlMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createGuestPrescriptionUploadUrl>>,
+        TError,
+        CreateGuestPrescriptionUploadUrlMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGuestPrescriptionUploadUrlMutationOptions(options), queryClient);
+    }
+
+export type getGuestOrderResponse200 = {
+  data: Order
+  status: 200
+}
+
+export type getGuestOrderResponse404 = {
+  data: ProblemResponse
+  status: 404
+}
+
+export type getGuestOrderResponseSuccess = (getGuestOrderResponse200) & {
+  headers: Headers;
+};
+export type getGuestOrderResponseError = (getGuestOrderResponse404) & {
+  headers: Headers;
+};
+
+export type getGuestOrderResponse = (getGuestOrderResponseSuccess | getGuestOrderResponseError)
+
+export const getGetGuestOrderUrl = (id: string,) => {
+
+
+
+
+  return `/v1/guest/orders/${id}`
+}
+
+/**
+ * `X-Order-Token` es el `order_token` del checkout (también va en los correos). Sirve hasta 90 días después de la
+ * entrega. Token, id o vigencia incorrectos responden `404` sin distinguir.
+ * @summary Pedido de invitado con su enlace privado
+ */
+export const getGuestOrder = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getGuestOrderResponse> => {
+
+  return apiFetch<getGuestOrderResponse>(getGetGuestOrderUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGuestOrderQueryKey = (id: string,) => {
+    return [
+    `/v1/guest/orders/${id}`
+    ] as const;
+    }
+
+
+export const getGetGuestOrderQueryOptions = <TData = Awaited<ReturnType<typeof getGuestOrder>>, TError = ProblemResponse>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGuestOrderQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGuestOrder>>> = ({ signal }) => getGuestOrder(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetGuestOrderQueryResult = NonNullable<Awaited<ReturnType<typeof getGuestOrder>>>
+export type GetGuestOrderQueryError = ProblemResponse
+
+
+/**
+ * `X-Order-Token` es el `order_token` del checkout (también va en los correos). Sirve hasta 90 días después de la
+ * entrega. Token, id o vigencia incorrectos responden `404` sin distinguir.
+ * @summary Pedido de invitado con su enlace privado
+ */
+export function useGetGuestOrder<TData = Awaited<ReturnType<typeof getGuestOrder>>, TError = ProblemResponse>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGuestOrder>>,
+          TError,
+          Awaited<ReturnType<typeof getGuestOrder>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * `X-Order-Token` es el `order_token` del checkout (también va en los correos). Sirve hasta 90 días después de la
+ * entrega. Token, id o vigencia incorrectos responden `404` sin distinguir.
+ * @summary Pedido de invitado con su enlace privado
+ */
+export function useGetGuestOrder<TData = Awaited<ReturnType<typeof getGuestOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGuestOrder>>,
+          TError,
+          Awaited<ReturnType<typeof getGuestOrder>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * `X-Order-Token` es el `order_token` del checkout (también va en los correos). Sirve hasta 90 días después de la
+ * entrega. Token, id o vigencia incorrectos responden `404` sin distinguir.
+ * @summary Pedido de invitado con su enlace privado
+ */
+export function useGetGuestOrder<TData = Awaited<ReturnType<typeof getGuestOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * `X-Order-Token` es el `order_token` del checkout (también va en los correos). Sirve hasta 90 días después de la
+ * entrega. Token, id o vigencia incorrectos responden `404` sin distinguir.
+ * @summary Pedido de invitado con su enlace privado
+ */
+export function useGetGuestOrder<TData = Awaited<ReturnType<typeof getGuestOrder>>, TError = ProblemResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuestOrder>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGuestOrderQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export type listMyOrdersResponse200 = {
   data: ListMyOrders200
