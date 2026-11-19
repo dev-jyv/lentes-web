@@ -1,6 +1,6 @@
 # SPEC 26 — Acceso y registro con Google
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-web 0dd7e2f
 > **Depends on:** SPEC 08, SPEC 10
 > **Date:** 2026-11-18
 > **Objective:** Dejar funcionando en producción "Continuar con Google" para entrar y para crear cuenta, con el carrito anónimo y el consentimiento legal igual que en el acceso con correo.
