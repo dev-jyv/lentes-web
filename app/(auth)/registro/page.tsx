@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: t("auth.register.title"), robots: { i
 export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
   return (
-    <AuthShell title={t("auth.tabs.title")}>
+    <AuthShell title={t("auth.tabs.title")} subtitle={t("auth.register.subtitle")}>
       <AuthTabs initial="register" next={next} />
     </AuthShell>
   );

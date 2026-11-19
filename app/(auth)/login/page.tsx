@@ -10,9 +10,9 @@ export default async function LoginPage({
 }: { searchParams: Promise<{ next?: string; error?: string }> }) {
   const { next, error } = await searchParams;
   return (
-    <AuthShell title={t("auth.tabs.title")}>
+    <AuthShell title={t("auth.tabs.title")} subtitle={t("auth.login.subtitle")}>
       {error && (
-        <p role="alert" className="mb-4 text-sm text-destructive">
+        <p role="alert" className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {t("auth.login.oauthFailed")}
         </p>
       )}

@@ -129,3 +129,19 @@ export async function restoreAccount() {
   await updateMe({ full_name, phone, marketing_opt_in });
   rmSync(BACKUP);
 }
+
+// Carrito anónimo con un armazón "Solo armazón"; devuelve el cart_token que emite la API (SPEC 26).
+export async function addFrameAnonymous(slug: string): Promise<string> {
+  const req = await request.newContext();
+  const p = await (await req.get(`${apiUrl()}/products/${slug}`)).json() as {
+    frame_variants: { id: string; in_stock: boolean }[]; lens_packages: { id: string; vision_type: string }[];
+  };
+  const variant = p.frame_variants.find((v) => v.in_stock);
+  const pkg = p.lens_packages.find((l) => l.vision_type === "frame_only");
+  if (!variant || !pkg) throw new Error(`${slug} no tiene variante en existencia o "Solo armazón" activo`);
+  const res = await req.post(`${apiUrl()}/cart/items`, { data: { variant_id: variant.id, eye: "both", quantity: 1, lens_package_id: pkg.id } });
+  if (!res.ok()) throw new Error(`POST /cart/items anónimo → ${res.status()} ${await res.text()}`);
+  const token = (await res.json()).cart_token as string | undefined;
+  if (!token) throw new Error("La API no devolvió cart_token para el carrito anónimo");
+  return token;
+}

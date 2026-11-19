@@ -16,7 +16,9 @@
   "auth": {
     "login": {
       "title": "Iniciar sesión",
-      "oauthFailed": "No pudimos completar el inicio de sesión. Intenta de nuevo."
+      "oauthFailed": "No pudimos completar el inicio de sesión. Intenta de nuevo.",
+      "welcome": "Hola de nuevo",
+      "subtitle": "Entra para ver tus pedidos, recetas y favoritos."
     },
     "recover": {
       "title": "Recuperar contraseña",
@@ -29,8 +31,8 @@
       "checkEmail": "Revisa tu correo para confirmar tu cuenta.",
       "fullName": "Nombre completo",
       "haveAccount": "¿Ya tienes cuenta? <link>Inicia sesión</link>",
-      "socialTitle": "Regístrate con…",
-      "orEmail": "O regístrate con tu correo",
+      "subtitle": "Crea tu cuenta para guardar tu receta y seguir tus pedidos.",
+      "orEmail": "o regístrate con tu correo",
       "requiredNote": "*Información obligatoria",
       "fullNameRequired": "Nombre completo*",
       "emailRequired": "Correo*",
@@ -45,6 +47,7 @@
         "fuerte"
       ],
       "marketing": "Quiero recibir promociones y novedades de {{brand}}. Consulta los <terms>Términos</terms> y el <privacy>Aviso de privacidad</privacy>.",
+      "googleLegalNote": "Al continuar con Google aceptas los <terms>Términos</terms> y el <privacy>Aviso de privacidad</privacy> de {{brand}}.",
       "legalNote": "Al crear tu cuenta aceptas los <terms>Términos</terms> y el <privacy>Aviso de privacidad</privacy>.",
       "successTitle": "¡Listo!",
       "successBody": "Te damos la bienvenida a {{brand}}. Te enviamos un correo para confirmar tu cuenta.",
@@ -63,13 +66,22 @@
     "continueWithGoogle": "Continuar con Google",
     "signOut": "Cerrar sesión",
     "showPassword": "Mostrar contraseña",
-    "orContinueWith": "O entra con",
+    "orContinueWith": "o con tu correo",
     "noAccount": "¿No tienes cuenta? <link>Regístrate</link>",
     "tabs": {
       "title": "Accede a tu cuenta",
       "label": "Acceso o registro",
       "login": "Iniciar sesión",
       "register": "Soy nuevo"
+    },
+    "shell": {
+      "title": "Tu receta, tus pedidos y tu próxima compra en un solo lugar.",
+      "perks": {
+        "prescriptions": "Guarda tu receta y úsala en cada compra",
+        "orders": "Sigue cada pedido paso a paso",
+        "reorder": "Vuelve a pedir tus lentes de contacto en segundos",
+        "favorites": "Guarda tus armazones favoritos"
+      }
     }
   },
   "account": {
