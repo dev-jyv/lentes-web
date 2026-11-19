@@ -274,21 +274,30 @@ export function RegisterForm({ next, email: initialEmail }: { next?: string; ema
 
 export function RecoverForm() {
   const [info, setInfo] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const turnstile = useTurnstile();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(z.object({ email })),
   });
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit(async ({ email }) => {
-      await createClient().auth.resetPasswordForEmail(email, {
+      setError(null);
+      setInfo(null);
+      if (turnstile.required && !turnstile.token) return setError(t("auth.completeCaptcha"));
+      const { error } = await createClient().auth.resetPasswordForEmail(email, {
         redirectTo: `${origin()}/auth/callback?next=/cuenta/contrasena`,
+        captchaToken: turnstile.token,
       });
-      // Respuesta neutra: no revela si el correo existe.
+      turnstile.reset();
+      // Solo el captcha rechazado se avisa; lo demás recibe la respuesta neutra, que no revela si el correo existe.
+      if (error?.code === "captcha_failed") return setError(t("auth.completeCaptcha"));
       setInfo(t("auth.recover.sent"));
     })}>
       <FloatingField id="email" label={t("auth.email")} type="email" autoComplete="email"
         error={errors.email?.message} reg={register("email")} />
-      <Notice info={info} />
+      {turnstile.widget}
+      <Notice error={error} info={info} />
       <Button type="submit" className={authButton} disabled={isSubmitting}>{t("auth.recover.send")}</Button>
     </form>
   );
