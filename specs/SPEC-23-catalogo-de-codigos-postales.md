@@ -1,6 +1,6 @@
 # SPEC 23 — Catálogo de códigos postales con autocompletado de dirección
 
-> **Status:** Approved
+> **Status:** Implemented — lentes-web 503eae6, lentes-api f9350b0; catálogo importado en producción el 2026-11-19
 > **Depends on:** SPEC 21
 > **Date:** 2026-11-18
 > **Objective:** Llenar estado, municipio y colonia a partir del código postal en todo formulario de dirección, con un catálogo oficial guardado en `lentes-api`.
