@@ -7,5 +7,5 @@
  */
 
 export type AdminListVariantsParams = {
-product_id: string;
+  product_id: string;
 };

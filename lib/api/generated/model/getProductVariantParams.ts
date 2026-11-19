@@ -7,19 +7,17 @@
  */
 
 export type GetProductVariantParams = {
-sphere?: number;
-cylinder?: number;
-/**
- * @minimum 0
- * @maximum 180
- */
-axis?: number;
-addition?: string;
-/**
- * `D` o `N`; solo en multifocales que lo requieren.
- */
-dominance?: string;
-base_curve: number;
-diameter: number;
-color?: string;
+  sphere?: number;
+  cylinder?: number;
+  /**
+   * @minimum 0
+   * @maximum 180
+   */
+  axis?: number;
+  addition?: string;
+  /** `D` o `N`; solo en multifocales que lo requieren. */
+  dominance?: string;
+  base_curve: number;
+  diameter: number;
+  color?: string;
 };

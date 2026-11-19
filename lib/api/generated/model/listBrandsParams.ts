@@ -8,8 +8,6 @@
 import type { ProductCategory } from './productCategory';
 
 export type ListBrandsParams = {
-/**
- * Devuelve solo marcas con al menos un producto activo de esa categoría.
- */
-category?: ProductCategory;
+  /** Devuelve solo marcas con al menos un producto activo de esa categoría. */
+  category?: ProductCategory;
 };

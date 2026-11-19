@@ -7,6 +7,6 @@
  */
 
 export type AdminSalesReportParams = {
-from: string;
-to: string;
+  from: string;
+  to: string;
 };

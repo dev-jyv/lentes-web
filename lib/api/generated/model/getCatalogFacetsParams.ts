@@ -8,5 +8,5 @@
 import type { ProductCategory } from './productCategory';
 
 export type GetCatalogFacetsParams = {
-category: ProductCategory;
+  category: ProductCategory;
 };

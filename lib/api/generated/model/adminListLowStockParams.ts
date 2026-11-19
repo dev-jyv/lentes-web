@@ -7,9 +7,9 @@
  */
 
 export type AdminListLowStockParams = {
-/**
- * @minimum 0
- * @maximum 10000
- */
-threshold?: number;
+  /**
+   * @minimum 0
+   * @maximum 10000
+   */
+  threshold?: number;
 };
