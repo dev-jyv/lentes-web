@@ -23,7 +23,7 @@ export interface CartItem {
   available: number;
   /** Se surte por pedido */
   on_demand: boolean;
-  /** false si la variante, el producto o el paquete de micas ya no están activos, o si el tratamiento se desactivó o ya no aplica a la necesidad */
+  /** false si la variante, el producto o el paquete de micas ya no están activos, si el tratamiento se desactivó o ya no aplica a la necesidad, o si el paquete es progresivo y el armazón dejó de ser apto (`progressive_eligible = false`) */
   purchasable: boolean;
   category: ProductCategory;
   /** @nullable */

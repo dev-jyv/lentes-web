@@ -2273,7 +2273,7 @@ components:
         progressive_eligible:
           type: boolean
           nullable: true
-          description: Solo lectura (no existe en FrameInput); calculado, no se guarda. `true` si `lens_height_mm` >= 28; `null` sin alto de mica.
+          description: Solo lectura (no existe en FrameInput); calculado, no se guarda. `true` si `lens_height_mm` >= 28; `null` sin alto de mica. Con `false`, el carrito rechaza paquetes `progressive` (400) y el checkout responde 409; con `null` se permiten.
         includes:
           description: Qué incluye el armazón; puede ser vacío.
           type: array
@@ -2508,6 +2508,7 @@ components:
         state: { type: string }
         postal_code: { type: string, pattern: "^[0-9]{5}$" }
         phone: { type: string }
+        references: { type: string, nullable: true, maxLength: 200, description: "Referencias de entrega (entre calles, color de fachada…)" }
         is_default: { type: boolean, default: false }
     Address:
       allOf:
@@ -2589,7 +2590,7 @@ components:
         variant_id: { type: string, format: uuid }
         eye: { $ref: "#/components/schemas/Eye" }
         quantity: { type: integer, minimum: 1, maximum: 12 }
-        lens_package_id: { type: string, format: uuid, nullable: true, description: "Requerido en armazones, con eye = both; prohibido en lentes de contacto." }
+        lens_package_id: { type: string, format: uuid, nullable: true, description: "Requerido en armazones, con eye = both; prohibido en lentes de contacto. Un paquete `progressive` en un armazón con `progressive_eligible = false` responde 400." }
         lens_treatment_id:
           type: string
           format: uuid
@@ -2616,7 +2617,7 @@ components:
         line_total_cents: { type: integer, format: int64 }
         available: { type: integer, description: "stock - reserved ahora mismo; con `on_demand` es un tope técnico (9999)" }
         on_demand: { type: boolean, description: "Se surte por pedido" }
-        purchasable: { type: boolean, description: "false si la variante, el producto o el paquete de micas ya no están activos, o si el tratamiento se desactivó o ya no aplica a la necesidad" }
+        purchasable: { type: boolean, description: "false si la variante, el producto o el paquete de micas ya no están activos, si el tratamiento se desactivó o ya no aplica a la necesidad, o si el paquete es progresivo y el armazón dejó de ser apto (`progressive_eligible = false`)" }
         category: { $ref: "#/components/schemas/ProductCategory" }
         lens_package:
           type: object
@@ -2845,6 +2846,7 @@ components:
         state: { type: string }
         postal_code: { type: string }
         phone: { type: string }
+        references: { type: string, nullable: true, maxLength: 200, description: "Referencias de entrega (entre calles, color de fachada…)" }
     AdminOrder:
       allOf:
         - $ref: "#/components/schemas/AdminOrderSummary"

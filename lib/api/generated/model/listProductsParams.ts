@@ -15,42 +15,34 @@ import type { ProductCategory } from './productCategory';
 import type { Replacement } from './replacement';
 
 export type ListProductsParams = {
-/**
- * Slug de la marca
- */
-brand?: string;
-lens_type?: LensType;
-replacement?: Replacement;
-/**
- * Sin este parámetro se devuelven todas las categorías.
- */
-category?: ProductCategory;
-/**
- * Busca en nombre de producto y de marca, sin distinguir mayúsculas ni acentos. De 2 a 80 caracteres tras recortar.
- */
-q?: string;
-shape?: FrameShape;
-frame_material?: FrameMaterial;
-rim?: FrameRim;
-gender?: FrameGender;
-color?: FrameColor;
-/**
- * Se aplica sobre `from_price_cents`; excluye agotados.
- * @minimum 0
- */
-min_price_cents?: number;
-/**
- * Se aplica sobre `from_price_cents`; excluye agotados.
- * @minimum 0
- */
-max_price_cents?: number;
-/**
- * Cursor opaco devuelto en `next_cursor`
- */
-cursor?: string;
-/**
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
+  /** Slug de la marca */
+  brand?: string;
+  lens_type?: LensType;
+  replacement?: Replacement;
+  /** Sin este parámetro se devuelven todas las categorías. */
+  category?: ProductCategory;
+  /** Busca en nombre de producto y de marca, sin distinguir mayúsculas ni acentos. De 2 a 80 caracteres tras recortar. */
+  q?: string;
+  shape?: FrameShape;
+  frame_material?: FrameMaterial;
+  rim?: FrameRim;
+  gender?: FrameGender;
+  color?: FrameColor;
+  /**
+   * Se aplica sobre `from_price_cents`; excluye agotados.
+   * @minimum 0
+   */
+  min_price_cents?: number;
+  /**
+   * Se aplica sobre `from_price_cents`; excluye agotados.
+   * @minimum 0
+   */
+  max_price_cents?: number;
+  /** Cursor opaco devuelto en `next_cursor` */
+  cursor?: string;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
 };

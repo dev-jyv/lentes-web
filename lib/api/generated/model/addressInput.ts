@@ -18,5 +18,11 @@ export interface AddressInput {
   /** @pattern ^[0-9]{5}$ */
   postal_code: string;
   phone: string;
+  /**
+     * Referencias de entrega (entre calles, color de fachada…)
+     * @maxLength 200
+     * @nullable
+     */
+  references?: string | null;
   is_default?: boolean;
 }

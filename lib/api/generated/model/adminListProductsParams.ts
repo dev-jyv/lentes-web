@@ -8,11 +8,11 @@
 import type { ProductCategory } from './productCategory';
 
 export type AdminListProductsParams = {
-category?: ProductCategory;
-cursor?: string;
-/**
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
+  category?: ProductCategory;
+  cursor?: string;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
 };

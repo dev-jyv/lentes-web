@@ -17,4 +17,10 @@ export interface ShippingAddress {
   state: string;
   postal_code: string;
   phone: string;
+  /**
+     * Referencias de entrega (entre calles, color de fachada…)
+     * @maxLength 200
+     * @nullable
+     */
+  references?: string | null;
 }

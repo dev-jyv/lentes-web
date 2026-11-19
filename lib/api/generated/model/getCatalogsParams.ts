@@ -7,8 +7,6 @@
  */
 
 export type GetCatalogsParams = {
-/**
- * `true`: incluye los valores ocultos, en su orden de `position`.
- */
-include_hidden?: boolean;
+  /** `true`: incluye los valores ocultos, en su orden de `position`. */
+  include_hidden?: boolean;
 };

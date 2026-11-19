@@ -7,8 +7,6 @@
  */
 
 export type MercadoPagoWebhookParams = {
-/**
- * Id del pago; es el que firma Mercado Pago.
- */
-'data.id': string;
+  /** Id del pago; es el que firma Mercado Pago. */
+  'data.id': string;
 };

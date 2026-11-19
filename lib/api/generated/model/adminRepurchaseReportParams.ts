@@ -7,6 +7,6 @@
  */
 
 export type AdminRepurchaseReportParams = {
-from: string;
-to: string;
+  from: string;
+  to: string;
 };

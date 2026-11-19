@@ -8,11 +8,11 @@
 import type { OrderStatus } from './orderStatus';
 
 export type AdminListOrdersParams = {
-status?: OrderStatus;
-cursor?: string;
-/**
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
+  status?: OrderStatus;
+  cursor?: string;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
 };
