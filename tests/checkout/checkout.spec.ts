@@ -41,11 +41,12 @@ async function fakeCheckout(page: Page, status: number, body: object) {
   return bodies;
 }
 
-test("sin sesión, /checkout redirige al login", async ({ browser }) => {
+// SPEC 25: /checkout ya no exige sesión; sin ella se ofrece comprar como invitado (tests/checkout/invitado.spec.ts).
+test("sin sesión, /checkout no redirige al login", async ({ browser }) => {
   const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
   const page = await context.newPage();
   await page.goto("/checkout");
-  await expect(page).toHaveURL(/\/login\?next=%2Fcheckout$/);
+  await expect(page).toHaveURL(/\/checkout$/);
   await context.close();
 });
 
@@ -149,6 +150,7 @@ test.describe("con armazón sin receta", () => {
 
     await page.getByLabel("Código postal").fill("06600");
     await page.getByLabel("Teléfono (10 dígitos)").fill("5555555555");
+    await page.getByLabel("Referencias de entrega").fill("Portón negro");
     await save.click();
     await expect(stepHeader(page, "Pago")).toHaveAttribute("aria-expanded", "true");
     await expect(stepHeader(page, "Dirección de envío")).toContainText("Cambiar");

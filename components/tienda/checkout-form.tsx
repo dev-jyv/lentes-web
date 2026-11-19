@@ -20,11 +20,11 @@ import { isUsable, rxStatusLabel } from "@/lib/prescription";
 import { t } from "@/lib/i18n";
 import { rich } from "@/lib/rich";
 
-type StepKey = "address" | "prescription" | "payment";
-type StepState = "done" | "current" | "pending";
+export type StepKey = "contact" | "address" | "prescription" | "payment";
+export type StepState = "done" | "current" | "pending";
 
 // La API manda `detail` en español y apto para el cliente en 409 (existencias, receta, carrito vacío).
-function checkoutMessage(status: number, detail?: string) {
+export function checkoutMessage(status: number, detail?: string) {
   switch (status) {
     case 409:
       return detail ?? t("checkout.errors.unavailable");
@@ -39,7 +39,7 @@ function checkoutMessage(status: number, detail?: string) {
   }
 }
 
-const addressLine = (a: Address) =>
+export const addressLine = (a: Pick<Address, "street" | "ext_number" | "int_number" | "neighborhood" | "postal_code">) =>
   `${a.street} ${a.ext_number}${a.int_number ? t("checkout.address.interior", { number: a.int_number }) : ""}, ${a.neighborhood}, ${a.postal_code}`;
 const rxLine = (r: Prescription) => `${r.doctor_name} · ${rxStatusLabel[r.status]}`;
 
@@ -56,7 +56,7 @@ function ChoiceCard({ name, checked, onChange, children }: { name: string; check
   );
 }
 
-function Stepper({ steps, states, onOpen }: { steps: { key: StepKey; label: string }[]; states: Record<StepKey, StepState>; onOpen: (k: StepKey) => void }) {
+export function Stepper({ steps, states, onOpen }: { steps: { key: StepKey; label: string }[]; states: Record<StepKey, StepState>; onOpen: (k: StepKey) => void }) {
   return (
     <ol aria-label={t("checkout.stepsLabel")} className="mb-8 flex items-center gap-2 text-sm sm:gap-3">
       {steps.map((s, i) => {
@@ -89,7 +89,7 @@ function Stepper({ steps, states, onOpen }: { steps: { key: StepKey; label: stri
   );
 }
 
-function StepPanel({
+export function StepPanel({
   stepKey, index, title, state, open, openable, summary, onOpen, children,
 }: {
   stepKey: StepKey; index: number; title: string; state: StepState; open: boolean; openable: boolean;
@@ -159,7 +159,7 @@ function RxGroup({
   );
 }
 
-function SummaryContent({ cart }: { cart: Cart }) {
+export function SummaryContent({ cart }: { cart: Cart }) {
   const hasFrames = cart.items.some((i) => i.category === "frame");
   return (
     <div className="space-y-4">
@@ -194,7 +194,7 @@ function SummaryContent({ cart }: { cart: Cart }) {
   );
 }
 
-function CheckoutSkeleton() {
+export function CheckoutSkeleton() {
   return (
     <div aria-busy="true" aria-label={t("common.loading")}>
       <Skeleton className="mb-8 h-7 w-full max-w-md" />
@@ -205,6 +205,19 @@ function CheckoutSkeleton() {
           <Skeleton className="h-16 w-full rounded-2xl" />
         </div>
         <Skeleton className="hidden h-72 w-full rounded-2xl lg:block" />
+      </div>
+    </div>
+  );
+}
+
+export function EmptyCheckout() {
+  return (
+    <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border bg-card px-6 py-12 text-center">
+      <span className="grid size-14 place-items-center rounded-full bg-blue-soft text-blue"><ShoppingBag className="size-7" aria-hidden="true" /></span>
+      <p className="text-lg">{t("checkout.emptyCart")}</p>
+      <div className="flex flex-wrap justify-center gap-2">
+        <Link href="/armazones" className={buttonVariants({ size: "lg", className: "px-4" })}>{t("checkout.browseFrames")}</Link>
+        <Link href="/lentes" className={buttonVariants({ size: "lg", variant: "outline", className: "px-4" })}>{t("checkout.browseLenses")}</Link>
       </div>
     </div>
   );
@@ -228,25 +241,14 @@ export function CheckoutForm() {
   useEffect(() => {
     if (cartReady && !started.current) {
       started.current = true;
-      track("checkout_started");
+      track("checkout_started", { guest: false });
     }
   }, [cartReady]);
 
   if (cartQuery.isLoading || addressesQuery.isLoading || rxQuery.isLoading) return <CheckoutSkeleton />;
   const cart = cartQuery.data?.status === 200 ? cartQuery.data.data : undefined;
   const addresses = addressesQuery.data?.status === 200 ? addressesQuery.data.data.items : [];
-  if (!cart || cart.items.length === 0) {
-    return (
-      <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border bg-card px-6 py-12 text-center">
-        <span className="grid size-14 place-items-center rounded-full bg-blue-soft text-blue"><ShoppingBag className="size-7" aria-hidden="true" /></span>
-        <p className="text-lg">{t("checkout.emptyCart")}</p>
-        <div className="flex flex-wrap justify-center gap-2">
-          <Link href="/armazones" className={buttonVariants({ size: "lg", className: "px-4" })}>{t("checkout.browseFrames")}</Link>
-          <Link href="/lentes" className={buttonVariants({ size: "lg", variant: "outline", className: "px-4" })}>{t("checkout.browseLenses")}</Link>
-        </div>
-      </div>
-    );
-  }
+  if (!cart || cart.items.length === 0) return <EmptyCheckout />;
 
   const needsRx = cart.items.some((i) => i.product.requires_prescription);
   const needsGlassesRx = cart.items.some((i) => i.lens_package?.requires_prescription);
@@ -268,7 +270,7 @@ export function CheckoutForm() {
     ...(needsRx || needsGlassesRx ? [{ key: "prescription" as const, label: t("checkout.steps.prescription") }] : []),
     { key: "payment", label: t("checkout.steps.payment") },
   ];
-  const complete: Record<StepKey, boolean> = { address: !!address, prescription: !rxMissing, payment: false };
+  const complete: Record<StepKey, boolean> = { contact: true, address: !!address, prescription: !rxMissing, payment: false };
   const openable = (k: StepKey) => steps.slice(0, steps.findIndex((s) => s.key === k)).every((s) => complete[s.key]);
   // Se abre el primer paso incompleto hasta que el cliente elija otro.
   const current: StepKey = openStep && openable(openStep) ? openStep : (steps.find((s) => !complete[s.key])?.key ?? "payment");

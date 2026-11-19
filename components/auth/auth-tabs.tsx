@@ -13,7 +13,7 @@ type Tab = "login" | "register";
 const tabClass = "h-10 flex-1 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 data-active:bg-background data-active:text-foreground data-active:shadow-sm";
 
 // /login y /registro son la misma página: la URL decide la pestaña y cambiar de pestaña cambia la URL.
-export function AuthTabs({ initial, next }: { initial: Tab; next?: string }) {
+export function AuthTabs({ initial, next, email }: { initial: Tab; next?: string; email?: string }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>(initial);
   // Un `next` inválido se descarta al cambiar de pestaña.
@@ -29,7 +29,7 @@ export function AuthTabs({ initial, next }: { initial: Tab; next?: string }) {
         <Tabs.Tab value="register" className={tabClass}>{t("auth.tabs.register")}</Tabs.Tab>
       </Tabs.List>
       <Tabs.Panel value="login" className="outline-none"><LoginForm next={next} /></Tabs.Panel>
-      <Tabs.Panel value="register" className="outline-none"><RegisterForm next={next} /></Tabs.Panel>
+      <Tabs.Panel value="register" className="outline-none"><RegisterForm next={next} email={email} /></Tabs.Panel>
     </Tabs.Root>
   );
 }

@@ -2885,6 +2885,9 @@ components:
       type: object
       required: [id, number, status, subtotal_cents, shipping_cents, discount_cents, total_cents, created_at, items]
       properties:
+        shipping_address:
+          allOf: [{ $ref: "#/components/schemas/ShippingAddress" }]
+          description: Copia de la dirección de envío congelada en el pedido, con sus referencias (SPEC 25 de lentes-web).
         tracking_carrier: { type: string, nullable: true }
         tracking_number: { type: string, nullable: true }
         id: { type: string, format: uuid }

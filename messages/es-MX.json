@@ -211,9 +211,35 @@
     "title": "Finalizar compra",
     "stepsLabel": "Pasos",
     "steps": {
+      "contact": "Identificación",
+      "shipping": "Envío",
       "address": "Dirección",
       "prescription": "Receta",
       "payment": "Pago"
+    },
+    "guest": {
+      "title": "Compra como invitado",
+      "body": "Solo te pedimos tu correo, nombre y teléfono. Puedes crear tu cuenta después de pagar.",
+      "cta": "Continuar como invitado",
+      "loginTitle": "Ya tengo cuenta",
+      "loginBody": "Usa tus direcciones y recetas guardadas.",
+      "loginCta": "Iniciar sesión",
+      "backToGuest": "Volver a mi compra como invitado",
+      "contactTitle": "Identificación",
+      "contactIntro": "Solo lo esencial para tu compra y para avisarte del envío.",
+      "email": "Correo electrónico",
+      "haveAccount": "¿Ya tienes cuenta? <link>Inicia sesión</link>",
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "phone": "Teléfono celular (10 dígitos)",
+      "marketing": "Quiero recibir promociones y novedades.",
+      "toShipping": "Continuar al envío",
+      "toNext": "Continuar",
+      "rxIntro": "Sube una foto clara o el PDF de tu receta. La revisamos antes de enviar tu pedido.",
+      "rxFile": "Foto o PDF de tu receta",
+      "rxHelp": "JPG, PNG, WebP o PDF de hasta 10 MB.",
+      "rxReady": "Receta lista: {{name}}",
+      "uploading": "Subiendo tu receta…"
     },
     "result": {
       "metaTitle": "Resultado del pago",
@@ -234,6 +260,8 @@
       "changePlace": "Cambiar",
       "chooseNeighborhood": "Elige tu colonia",
       "otherNeighborhood": "Otra colonia",
+      "references": "Referencias de entrega",
+      "referencesHint": "Entre calles, color de fachada, portón…",
       "phone": "Teléfono (10 dígitos)",
       "saveFailed": "No pudimos guardar la dirección.",
       "save": "Guardar dirección",
@@ -544,9 +572,12 @@
     "expiresAfterIssue": "Debe ser posterior a la fecha de emisión",
     "axisWithCylinder": "Requerido con cilindro",
     "fiveDigits": "5 dígitos",
-    "tenDigits": "10 dígitos"
+    "tenDigits": "10 dígitos",
+    "max200": "Máximo 200 caracteres",
+    "max80": "Máximo 80 caracteres"
   },
   "orders": {
+    "shipTo": "Envío a",
     "loadFailed": "No pudimos cargar tus pedidos.",
     "empty": "Aún no tienes pedidos. <link>Ver lentes</link>",
     "units_one": "{{count}} artículo",
@@ -970,5 +1001,15 @@
     "viewAll": "Ver mis favoritos",
     "saveFailed": "No pudimos actualizar tus favoritos. Intenta de nuevo.",
     "loadFailed": "No pudimos cargar tus favoritos. Intenta de nuevo."
+  },
+  "guestOrder": {
+    "metaTitle": "Tu pedido",
+    "back": "Seguir comprando",
+    "notFound": "No encontramos este pedido",
+    "notFoundBody": "Revisa el enlace de tu correo. Los enlaces dejan de servir 90 días después de la entrega.",
+    "loadFailed": "No pudimos cargar tu pedido.",
+    "createAccountTitle": "Crea tu cuenta para seguir tus pedidos",
+    "createAccountBody": "Con el mismo correo verás este pedido y los siguientes en Mis pedidos, y guardarás tu receta.",
+    "createAccountCta": "Crear mi cuenta"
   }
 }

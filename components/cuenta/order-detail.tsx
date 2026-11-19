@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "cn";
-import { ArrowLeft, Check, Copy, Info, Truck } from "lucide-react";
+import { ArrowLeft, Check, Copy, Info, MapPin, Truck } from "lucide-react";
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
@@ -86,7 +86,6 @@ function ItemRow({ i }: { i: OrderItem }) {
 
 export function OrderDetail({ id }: { id: string }) {
   const query = useGetOrder(id);
-  const clipboard = useSyncExternalStore(() => () => {}, canCopy, () => false);
   const back = (
     <Link href="/cuenta/pedidos" className="inline-flex items-center gap-1.5 text-sm font-medium text-blue underline-offset-4 hover:underline">
       <ArrowLeft className="size-4" aria-hidden="true" />{t("orders.back")}
@@ -115,7 +114,12 @@ export function OrderDetail({ id }: { id: string }) {
     );
   }
 
-  const order = query.data.data;
+  return <OrderView order={query.data.data} back={back} />;
+}
+
+// Vista del pedido. `guest` (SPEC 25): pedido de invitado, sin recompra (es de la cuenta).
+export function OrderView({ order, back, guest = false, aside }: { order: Order; back?: React.ReactNode; guest?: boolean; aside?: React.ReactNode }) {
+  const clipboard = useSyncExternalStore(() => () => {}, canCopy, () => false);
   const lenses = order.items.filter((i) => i.category !== "frame");
   const frames = order.items.filter((i) => i.category === "frame");
   const paid = order.paid_at != null || orderProgress(order.status) !== null;
@@ -183,7 +187,20 @@ export function OrderDetail({ id }: { id: string }) {
             </section>
           )}
 
-          {canReorder(order.status) && order.items.some((i) => i.category !== "frame") && (
+          {order.shipping_address && (
+            <section aria-labelledby="order-address" className="rounded-2xl border bg-card p-5 text-sm">
+              <h2 id="order-address" className="mb-2 flex items-center gap-2 text-lg"><MapPin className="size-5 text-blue" aria-hidden="true" />{t("orders.shipTo")}</h2>
+              <p className="font-medium">{order.shipping_address.recipient}</p>
+              <p>
+                {order.shipping_address.street} {order.shipping_address.ext_number}
+                {order.shipping_address.int_number ? t("checkout.address.interior", { number: order.shipping_address.int_number }) : ""}, {order.shipping_address.neighborhood}
+              </p>
+              <p>{order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}</p>
+              {order.shipping_address.references && <p className="mt-1 text-muted-foreground">{order.shipping_address.references}</p>}
+            </section>
+          )}
+          {aside}
+          {!guest && canReorder(order.status) && order.items.some((i) => i.category !== "frame") && (
             <Link href={`/recompra/${order.id}`} className={buttonVariants({ size: "lg", className: "h-11 w-full" })}>{t("orders.reorder")}</Link>
           )}
         </div>

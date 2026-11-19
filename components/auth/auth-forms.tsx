@@ -178,7 +178,8 @@ function StrengthMeter({ value }: { value: string }) {
   );
 }
 
-export function RegisterForm({ next }: { next?: string }) {
+// `email` prellena el correo, p. ej. tras comprar como invitado (SPEC 25).
+export function RegisterForm({ next, email: initialEmail }: { next?: string; email?: string }) {
   const router = useRouter();
   const id = useId();
   // Destino tras confirmar el correo; sin `next` se conserva el de antes (/cuenta).
@@ -194,7 +195,7 @@ export function RegisterForm({ next }: { next?: string }) {
       phone,
       marketing_opt_in: z.boolean(),
     })),
-    defaultValues: { full_name: "", email: "", password: "", phone: "", marketing_opt_in: false },
+    defaultValues: { full_name: "", email: initialEmail ?? "", password: "", phone: "", marketing_opt_in: false },
   });
   const pw = useWatch({ control, name: "password" });
 

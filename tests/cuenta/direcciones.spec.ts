@@ -20,6 +20,7 @@ async function fill(page: Page, recipient: string) {
   await sheet.getByLabel("Estado").fill("CDMX");
   await sheet.getByLabel("Código postal").fill("03940");
   await sheet.getByLabel("Teléfono (10 dígitos)").fill("5512345678");
+  await sheet.getByLabel("Referencias de entrega").fill("Entre Barranca del Muerto y Río Mixcoac");
 }
 
 test("agrega, edita, hace predeterminada y elimina una dirección", async ({ page }) => {
@@ -41,6 +42,8 @@ test("agrega, edita, hace predeterminada y elimina una dirección", async ({ pag
   await expect(sheet.getByRole("heading", { name: "Editar dirección" })).toBeVisible();
   await expect(sheet.getByLabel("Calle")).toHaveValue("Insurgentes Sur");
   await sheet.getByLabel("No. exterior").fill("1700");
+  // Las direcciones guardadas antes de SPEC 25 no traen referencias: al editarlas se piden.
+  await sheet.getByLabel("Referencias de entrega").fill("Entre Barranca del Muerto y Río Mixcoac");
   await sheet.getByRole("button", { name: "Guardar dirección" }).click();
   await expect(card(page, RECIPIENT)).toContainText("Insurgentes Sur 1700");
 
